@@ -1,0 +1,77 @@
+<view class="detail-shell">
+  <view class="detail-page">
+    <view class="statusbar-spacer"></view>
+
+    <view class="page-topbar operation-log-header">
+      <view class="back-button" bindtap="handleBack"></view>
+      <view class="page-title">操作日志</view>
+    </view>
+
+    <view wx:if="{{loading && !loaded && !loadFailed}}" class="state-card">
+      <view class="state-emoji">🗂️</view>
+      <view class="state-title">日志加载中</view>
+      <view class="state-copy">正在同步最近的管理操作记录</view>
+    </view>
+
+    <block wx:if="{{!loadFailed && loaded}}">
+      <view class="retention-card">
+        <view class="retention-copy">
+          <view class="retention-title">定时清除</view>
+          <view class="retention-subtitle">当前保留周期：{{retentionLabel}}</view>
+        </view>
+        <view class="retention-actions">
+          <view class="retention-btn" bindtap="chooseRetention">修改</view>
+          <view class="retention-btn retention-btn--ghost" bindtap="clearExpiredLogs">立即清理</view>
+          <view class="retention-btn retention-btn--ghost" bindtap="clearAllLogs">全部清空</view>
+        </view>
+      </view>
+
+      <view class="search-box">
+        <input
+          class="search-input"
+          placeholder="搜索操作对象（商品编号 / 用户 ID）"
+          placeholder-class="search-placeholder"
+          value="{{keyword}}"
+          bindinput="onKeywordInput"
+        />
+      </view>
+
+      <view class="filter-row">
+        <view class="filter-chip filter-chip--active" bindtap="choosePeriod">{{selectedPeriod}} ˅</view>
+        <view class="filter-chip" bindtap="chooseType">{{selectedType}} ˅</view>
+        <view class="filter-chip" bindtap="chooseOperator">{{selectedOperator}} ˅</view>
+        <view class="filter-chip {{selectedResult === '仅失败' ? 'filter-chip--danger' : ''}}" bindtap="chooseResult">{{selectedResult}} ˅</view>
+      </view>
+
+      <scroll-view wx:if="{{filteredLogs.length}}" class="log-scroll" scroll-y>
+        <view wx:for="{{filteredLogs}}" wx:key="id" class="log-card {{item.success ? '' : 'log-card--danger'}}">
+          <view class="log-head">
+            <view class="log-title-wrap">
+              <view wx:if="{{!item.success}}" class="log-alert">!</view>
+              <view class="log-title">{{item.title}}</view>
+            </view>
+            <view class="log-status {{item.success ? 'log-status--success' : 'log-status--danger'}}">{{item.success ? '成功' : '失败'}}</view>
+          </view>
+          <view class="log-row"><text class="log-label">操作对象</text><text class="log-value">{{item.target}}</text></view>
+          <view class="log-row"><text class="log-label">操作人</text><text class="log-value">{{item.operator}}</text></view>
+          <view class="log-row"><text class="log-label">时间</text><text class="log-value">{{item.time}}</text></view>
+          <view class="log-note {{item.success ? '' : 'log-note--danger'}}">备注：{{item.note}}</view>
+        </view>
+        <view wx:if="{{loading && loaded}}" class="list-refresh-tip">刷新中…</view>
+      </scroll-view>
+
+      <view wx:else class="state-card">
+        <view class="state-emoji">📋</view>
+        <view class="state-title">暂无操作记录</view>
+        <view class="state-copy">管理操作产生后会记录在这里</view>
+      </view>
+    </block>
+
+    <view wx:if="{{loadFailed}}" class="state-card state-card--error">
+      <view class="state-emoji">⚠️</view>
+      <view class="state-title">数据加载失败</view>
+      <view class="state-copy">数据加载失败，请刷新后重试</view>
+      <view class="state-btn" bindtap="retryLoad">刷新重试</view>
+    </view>
+  </view>
+</view>

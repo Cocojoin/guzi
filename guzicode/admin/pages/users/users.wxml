@@ -1,0 +1,543 @@
+<view class="management-shell {{currentView === 'userDetail' ? 'management-shell--detail' : ''}}">
+  <view class="management-page {{currentView === 'userList' ? 'management-page--list-offset' : ''}} {{multiSelect ? 'management-page--with-bar' : ''}}">
+    <view class="statusbar-spacer"></view>
+    <view wx:if="{{currentView === 'userList' || currentView === 'emptyUser'}}" class="management-header">
+      <view class="header-title">用户管理</view>
+      <view class="header-actions">
+        <view class="header-search">
+          <input
+            class="header-search-input"
+            placeholder="搜索"
+            placeholder-class="header-search-placeholder"
+            value="{{keyword}}"
+            bindinput="onKeywordInput"
+            bindconfirm="handleSearch"
+            confirm-type="search"
+          />
+          <view wx:if="{{keyword}}" class="header-search-clear" bindtap="clearKeyword"></view>
+        </view>
+        <view class="header-search-btn" bindtap="handleSearch">
+          <view class="header-search-icon"></view>
+        </view>
+      </view>
+    </view>
+    <view class="page-topbar" wx:else>
+      <view class="back-button" bindtap="handleBack"></view>
+      <view class="page-title-group">
+        <view class="page-title">{{viewTitle}}</view>
+        <view class="page-subtitle" wx:if="{{viewSubtitle}}">{{viewSubtitle}}</view>
+      </view>
+    </view>
+    <view wx:if="{{pageError}}" class="error-banner">
+      <text class="error-banner-text">{{pageError}}</text>
+      <view class="error-banner-retry" bindtap="retryCurrentView">重试</view>
+    </view>
+
+    <!-- 用户列表 -->
+    <view wx:if="{{currentView === 'userList'}}" class="filter-row">
+      <view class="filter-anchor">
+        <view class="filter-chip filter-chip--role" bindtap="toggleRoleDropdown">{{roleOptions[selectedRoleIndex]}} ▼</view>
+        <view wx:if="{{showRoleDropdown}}" class="role-dropdown role-dropdown--inline">
+          <view
+            wx:for="{{roleOptions}}"
+            wx:key="*this"
+            class="role-option {{selectedRoleIndex === index ? 'role-option--active' : ''}}"
+            data-index="{{index}}"
+            bindtap="selectRoleFilter"
+          >
+            <text>{{item}}</text>
+            <text wx:if="{{selectedRoleIndex === index}}">✓</text>
+          </view>
+        </view>
+      </view>
+      <view class="filter-anchor">
+        <view class="filter-chip filter-chip--inactive" bindtap="toggleInactiveDropdown">{{inactiveOptions[selectedInactiveIndex]}} ▼</view>
+        <view wx:if="{{showInactiveDropdown}}" class="role-dropdown role-dropdown--inline role-dropdown--inactive">
+          <view
+            wx:for="{{inactiveOptions}}"
+            wx:key="*this"
+            class="role-option {{selectedInactiveIndex === index ? 'role-option--active' : ''}}"
+            data-index="{{index}}"
+            bindtap="selectInactiveFilter"
+          >
+            <text>{{item}}</text>
+            <text wx:if="{{selectedInactiveIndex === index}}">✓</text>
+          </view>
+        </view>
+      </view>
+      <view class="batch-btn" bindtap="toggleMultiSelect">{{multiSelect ? '取消批量' : '批量'}}</view>
+    </view>
+
+    <view wx:if="{{currentView === 'userList' && loadingUsers && !usersLoaded}}" class="detail-card empty-state">
+      <view class="empty-mark">…</view>
+      <view class="empty-title">用户加载中</view>
+      <view class="empty-sub">正在同步用户与寄售统计</view>
+    </view>
+
+    <view wx:if="{{currentView === 'userList'}}" class="user-list">
+      <view class="list-card {{item.cardClass}} {{multiSelect ? 'list-card--batch' : ''}} {{item.selected ? 'list-card--selected' : ''}} {{multiSelect && !item.selectable ? 'list-card--disabled' : ''}}" wx:for="{{filteredUsers}}" wx:key="id" bindtap="handleUserCardTap" data-user-id="{{item.id}}">
+        <view wx:if="{{multiSelect}}" class="select-col">
+          <view class="select-circle {{item.selected ? 'select-circle--checked' : ''}} {{!item.selectable ? 'select-circle--disabled' : ''}}"></view>
+        </view>
+        <view class="avatar-chip">{{item.initial}}</view>
+        <view class="list-main">
+          <view class="list-title">{{item.name}}</view>
+          <view wx:if="{{item.metaTop}}" class="list-subtitle">{{item.metaTop}}</view>
+          <view wx:if="{{item.metaBottom}}" class="list-subtitle">{{item.metaBottom}}</view>
+        </view>
+        <view class="list-side">
+          <view class="{{item.badgeClass}}">{{item.badge}}</view>
+        </view>
+      </view>
+      <view wx:if="{{!loadingUsers && usersLoaded && filteredUsers.length === 0}}" class="detail-card empty-state">
+        <view class="empty-mark">空</view>
+        <view class="empty-title">暂无匹配用户</view>
+        <view class="empty-sub">可尝试更换昵称、账号或筛选条件</view>
+      </view>
+      <view wx:if="{{loadingUsers && usersLoaded}}" class="list-refresh-tip">刷新中…</view>
+    </view>
+
+    <view wx:if="{{currentView === 'userList' && multiSelect}}" class="selection-bar">
+      <view class="selection-meta" bindtap="toggleSelectAllUsers">
+        <view class="select-circle select-circle--bar {{allSelectableChecked ? 'select-circle--checked' : ''}}"></view>
+        <view class="selection-copy">
+          <view class="selection-title">全选</view>
+          <view class="selection-count">已选 <text>{{selectedUserIds.length}}</text> 个用户</view>
+        </view>
+      </view>
+      <view class="selection-actions">
+        <button class="danger-btn" bindtap="handleBatchDeleteUsers">批量删除</button>
+      </view>
+    </view>
+
+    <!-- 用户详情 -->
+    <scroll-view wx:if="{{currentView !== 'userList' && currentView !== 'emptyUser'}}" class="panel-scroll {{currentView === 'soldGoods' ? 'panel-scroll--sold' : ''}}" scroll-y enhanced show-scrollbar="{{false}}">
+      
+      <!-- Header区：头像 + 昵称 + 账号 -->
+      <view class="detail-card hero-user-card" wx:if="{{currentUser && currentView !== 'settlement' && currentView !== 'settledDetail'}}">
+        <view class="avatar-chip">{{currentUser.initial}}</view>
+        <view class="list-main">
+          <view class="hero-name-line">
+            <view class="list-title">{{currentUser.nickname}}</view>
+            <view wx:if="{{currentUser.roleType === 'consignment'}}" class="status-pill status-pill--consignment-user">寄售用户</view>
+          </view>
+          <view class="list-subtitle">{{currentUser.account}}</view>
+          <view wx:if="{{currentUser.roleType === 'consignment'}}" class="list-subtitle">抽成 <text class="rate-hot">{{currentUser.rate}}%</text></view>
+        </view>
+        <view class="hero-side-circle"></view>
+      </view>
+
+      <!-- 统计区 -->
+      <view wx:if="{{(currentView === 'userDetail' || currentView === 'userDetailSaved') && currentUser.roleType === 'consignment'}}" class="stats-row">
+        <view class="detail-card stat-card" bindtap="switchView" data-target="userGoods">
+          <view class="stat-num">{{currentUser.goodsCount}}</view>
+          <view wx:if="{{currentUser.roleType === 'consignment'}}" class="stat-label">寄售商品</view>
+        </view>
+        <view class="detail-card stat-card" bindtap="switchView" data-target="soldGoods">
+          <view class="stat-num">{{currentUser.soldCount}}</view>
+          <view wx:if="{{currentUser.roleType === 'consignment'}}" class="stat-label">已售出</view>
+        </view>
+        <view class="detail-card stat-card" bindtap="switchView" data-target="settledList">
+          <view class="stat-num">{{currentUser.settledCount}}</view>
+          <view wx:if="{{currentUser.roleType === 'consignment'}}" class="stat-label">已结算</view>
+        </view>
+      </view>
+
+      <!-- 用户信息区（编辑态） -->
+      <view wx:if="{{currentView === 'userDetail' && isEditing}}" class="detail-card section-card">
+        <view class="section-head">
+          <view class="mini-title">用户信息</view>
+          <view class="tiny-actions">
+            <view class="tiny-btn tiny-btn--ghost" bindtap="cancelEdit">取消</view>
+            <view class="tiny-btn tiny-btn--primary" bindtap="saveEdit">保存</view>
+          </view>
+        </view>
+        
+        <view class="field-row field-row--first">
+          <view class="field-label">昵称</view>
+          <input class="field-input field-input--fixed {{errors.nickname ? 'field-input--error' : ''}}" 
+            value="{{tempData.nickname}}" 
+            data-field="nickname"
+            bindinput="onInputChange"
+            placeholder="请输入昵称"
+            maxlength="20" />
+        </view>
+        <view wx:if="{{errors.nickname}}" class="error-text">{{errors.nickname}}</view>
+        
+        <view class="field-row">
+          <view class="field-label">联系方式</view>
+          <input class="field-input field-input--fixed {{errors.contact ? 'field-input--error' : ''}}" 
+            value="{{tempData.contact}}" 
+            data-field="contact"
+            bindinput="onInputChange"
+            placeholder="请输入联系方式"
+            maxlength="50" />
+        </view>
+        <view wx:if="{{errors.contact}}" class="error-text">{{errors.contact}}</view>
+        
+        <view wx:if="{{currentUser.roleType === 'consignment'}}" class="field-row">
+          <view class="field-label">抽成比例</view>
+          <view class="field-input-wrap field-input-wrap--rate">
+            <input class="field-input field-input--percent field-input--rate {{errors.rate ? 'field-input--error' : ''}}" 
+              value="{{tempData.rate}}" 
+              data-field="rate"
+              bindinput="onInputChange"
+              placeholder="0-100"
+              type="number"
+              maxlength="3" />
+            <text class="field-suffix">%</text>
+          </view>
+        </view>
+        <view wx:if="{{errors.rate}}" class="error-text">{{errors.rate}}</view>
+      </view>
+
+      <!-- 用户信息区（只读态） -->
+      <view wx:if="{{currentView === 'userDetail' && !isEditing}}" class="detail-card section-card">
+        <view class="section-head">
+          <view class="mini-title">用户信息</view>
+          <view class="tiny-btn tiny-btn--primary" bindtap="handleEditProfile">编辑</view>
+        </view>
+        <view class="info-line">
+          <text>昵称</text>
+          <view class="info-value">
+            <text>{{currentUser.nickname}}</text>
+          </view>
+        </view>
+        <view class="info-line">
+          <text>联系方式</text>
+          <view class="info-value">
+            <text>{{currentUser.contact || '-'}}</text>
+          </view>
+        </view>
+        <view wx:if="{{currentUser.roleType === 'consignment'}}" class="info-line">
+          <text>抽成比例</text>
+          <view class="info-value">
+            <text class="rate-hot">{{currentUser.rate}}%</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 寄售权限 -->
+      <view wx:if="{{currentView === 'userDetail'}}" class="detail-card section-card">
+        <view class="permission-row">
+          <view class="permission-copy">
+            <view class="mini-title">寄售权限</view>
+            <view class="perm-sub">关闭后已上架商品将自动下架</view>
+          </view>
+          <view class="switch {{currentUser.canConsign ? 'switch--on' : ''}}" bindtap="toggleConsignPermission"></view>
+        </view>
+      </view>
+
+      <!-- 重置密码 -->
+      <button wx:if="{{currentView === 'userDetail'}}" class="ghost-btn" bindtap="resetPassword">🔒 重置密码</button>
+
+      <!-- 其他视图... -->
+      <view wx:if="{{currentView === 'userGoods' || currentView === 'userGoodsFilters'}}" class="filter-panel">
+        <view class="filter-row">
+          <view class="filter-dropdown {{activeDropdown === 'status' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="status">
+            <text class="filter-dropdown-text">{{userGoodsStatusOptions[userGoodsStatusIndex]}}</text>
+            <text class="filter-arrow {{activeDropdown === 'status' ? 'filter-arrow--up' : ''}}">▼</text>
+          </view>
+        </view>
+        
+        <!-- 下拉面板 -->
+        <view wx:if="{{activeDropdown === 'status'}}" class="dropdown-panel">
+          <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+          <view class="dropdown-panel-content">
+            <view class="dropdown-option {{userGoodsStatusIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{userGoodsStatusOptions}}" wx:key="index" data-key="status" data-index="{{index}}" bindtap="onUserGoodsDropdownSelect">
+              <text>{{item}}</text>
+              <text wx:if="{{userGoodsStatusIndex === index}}" class="dropdown-check">✓</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <view wx:if="{{currentView === 'userGoods'}}" wx:for="{{filteredUserGoodsItems}}" wx:key="id" class="detail-card goods-card">
+        <view class="goods-media">
+          <view class="goods-thumb">
+            <image
+              wx:if="{{item.coverImage}}"
+              class="goods-image"
+              src="{{item.coverImage}}"
+              mode="aspectFill"
+            />
+            <view wx:else class="goods-star"></view>
+          </view>
+          <view class="quality-tag quality-tag--{{item.quality}}">{{item.qualityLabel}}</view>
+        </view>
+        <view class="list-main">
+          <view class="goods-header">
+            <view class="list-title">{{item.title}}</view>
+            <view class="goods-status-pill {{item.statusClass}}">{{item.statusLabel}}</view>
+          </view>
+          <view class="goods-price-row">
+            <view class="list-subtitle">IP：{{item.ip}}</view>
+            <text class="price">¥{{item.price}}</text>
+          </view>
+          <view class="list-subtitle">剩余可售：{{item.remainQuantity}}</view>
+          <view class="list-subtitle">类型：{{item.type}}</view>
+        </view>
+      </view>
+      <view wx:if="{{currentView === 'userGoods' && userGoodsItems.length === 0}}" class="detail-card empty-state">
+        <view class="empty-mark">空</view>
+        <view class="empty-title">暂无寄售商品</view>
+        <view class="empty-sub">该用户还没有可展示的商品</view>
+      </view>
+
+      <view wx:if="{{currentView === 'soldGoods'}}" class="detail-card settle-user-card">
+        <view class="avatar-chip">{{currentUser.initial}}</view>
+        <view class="list-main">
+          <view class="list-title">{{currentUser.nickname}}</view>
+          <view class="list-subtitle">已售出 {{currentUser.soldCount}} 件 · 抽成按售出时锁定</view>
+        </view>
+        <view class="settle-counter">已选 {{selectedSoldCount}} / {{soldItems.length}}</view>
+      </view>
+
+      <view
+        wx:if="{{currentView === 'soldGoods'}}"
+        wx:for="{{soldItems}}"
+        wx:key="rowKey"
+        class="detail-card goods-card goods-card--settle {{item.selected ? '' : 'goods-card--disabled'}}"
+        data-id="{{item.rowKey}}"
+        bindtap="toggleSoldItem"
+      >
+        <view class="settle-check {{item.selected ? '' : 'settle-check--off'}}">{{item.selected ? '✓' : ''}}</view>
+        <view class="goods-media">
+          <view class="goods-thumb">
+            <image
+              wx:if="{{item.coverImage}}"
+              class="goods-image"
+              src="{{item.coverImage}}"
+              mode="aspectFill"
+            />
+            <view wx:else class="goods-star"></view>
+          </view>
+          <view class="quality-tag">{{item.quality}}</view>
+        </view>
+        <view class="list-main">
+          <view class="list-title">{{item.title}}</view>
+          <view class="list-subtitle">类型 {{item.type}} · 抽成 {{item.rate}}%</view>
+          <view class="goods-price-row">
+            <text class="goods-series">{{item.series}}</text>
+            <text class="price">¥{{item.totalPrice}}</text>
+          </view>
+          <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
+          <view class="list-subtitle">单价：¥{{item.price}}</view>
+        </view>
+      </view>
+      <view wx:if="{{currentView === 'soldGoods' && soldItems.length === 0}}" class="detail-card empty-state">
+        <view class="empty-mark">空</view>
+        <view class="empty-title">暂无待结算商品</view>
+        <view class="empty-sub">该用户当前没有已售出待结算商品</view>
+      </view>
+
+      <view wx:if="{{currentView === 'settlement'}}" class="detail-card section-card settlement-list-card">
+        <view wx:for="{{settlementItems}}" wx:key="rowKey" class="settlement-item-row">
+          <view class="settlement-item-thumb-wrap">
+            <view class="settlement-item-thumb">
+              <image
+                wx:if="{{item.coverImage}}"
+                class="settlement-item-image"
+                src="{{item.coverImage}}"
+                mode="aspectFill"
+              />
+              <view wx:else class="goods-star"></view>
+            </view>
+          </view>
+          <view class="settlement-item-main">
+            <view class="list-title">{{item.title}}</view>
+            <view class="list-subtitle">类型 {{item.type}} · 抽成 {{item.rate}}%</view>
+            <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
+          </view>
+          <view class="settlement-item-side">
+            <view class="price">¥{{item.totalPrice}}</view>
+            <view class="list-subtitle">单价：¥{{item.price}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{currentView === 'settlement'}}" class="detail-card section-card settlement-summary-card">
+        <view class="line"><text>商品总额（寄售价）</text><text class="money-text-red">¥ {{settlementGross}}</text></view>
+        <view class="line"><text>平台抽成金额</text><text class="money-text-red">− ¥ {{settlementCommission}}</text></view>
+        <view class="line no-divider"><text>应付寄售用户</text><text class="money-text-red">¥ {{settlementPayable}}</text></view>
+      </view>
+
+      <view wx:if="{{currentView === 'settlement'}}" class="detail-card section-card">
+        <view class="section-head">
+          <view class="mini-title">商品实际收入 <text class="rate-hot">*</text></view>
+          <view class="settlement-hint">仅平台统计</view>
+        </view>
+        <view class="settlement-income-wrap">
+          <text class="settlement-income-prefix">¥</text>
+          <input class="settlement-income-input" value="{{settlementActualIncome}}" bindinput="onSettlementIncomeInput" />
+        </view>
+        <view class="settlement-desc">在外部平台实际成交合计。不展示给寄售用户，不参与结算用户的结算金额。</view>
+      </view>
+
+      <view wx:if="{{currentView === 'settlement'}}" class="detail-card section-card">
+        <view class="section-head">
+          <view class="mini-title">结算凭证 <text class="rate-hot">*</text></view>
+          <view class="settlement-hint">{{settlementVouchers.length}} / 3 · 单张 ≤ 5M</view>
+        </view>
+        <view class="photo-grid">
+          <block wx:for="{{settlementVouchers}}" wx:key="index">
+            <view class="photo-item" data-index="{{index}}">
+              <image class="photo-img" src="{{item}}" mode="aspectFill" bindtap="previewSettlementVoucher" data-index="{{index}}" />
+              <view class="photo-delete-btn" data-index="{{index}}" catchtap="deleteSettlementVoucher"></view>
+            </view>
+          </block>
+          <view wx:if="{{settlementVouchers.length < 3}}" class="photo-item photo-add" bindtap="chooseSettlementVoucher">
+            <view class="photo-add-icon"></view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{currentView === 'settledList'}}" class="detail-card settle-user-card">
+        <view class="avatar-chip">{{currentUser.initial}}</view>
+        <view class="list-main">
+          <view class="list-title">{{currentUser.nickname}}</view>
+          <view class="list-subtitle">累计结算 {{settledTotalItems}} 件 · 共 {{settledTotalTimes}} 次</view>
+        </view>
+        <view class="settle-record-total">
+          <view class="settlement-hint">累计应付</view>
+          <view class="price">¥ {{settledTotalPayable}}</view>
+        </view>
+      </view>
+
+      <view
+        wx:if="{{currentView === 'settledList'}}"
+        wx:for="{{settledRecords}}"
+        wx:key="_id"
+        class="detail-card settled-record-card"
+        data-id="{{item._id || item.id}}"
+        bindtap="openSettledDetail"
+      >
+        <view class="settled-record-icon">📅</view>
+        <view class="list-main">
+          <view class="list-title">{{item.date}}</view>
+          <view class="list-subtitle">共 {{item.items}} 件 · 抽成 ¥{{item.commission}}</view>
+        </view>
+        <view class="settled-record-side">
+          <view class="price">¥ {{item.gross}}</view>
+          <view class="settlement-hint">商品总额</view>
+        </view>
+      </view>
+      <view wx:if="{{currentView === 'settledList' && settledRecords.length === 0}}" class="detail-card empty-state">
+        <view class="empty-mark">空</view>
+        <view class="empty-title">暂无结算记录</view>
+        <view class="empty-sub">提交结算后会在这里展示历史记录</view>
+      </view>
+
+      <view wx:if="{{currentView === 'settledDetail' && settledDetail}}" class="detail-card settled-detail-top">
+        <view class="settlement-hint">本次应付寄售用户</view>
+        <view class="settled-detail-main-money">¥ {{settledDetailPayable}}</view>
+        <view class="settled-detail-nums">
+          <view><view class="settlement-hint">商品总额</view><view class="money-text-red">¥ {{settledDetailGross}}</view></view>
+          <view><view class="settlement-hint">平台抽成</view><view class="money-text-red">¥ {{settledDetailCommission}}</view></view>
+          <view><view class="settlement-hint">实际收入</view><view class="money-text-red">¥ {{settledDetailActualIncome}}</view></view>
+        </view>
+      </view>
+
+      <view wx:if="{{currentView === 'settledDetail' && settledDetail}}" class="detail-card section-card settlement-list-card">
+        <view class="section-head"><view class="mini-title">结算商品</view><view class="settlement-hint">共 {{settledDetail.items}} 件</view></view>
+        <view wx:for="{{settlementItems}}" wx:key="rowKey" class="settlement-item-row">
+          <view class="settlement-item-thumb-wrap">
+            <view class="settlement-item-thumb">
+              <image
+                wx:if="{{item.coverImage}}"
+                class="settlement-item-image"
+                src="{{item.coverImage}}"
+                mode="aspectFill"
+              />
+              <view wx:else class="goods-star"></view>
+            </view>
+          </view>
+          <view class="settlement-item-main">
+            <view class="list-title">{{item.title}}</view>
+            <view class="list-subtitle">{{item.series}} · {{item.type}} · 抽成 {{item.rate}}%</view>
+            <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
+          </view>
+          <view class="settlement-item-side">
+            <view class="price">¥{{item.totalPrice}}</view>
+            <view class="list-subtitle">单价：¥{{item.price}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{currentView === 'settledDetail' && settledDetail}}" class="detail-card section-card">
+        <view class="section-head"><view class="mini-title">结算凭证</view><view class="settlement-hint">{{settlementVouchers.length}} 张 · 点击放大</view></view>
+        <view class="photo-grid">
+          <block wx:for="{{settlementVouchers}}" wx:key="index">
+            <view class="photo-item" data-index="{{index}}">
+              <image class="photo-img" src="{{item}}" mode="aspectFill" bindtap="previewSettlementVoucher" data-index="{{index}}" />
+            </view>
+          </block>
+        </view>
+      </view>
+
+    </scroll-view>
+
+    <view wx:if="{{currentView === 'soldGoods' && soldItems.length > 0}}" class="sold-footer">
+      <view class="sold-total">
+        <view class="sold-total-label">本次应付寄售用户</view>
+        <view class="sold-total-amount">¥ {{soldTotalPayable}}</view>
+      </view>
+      <view class="sold-actions">
+        <view class="sold-action" bindtap="toggleSoldAll">全选</view>
+        <view class="sold-action sold-action--primary" bindtap="handleSettleSubmit">结算 ({{selectedSoldCount}})</view>
+      </view>
+    </view>
+
+    <view wx:if="{{currentView === 'settlement'}}" class="sold-footer">
+      <view class="sold-action sold-action--primary sold-action--full" bindtap="submitSettlement">提 交 结 算</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{currentView === 'emptyUser'}}" class="detail-card empty-state">
+      <view class="empty-mark">空</view>
+      <view class="empty-title">未找到匹配结果</view>
+      <view class="empty-sub">可尝试更换昵称、账号或筛选条件</view>
+    </view>
+
+    <!-- 确认弹窗 -->
+    <view wx:if="{{showConfirmDialog}}" class="dialog-mask" bindtap="closeDialog">
+      <view class="dialog-box" catchtap="preventBubble">
+        <view class="dialog-title">{{dialogTitle}}</view>
+        <view class="dialog-text">{{dialogContent}}</view>
+        <view class="dialog-actions">
+          <view class="tiny-btn" bindtap="closeDialog">{{dialogCancelText}}</view>
+          <view class="tiny-btn tiny-btn--primary" bindtap="confirmDialog">{{dialogConfirmText}}</view>
+        </view>
+      </view>
+    </view>
+
+  </view>
+
+  <!-- 底部导航 -->
+  <view class="bottom-nav" wx:if="{{currentView === 'userList' || currentView === 'emptyUser'}}">
+    <view class="nav-item" bindtap="goStats">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/stat.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">统计</view>
+    </view>
+    <view class="nav-item" bindtap="goGoods">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/product.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">商品</view>
+    </view>
+    <view class="nav-item nav-item--active" bindtap="goUsers">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/user-active.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">用户</view>
+    </view>
+    <view class="nav-item" bindtap="goSettings">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/setting.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">设置</view>
+    </view>
+  </view>
+</view>

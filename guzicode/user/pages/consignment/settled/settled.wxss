@@ -1,0 +1,70 @@
+@import "../../../user.wxss";
+
+.u-topbar {
+  align-items: center;
+  padding-right: env(safe-area-inset-right);
+  gap: 16rpx;
+}
+
+.title-wrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.settled-total {
+  height: 96rpx;
+  border-radius: 26rpx;
+  padding: 0 34rpx;
+  margin-bottom: 28rpx;
+  background: linear-gradient(145deg, #d8f4ef, #c9e8ff);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4b617a;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.settled-total text:last-child,
+.settle-amount {
+  color: #48a18e;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.settle-row {
+  min-height: 110rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 22rpx;
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+}
+
+.settle-icon {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 18rpx;
+  background: #d8f4ef;
+  color: #48a18e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+
+.settle-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.settle-title {
+  color: #26384f;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.manage-arrow {
+  color: #a3adbd;
+  font-size: 38rpx;
+}

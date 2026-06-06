@@ -1,0 +1,23 @@
+{
+  "envId": "your-env-id",
+  "collectionName": "material_expenses",
+  "description": "材料支出记录",
+  "schema": {
+    "_id": "string",
+    "itemName": "string",
+    "amount": "number",
+    "date": "string",
+    "note": "string",
+    "vouchers": "array",
+    "updatedAt": "date",
+    "createdAt": "date"
+  },
+  "indexes": [
+    { "keys": { "date": -1 }, "name": "date_index" },
+    { "keys": { "createdAt": -1 }, "name": "createdAt_index" }
+  ],
+  "permission": {
+    "read": true,
+    "write": true
+  }
+}

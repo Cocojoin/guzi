@@ -1,0 +1,1560 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>谷圈星社用户管理页面视觉预览</title>
+  <style>
+    :root {
+      --ink: #24364A;
+      --muted: #6C7F99;
+      --soft: #F2FAFF;
+      --blue: #B0DDFA;
+      --blue-deep: #4B84BF;
+      --pink: #FFD7E6;
+      --pink-deep: #E55472;
+      --line: rgba(217, 236, 248, 0.92);
+      --shadow: 0 18px 38px rgba(45, 76, 120, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(255, 215, 230, 0.42), transparent 26%),
+        radial-gradient(circle at 88% 12%, rgba(176, 221, 250, 0.52), transparent 28%),
+        linear-gradient(180deg, #F7FCFF 0%, #EEF8FF 48%, #FFF8FB 100%);
+      min-height: 100vh;
+    }
+
+    .preview-page {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .palette {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 0 12px 24px rgba(45, 76, 120, 0.08);
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.92);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+    }
+
+    .tab {
+      border: 0;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: transparent;
+      color: #60718A;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: var(--ink);
+      background: linear-gradient(180deg, #FFE2EC 0%, #CFE7FF 100%);
+      box-shadow: 0 8px 18px rgba(45, 76, 120, 0.12);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .phone-wrap {
+      position: sticky;
+      top: 20px;
+      display: grid;
+      place-items: center;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      padding: 14px;
+      background: #25344A;
+      box-shadow: 0 28px 58px rgba(30, 48, 72, 0.22);
+    }
+
+    .screen {
+      height: 100%;
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(180deg, #FCFEFF 0%, #F2FAFF 56%, #FFF8FB 100%);
+    }
+
+    .status {
+      height: 86px;
+      padding: 26px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+      position: relative;
+    }
+
+    .status::after {
+      content: "... 100%";
+      position: absolute;
+      right: 24px;
+      top: 58px;
+      min-width: 112px;
+      height: 34px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: rgba(36, 54, 74, 0.16);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: softIn 0.32s ease both;
+    }
+
+    @keyframes softIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page {
+      height: calc(100% - 86px);
+      padding: 0 10px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page.scroll-page {
+      padding-bottom: 12px;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0 12px;
+    }
+
+    .title {
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .back {
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: #557087;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(217, 236, 248, 0.9);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .icon-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-button {
+      width: 46px;
+      height: 46px;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      color: var(--blue-deep);
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .scroll {
+      height: calc(100% - 58px);
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+
+    .scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .search {
+      height: 46px;
+      display: grid;
+      grid-template-columns: 1fr 46px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .search-pill,
+    .search-btn {
+      border-radius: 17px;
+      display: flex;
+      align-items: center;
+      color: #8EA1B8;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .search-pill {
+      padding: 0 15px;
+    }
+
+    .search-btn {
+      justify-content: center;
+      color: var(--blue-deep);
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      color: #60718A;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .goods-filter-dropdowns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: -6px 0 12px;
+    }
+
+    .filter-menu {
+      padding: 7px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(217, 236, 248, 0.95);
+      box-shadow: 0 10px 20px rgba(45, 76, 120, 0.08);
+    }
+
+    .filter-menu-title {
+      padding: 0 4px 5px;
+      color: #8EA1B8;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .filter-menu-option {
+      min-height: 26px;
+      border-radius: 10px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #60718A;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .filter-menu-option.active {
+      color: #24435A;
+      background: #DFF2FF;
+    }
+
+    .filter-menu-option.active::after {
+      content: "✓";
+      color: #4B84BF;
+      font-weight: 900;
+    }
+
+    .card {
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.09);
+    }
+
+    .user-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .user-card {
+      padding: 13px;
+      display: grid;
+      grid-template-columns: 52px 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.48);
+    }
+
+    .user-name {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .user-meta {
+      margin-top: 4px;
+      color: #8493AA;
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .rate-pill,
+    .role-pill,
+    .status-pill {
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue-deep);
+      background: rgba(176, 221, 250, 0.28);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .role-pill.normal {
+      color: #7A6FB2;
+      background: rgba(201, 194, 255, 0.28);
+    }
+
+    .status-pill.off {
+      color: #718097;
+      background: rgba(148, 163, 184, 0.16);
+    }
+
+    .hero-user {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 14px;
+      align-items: center;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255, 226, 240, 0.62), transparent 36%),
+        linear-gradient(135deg, #FFFFFF 0%, #F3FBFF 52%, #FFF6FB 100%);
+      border-color: #D7ECFB;
+      box-shadow: 0 12px 24px rgba(45, 76, 120, 0.07);
+    }
+
+    .hero-user .avatar {
+      width: 76px;
+      height: 76px;
+      font-size: 24px;
+    }
+
+    .hero-name-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hero-name {
+      font-size: 20px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .stat {
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .stat-num {
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .stat-label {
+      margin-top: 4px;
+      color: #7A8AA0;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .info-card {
+      padding: 13px 14px;
+    }
+
+    .mini-title {
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .section-head .mini-title {
+      margin-bottom: 0;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tiny-btn {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue-deep);
+      background: rgba(176, 221, 250, 0.22);
+      border: 1px solid rgba(176, 221, 250, 0.76);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .tiny-btn.primary {
+      color: var(--ink);
+      background: linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+      border: 0;
+    }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(217, 236, 248, 0.72);
+      color: #718097;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .line:first-of-type {
+      border-top: 0;
+    }
+
+    .line strong {
+      color: var(--ink);
+      text-align: right;
+      font-weight: 900;
+    }
+
+    .switch-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding-top: 10px;
+    }
+
+    .switch {
+      width: 58px;
+      height: 30px;
+      border-radius: 999px;
+      padding: 3px;
+      background: linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    }
+
+    .switch::after {
+      content: "";
+      display: block;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      margin-left: auto;
+      background: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(45, 76, 120, 0.16);
+    }
+
+    .button {
+      height: 52px;
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 14px 28px rgba(176, 221, 250, 0.32);
+    }
+
+    .button.ghost {
+      color: var(--pink-deep);
+      background: rgba(255, 230, 239, 0.72);
+      border: 1px solid rgba(255, 199, 219, 0.82);
+      box-shadow: none;
+    }
+
+    .goods-card {
+      padding: 13px;
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 12px;
+      position: relative;
+    }
+
+    .thumb {
+      width: 68px;
+      height: 68px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .goods-title {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 900;
+    }
+
+    .goods-meta {
+      margin-top: 4px;
+      color: #68709A;
+      font-size: 11px;
+      line-height: 1.7;
+      font-weight: 800;
+    }
+
+    .goods-bottom {
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .price {
+      color: var(--pink-deep);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .select-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: #1F2940;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .bottom-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: 1fr 128px;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px 16px;
+      background: rgba(255, 255, 255, 0.94);
+      border-top: 1px solid var(--line);
+      box-shadow: 0 -12px 24px rgba(45, 76, 120, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .bottom-info {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .bottom-info span {
+      display: block;
+      margin-top: 3px;
+      color: #8493AA;
+      font-size: 10px;
+    }
+
+    .settle-summary {
+      padding: 14px;
+      background:
+        radial-gradient(circle at 92% 10%, rgba(255, 225, 238, 0.58), transparent 34%),
+        linear-gradient(135deg, #FFFFFF 0%, #F5FCFF 48%, #FFF7FB 100%);
+      border-color: #D7ECFB;
+      box-shadow: 0 12px 24px rgba(45, 76, 120, 0.07);
+    }
+
+    .money-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      color: #718097;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .money-row strong {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .money-row.payable strong {
+      color: var(--blue-deep);
+      font-size: 18px;
+    }
+
+    .input {
+      min-height: 42px;
+      border-radius: 16px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #9AA9BA;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .upload-tile {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #79A7C7;
+      background: rgba(242, 250, 255, 0.9);
+      border: 1px dashed rgba(121, 167, 199, 0.5);
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .upload-tile.filled {
+      color: #FFFFFF;
+      border: 0;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-weight: 900;
+    }
+
+    .filter-panel {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .filter-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .option {
+      min-height: 40px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      color: #60718A;
+      background: rgba(242, 250, 255, 0.86);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .option.active {
+      color: var(--ink);
+      background: #DFF2FF;
+      border-color: rgba(176, 221, 250, 0.95);
+    }
+
+    .form-row {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .form-row:first-child {
+      margin-top: 0;
+    }
+
+    .label {
+      color: #60718A;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .dialog-mask {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: end;
+      padding: 16px 10px 22px;
+      background: rgba(36, 54, 74, 0.28);
+      backdrop-filter: blur(10px);
+      z-index: 8;
+    }
+
+    .dialog {
+      padding: 18px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 22px 46px rgba(30, 48, 72, 0.22);
+    }
+
+    .dialog-title {
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .dialog-text {
+      margin-top: 8px;
+      color: #60718A;
+      font-size: 13px;
+      line-height: 1.7;
+      font-weight: 800;
+    }
+
+    .dialog-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .empty-state {
+      height: 360px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #7A8AA0;
+    }
+
+    .empty-mark {
+      width: 86px;
+      height: 86px;
+      margin: 0 auto 12px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .empty-title {
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .empty-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .record-card {
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .record-top {
+      display: flex;
+      justify-content: space-between;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .record-meta {
+      color: #7A8AA0;
+      font-size: 11px;
+      line-height: 1.6;
+      font-weight: 800;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: -10px;
+      right: -10px;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 9px 18px 14px;
+      background: rgba(255, 255, 255, 0.9);
+      border-top: 1px solid var(--line);
+      box-shadow: 0 -12px 28px rgba(45, 76, 120, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-item {
+      display: grid;
+      place-items: center;
+      gap: 4px;
+      color: #8C9BB0;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .nav-item.active {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .nav-icon {
+      width: 48px;
+      height: 30px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+    }
+
+    .nav-item.active .nav-icon {
+      background: linear-gradient(180deg, #FFE2EC 0%, #CFE7FF 100%);
+      box-shadow: 0 8px 18px rgba(45, 76, 120, 0.12);
+    }
+
+    .notes {
+      display: grid;
+      gap: 14px;
+    }
+
+    .note-card {
+      padding: 20px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 34px rgba(45, 76, 120, 0.1);
+    }
+
+    .note-card h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .note-card p,
+    .note-card div {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 920px) {
+      .topbar,
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .phone-wrap {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview-page">
+    <header class="topbar">
+      <div>
+        <h1>谷圈星社用户管理页面视觉预览</h1>
+        <p>基于用户管理需求文档，覆盖用户列表、详情、商品记录、结算和已结算记录。整体沿用注册登录的蓝粉轻二次元风格，管理端保持清晰、轻量、可扫读。</p>
+      </div>
+      <div class="palette" aria-label="主题色板">
+        <div class="swatch" style="background:#B0DDFA"></div>
+        <div class="swatch" style="background:#FFD7E6"></div>
+        <div class="swatch" style="background:#C9C2FF"></div>
+        <div class="swatch" style="background:#F7FCFF"></div>
+        <div class="swatch" style="background:#24364A"></div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="页面切换">
+      <button class="tab active" data-target="userList">用户列表</button>
+      <button class="tab" data-target="userDetail">用户详情</button>
+      <button class="tab" data-target="userDetailSaved">详情已保存</button>
+      <button class="tab" data-target="userGoods">用户商品</button>
+      <button class="tab" data-target="userGoodsFilters">商品筛选下拉</button>
+      <button class="tab" data-target="soldGoods">待结算</button>
+      <button class="tab" data-target="settlement">结算</button>
+      <button class="tab" data-target="settledList">已结算</button>
+      <button class="tab" data-target="settledDetail">结算详情</button>
+      <button class="tab" data-target="confirmDialog">确认弹窗</button>
+      <button class="tab" data-target="emptyUser">空态</button>
+    </nav>
+
+    <section class="workspace">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="status">
+              <span>9:41</span>
+            </div>
+
+            <section class="view page active" id="userList">
+              <div class="page-head">
+                <div>
+                  <div class="title">用户管理</div>
+                </div>
+              </div>
+              <div class="search">
+                <div class="search-pill">搜索用户昵称 / 账号</div>
+                <div class="search-btn">⌕</div>
+              </div>
+              <div class="filters">
+                <span>用户角色 ▼</span>
+                <span>注册时间 ▼</span>
+              </div>
+              <div class="user-list">
+                <article class="card user-card">
+                  <div class="avatar">桃</div>
+                  <div>
+                    <div class="user-name">桃桃寄售</div>
+                    <div class="user-meta">账号 taotao88 · 寄售用户<br>注册 2026-05-18</div>
+                  </div>
+                  <div class="rate-pill">10%</div>
+                </article>
+                <article class="card user-card">
+                  <div class="avatar">星</div>
+                  <div>
+                    <div class="user-name">星社补货组</div>
+                    <div class="user-meta">账号 hoshi24 · 寄售用户<br>寄售权限已开启</div>
+                  </div>
+                  <div class="rate-pill">12%</div>
+                </article>
+                <article class="card user-card">
+                  <div class="avatar">葵</div>
+                  <div>
+                    <div class="user-name">小葵收藏家</div>
+                    <div class="user-meta">账号 aoi777 · 普通用户<br>暂未开启寄售</div>
+                  </div>
+                  <div class="role-pill normal">普通</div>
+                </article>
+                <article class="card user-card">
+                  <div class="avatar">月</div>
+                  <div>
+                    <div class="user-name">月岛前线</div>
+                    <div class="user-meta">账号 tsuki09 · 寄售用户<br>寄售权限已停用</div>
+                  </div>
+                  <div class="status-pill off">停用</div>
+                </article>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-item"><div class="nav-icon">▥</div><div>统计</div></div>
+                <div class="nav-item"><div class="nav-icon">◇</div><div>商品</div></div>
+                <div class="nav-item active"><div class="nav-icon">◉</div><div>用户</div></div>
+                <div class="nav-item"><div class="nav-icon">⚙</div><div>设置</div></div>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="userDetail">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">用户详情</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="card hero-user">
+                  <div class="avatar">桃</div>
+                  <div>
+                    <div class="hero-name-line">
+                      <div class="hero-name">桃桃寄售</div>
+                      <span class="role-pill">寄售</span>
+                    </div>
+                    <div class="user-meta">账号 taotao88<br>联系方式：taotao_shop</div>
+                  </div>
+                </div>
+                <div class="stats">
+                  <div class="card stat">
+                    <div class="stat-num">36</div>
+                    <div class="stat-label">寄售商品</div>
+                  </div>
+                  <div class="card stat">
+                    <div class="stat-num">8</div>
+                    <div class="stat-label">待结算</div>
+                  </div>
+                  <div class="card stat">
+                    <div class="stat-num">21</div>
+                    <div class="stat-label">已结算</div>
+                  </div>
+                </div>
+                <div class="card info-card">
+                  <div class="section-head">
+                    <div class="mini-title">用户信息</div>
+                    <div class="edit-actions">
+                      <div class="tiny-btn">取消</div>
+                      <div class="tiny-btn primary">保存</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="label">昵称</span>
+                    <div class="input"><strong>桃桃寄售</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="label">联系方式</span>
+                    <div class="input"><strong>taotao_shop</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="label">抽成比例</span>
+                    <div class="input"><strong>10</strong><span>%</span></div>
+                  </div>
+                </div>
+                <div class="card info-card">
+                  <div class="mini-title">寄售权限</div>
+                  <div class="switch-row">
+                    <div>
+                      <div class="user-name">允许提交寄售</div>
+                      <div class="user-meta">关闭后，已上架商品会自动下架</div>
+                    </div>
+                    <div class="switch"></div>
+                  </div>
+                </div>
+                <button class="button ghost">重置密码</button>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="userDetailSaved">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">用户详情</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="card hero-user">
+                  <div class="avatar">桃</div>
+                  <div>
+                    <div class="hero-name-line">
+                      <div class="hero-name">桃桃寄售</div>
+                      <span class="role-pill">寄售</span>
+                    </div>
+                    <div class="user-meta">账号 taotao88<br>联系方式：taotao_shop</div>
+                  </div>
+                </div>
+                <div class="stats">
+                  <div class="card stat">
+                    <div class="stat-num">36</div>
+                    <div class="stat-label">寄售商品</div>
+                  </div>
+                  <div class="card stat">
+                    <div class="stat-num">8</div>
+                    <div class="stat-label">待结算</div>
+                  </div>
+                  <div class="card stat">
+                    <div class="stat-num">21</div>
+                    <div class="stat-label">已结算</div>
+                  </div>
+                </div>
+                <div class="card info-card">
+                  <div class="section-head">
+                    <div class="mini-title">用户信息</div>
+                    <div class="edit-actions">
+                      <div class="tiny-btn primary">编辑</div>
+                    </div>
+                  </div>
+                  <div class="line"><span>昵称</span><strong>桃桃寄售</strong></div>
+                  <div class="line"><span>联系方式</span><strong>taotao_shop</strong></div>
+                  <div class="line"><span>抽成比例</span><strong>10%</strong></div>
+                </div>
+                <div class="card info-card">
+                  <div class="mini-title">寄售权限</div>
+                  <div class="switch-row">
+                    <div>
+                      <div class="user-name">允许提交寄售</div>
+                      <div class="user-meta">关闭后，已上架商品会自动下架</div>
+                    </div>
+                    <div class="switch"></div>
+                  </div>
+                </div>
+                <button class="button ghost">重置密码</button>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="userGoods">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">桃桃寄售</div>
+                  <div class="subtitle">全部寄售商品 · 36 件</div>
+                </div>
+              </div>
+              <div class="filters">
+                <span>所有状态 ▼</span>
+                <span>类型 ▼</span>
+                <span>时间 ▼</span>
+              </div>
+              <div class="goods-filter-dropdowns">
+                <div class="filter-menu">
+                  <div class="filter-menu-title">所有状态</div>
+                  <div class="filter-menu-option active">全部状态</div>
+                  <div class="filter-menu-option">已上架</div>
+                  <div class="filter-menu-option">已下架</div>
+                  <div class="filter-menu-option">已售出</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">类型</div>
+                  <div class="filter-menu-option active">全部类型</div>
+                  <div class="filter-menu-option">镭射票</div>
+                  <div class="filter-menu-option">拍立得</div>
+                  <div class="filter-menu-option">吧唧</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">时间</div>
+                  <div class="filter-menu-option active">最近全部</div>
+                  <div class="filter-menu-option">近 7 天</div>
+                  <div class="filter-menu-option">近 30 天</div>
+                  <div class="filter-menu-option">更早</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <article class="card goods-card">
+                  <div class="thumb">✦</div>
+                  <div>
+                    <div class="goods-title">流萤 · 星穹铁道镭射票</div>
+                    <div class="goods-meta">IP：崩坏星穹铁道<br>数量 2 · 类型：镭射票</div>
+                    <div class="goods-bottom">
+                      <div class="price">¥68</div>
+                      <span class="status-pill">已上架</span>
+                    </div>
+                  </div>
+                </article>
+                <article class="card goods-card">
+                  <div class="thumb">✧</div>
+                  <div>
+                    <div class="goods-title">芙宁娜 · 周边拍立得</div>
+                    <div class="goods-meta">IP：原神<br>数量 1 · 类型：拍立得</div>
+                    <div class="goods-bottom">
+                      <div class="price">¥45</div>
+                      <span class="status-pill off">已下架</span>
+                    </div>
+                  </div>
+                </article>
+                <article class="card goods-card">
+                  <div class="thumb">♡</div>
+                  <div>
+                    <div class="goods-title">宫侑 · 稻荷崎吧唧</div>
+                    <div class="goods-meta">IP：排球少年<br>数量 1 · 类型：吧唧</div>
+                    <div class="goods-bottom">
+                      <div class="price">¥45</div>
+                      <span class="status-pill">已售出</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="userGoodsFilters">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">桃桃寄售</div>
+                  <div class="subtitle">商品筛选下拉状态</div>
+                </div>
+              </div>
+              <div class="filters">
+                <span>所有状态 ▼</span>
+                <span>类型 ▼</span>
+                <span>时间 ▼</span>
+              </div>
+              <div class="goods-filter-dropdowns">
+                <div class="filter-menu">
+                  <div class="filter-menu-title">所有状态</div>
+                  <div class="filter-menu-option">全部状态</div>
+                  <div class="filter-menu-option active">已上架</div>
+                  <div class="filter-menu-option">已下架</div>
+                  <div class="filter-menu-option">已售出</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">类型</div>
+                  <div class="filter-menu-option">全部类型</div>
+                  <div class="filter-menu-option active">镭射票</div>
+                  <div class="filter-menu-option">拍立得</div>
+                  <div class="filter-menu-option">吧唧</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">时间</div>
+                  <div class="filter-menu-option">最近全部</div>
+                  <div class="filter-menu-option active">近 30 天</div>
+                  <div class="filter-menu-option">近 7 天</div>
+                  <div class="filter-menu-option">更早</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <article class="card goods-card">
+                  <div class="thumb">✦</div>
+                  <div>
+                    <div class="goods-title">流萤 · 星穹铁道镭射票</div>
+                    <div class="goods-meta">IP：崩坏星穹铁道<br>数量 2 · 类型：镭射票</div>
+                    <div class="goods-bottom">
+                      <div class="price">¥68</div>
+                      <span class="status-pill">已上架</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="view page" id="soldGoods">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">待结算商品</div>
+                  <div class="subtitle">桃桃寄售 · 已售出 8 件</div>
+                </div>
+              </div>
+              <div class="scroll" style="height:calc(100% - 118px); padding-bottom:84px;">
+                <article class="card goods-card">
+                  <div class="thumb">✦</div>
+                  <div>
+                    <div class="goods-title">流萤 · 星旅票</div>
+                    <div class="goods-meta">售出数量 1 · 售出抽成 10%</div>
+                    <div class="goods-bottom">
+                      <div class="price">¥68</div>
+                      <div class="select-dot">✓</div>
+                    </div>
+                  </div>
+                </article>
+                <article class="card goods-card">
+                  <div class="thumb">♡</div>
+                  <div>
+                    <div class="goods-title">宫侑 · 稻荷崎吧唧</div>
+                    <div class="goods-meta">售出数量 2 · 售出抽成 10%</div>
+                    <div class="goods-bottom">
+                      <div class="price">¥90</div>
+                      <div class="select-dot">✓</div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div class="bottom-bar">
+                <div class="bottom-info">已选 2 件<span>合计寄售价 ¥158</span></div>
+                <div class="button">结算</div>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="settlement">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">结算</div>
+                  <div class="subtitle">桃桃寄售 · 本次 2 件商品</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="card hero-user">
+                  <div class="avatar">桃</div>
+                  <div>
+                    <div class="hero-name">桃桃寄售</div>
+                    <div class="user-meta">抽成按售出时锁定比例计算</div>
+                  </div>
+                </div>
+                <article class="card goods-card">
+                  <div class="thumb">✦</div>
+                  <div>
+                    <div class="goods-title">流萤 · 星旅票</div>
+                    <div class="goods-meta">¥68 × 1 · 抽成 10%</div>
+                  </div>
+                </article>
+                <article class="card goods-card">
+                  <div class="thumb">♡</div>
+                  <div>
+                    <div class="goods-title">宫侑 · 稻荷崎吧唧</div>
+                    <div class="goods-meta">¥45 × 2 · 抽成 10%</div>
+                  </div>
+                </article>
+                <div class="card settle-summary">
+                  <div class="mini-title">金额汇总</div>
+                  <div class="money-row"><span>商品总额</span><strong>¥158</strong></div>
+                  <div class="money-row"><span>平台抽成</span><strong>¥15.8</strong></div>
+                  <div class="money-row payable"><span>应付寄售用户</span><strong>¥142.2</strong></div>
+                </div>
+                <div class="card info-card">
+                  <div class="mini-title">商品实际收入</div>
+                  <div class="input"><strong>¥170</strong><span>仅平台统计用</span></div>
+                </div>
+                <div class="card info-card">
+                  <div class="mini-title">结算凭证</div>
+                  <div class="upload-grid">
+                    <div class="upload-tile filled">凭</div>
+                    <div class="upload-tile">＋</div>
+                    <div class="upload-tile">＋</div>
+                  </div>
+                </div>
+                <button class="button">提交结算</button>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="settledList">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">已结算记录</div>
+                  <div class="subtitle">桃桃寄售 · 历史结算</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <article class="card record-card">
+                  <div class="record-top"><span>2026-05-28</span><strong>共 5 件</strong></div>
+                  <div class="record-meta">商品总额 ¥420 · 抽成 ¥42 · 应付 ¥378</div>
+                </article>
+                <article class="card record-card">
+                  <div class="record-top"><span>2026-05-21</span><strong>共 3 件</strong></div>
+                  <div class="record-meta">商品总额 ¥266 · 抽成 ¥26.6 · 应付 ¥239.4</div>
+                </article>
+                <article class="card record-card">
+                  <div class="record-top"><span>2026-05-12</span><strong>共 8 件</strong></div>
+                  <div class="record-meta">商品总额 ¥612 · 抽成 ¥61.2 · 应付 ¥550.8</div>
+                </article>
+              </div>
+            </section>
+
+            <section class="view page scroll-page" id="settledDetail">
+              <div class="page-head">
+                <div class="back">‹</div>
+                <div style="flex:1">
+                  <div class="title">结算详情</div>
+                  <div class="subtitle">2026-05-28 · 共 5 件商品</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <article class="card goods-card">
+                  <div class="thumb">✦</div>
+                  <div>
+                    <div class="goods-title">流萤 · 星旅票</div>
+                    <div class="goods-meta">¥68 × 1 · 已结算</div>
+                  </div>
+                </article>
+                <article class="card goods-card">
+                  <div class="thumb">♡</div>
+                  <div>
+                    <div class="goods-title">宫侑 · 稻荷崎吧唧</div>
+                    <div class="goods-meta">¥45 × 2 · 已结算</div>
+                  </div>
+                </article>
+                <div class="card settle-summary">
+                  <div class="mini-title">金额汇总</div>
+                  <div class="money-row"><span>商品总额</span><strong>¥420</strong></div>
+                  <div class="money-row"><span>抽成金额</span><strong>¥42</strong></div>
+                  <div class="money-row"><span>商品实际收入</span><strong>¥438</strong></div>
+                  <div class="money-row payable"><span>已付寄售用户</span><strong>¥378</strong></div>
+                </div>
+                <div class="card info-card">
+                  <div class="mini-title">结算凭证</div>
+                  <div class="upload-grid">
+                    <div class="upload-tile filled">1</div>
+                    <div class="upload-tile filled">2</div>
+                    <div class="upload-tile filled">3</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view page" id="confirmDialog">
+              <div class="page-head">
+                <div>
+                  <div class="title">确认操作</div>
+                  <div class="subtitle">重置密码 / 寄售权限二次确认</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="card hero-user">
+                  <div class="avatar">桃</div>
+                  <div>
+                    <div class="hero-name">桃桃寄售</div>
+                    <div class="user-meta">账号 taotao88 · 当前寄售权限开启</div>
+                  </div>
+                </div>
+                <div class="card info-card">
+                  <div class="mini-title">当前页面内容</div>
+                  <div class="line"><span>操作</span><strong>关闭寄售权限</strong></div>
+                  <div class="line"><span>影响</span><strong>已上架商品自动下架</strong></div>
+                </div>
+              </div>
+              <div class="dialog-mask">
+                <div class="dialog">
+                  <div class="dialog-title">关闭寄售权限？</div>
+                  <div class="dialog-text">关闭后，该用户已上架商品将全部自动下架，且无法在用户端提交新的寄售。是否关闭？</div>
+                  <div class="dialog-actions">
+                    <button class="button ghost">取消</button>
+                    <button class="button">确认关闭</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view page" id="emptyUser">
+              <div class="page-head">
+                <div>
+                  <div class="title">用户管理</div>
+                  <div class="subtitle">搜索结果为空状态</div>
+                </div>
+              </div>
+              <div class="search">
+                <div class="search-pill">搜索用户昵称 / 账号</div>
+                <div class="search-btn">⌕</div>
+              </div>
+              <div class="card empty-state">
+                <div>
+                  <div class="empty-mark">空</div>
+                  <div class="empty-title">未找到匹配结果</div>
+                  <div class="empty-sub">换个昵称或账号再试试</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <div class="note-card">
+          <h2>设计范围</h2>
+          <div>用户列表、用户详情、用户商品记录、已售出待结算列表、结算页、已结算记录、结算记录详情。</div>
+        </div>
+        <div class="note-card">
+          <h2>风格处理</h2>
+          <div>延续注册登录的浅蓝柔粉、白色玻璃卡片和轻量淡入；管理信息保留密度，但用卡片和标签把重点收清楚。</div>
+        </div>
+        <div class="note-card">
+          <h2>需求映射</h2>
+          <div>抽成比例、寄售权限、重置密码、商品数量入口、结算金额、实际收入和凭证上传都已在页面里表现，后续可继续细化弹窗状态。</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const views = document.querySelectorAll(".view");
+
+    function showView(target) {
+      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.target === target));
+      views.forEach((view) => view.classList.toggle("active", view.id === target));
+    }
+
+    document.querySelectorAll("[data-target]").forEach((item) => {
+      item.addEventListener("click", () => showView(item.dataset.target));
+    });
+  </script>
+</body>
+</html>

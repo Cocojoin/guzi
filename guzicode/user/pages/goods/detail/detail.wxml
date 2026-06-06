@@ -1,0 +1,60 @@
+<view class="u-page detail-page" wx:if="{{product}}">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="u-top-title">商品详情</view>
+    </view>
+
+    <view class="hero-photo" bindtap="previewImage">
+      <image wx:if="{{product.coverImage}}" class="hero-img" src="{{product.coverImage}}" mode="widthFix" show-menu-by-longpress="{{false}}" />
+    </view>
+
+    <view class="u-card detail-head">
+      <view>
+        <view class="detail-title">{{product.title}}</view>
+        <view class="detail-sub">{{product.ip}} · {{product.typeLabel}}</view>
+        <view class="detail-badges">
+          <text class="badge {{product.qualityClassName === 'quality-badge--flaw' ? 'badge-flaw' : 'badge-clean'}}">{{product.qualityLabel}}</text>
+          <text class="badge status-pill--up">剩余 {{product.remainingCount}} 件</text>
+          <text class="badge {{product.statusClassName}}">{{product.statusLabel}}</text>
+        </view>
+      </view>
+      <view class="detail-price">{{product.priceText}}</view>
+    </view>
+
+    <view class="u-card spec-card">
+      <view class="spec-row"><text>IP</text><text>{{product.ip}}</text></view>
+      <view class="spec-row"><text>角色</text><text>{{product.role}}</text></view>
+      <view class="spec-row"><text>系列</text><text>{{product.series}}</text></view>
+      <view class="spec-row"><text>类型</text><text>{{product.typeLabel}}</text></view>
+      <view class="spec-row"><text>状态</text><text>{{product.statusLabel}}</text></view>
+    </view>
+
+    <view class="u-card desc-card">
+      <view class="section-title">商品描述</view>
+      <view class="desc-text">{{product.remark || "卖家暂未填写商品描述"}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{editable && product.displayStatus === 'down'}}" class="detail-actions">
+    <button class="action-btn edit-btn" bindtap="goEdit">编辑</button>
+    <button class="action-btn delete-btn" bindtap="deleteProduct">删除</button>
+  </view>
+
+</view>
+
+<view class="u-page detail-page" wx:elif="{{invalid}}">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="u-top-title">商品详情</view>
+    </view>
+
+    <view class="u-card empty-card empty-card--market">
+      <view class="empty-emoji">🚫</view>
+      <view class="empty-title">{{invalidText}}</view>
+      <view class="empty-desc">{{invalidDesc}}</view>
+      <button class="primary-btn invalid-btn" bindtap="backToList">返回商品列表</button>
+    </view>
+  </view>
+</view>

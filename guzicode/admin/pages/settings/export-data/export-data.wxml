@@ -1,0 +1,61 @@
+<view class="detail-shell">
+  <view class="detail-page">
+    <view class="statusbar-spacer"></view>
+
+    <view class="page-topbar export-data-header">
+      <view class="back-button" bindtap="handleBack"></view>
+      <view class="page-title">导出数据</view>
+    </view>
+
+    <view class="section-label">导出范围 *</view>
+    <view
+      wx:for="{{items}}"
+      wx:key="key"
+      class="export-card {{item.checked ? 'export-card--active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="toggleItem"
+    >
+      <view class="checkmark {{item.checked ? 'checkmark--active' : ''}}">{{item.checked ? '✓' : ''}}</view>
+      <view class="export-main">
+        <view class="export-title">{{item.title}}</view>
+        <view class="export-subtitle">{{item.subtitle}}</view>
+      </view>
+    </view>
+
+    <view class="section-label section-label--spaced">时间范围</view>
+    <view class="range-row">
+      <view
+        wx:for="{{rangeOptions}}"
+        wx:key="*this"
+        class="range-chip {{selectedRange === item ? 'range-chip--active' : ''}}"
+        data-value="{{item}}"
+        bindtap="selectRange"
+      >
+        {{item}}
+      </view>
+    </view>
+
+    <view wx:if="{{selectedRange === '自定义'}}" class="custom-card">
+      <view class="custom-row">
+        <view class="custom-label">开始日期</view>
+        <picker mode="date" value="{{customRange.start}}" bindchange="onStartDateChange">
+          <view class="custom-value">{{customRange.start || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="custom-row">
+        <view class="custom-label">结束日期</view>
+        <picker mode="date" value="{{customRange.end}}" bindchange="onEndDateChange">
+          <view class="custom-value">{{customRange.end || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="format-card">
+      <view class="format-title">导出格式</view>
+      <view class="format-tag">{{exportFormat}}</view>
+    </view>
+
+    <button class="primary-btn" bindtap="handleExport">导出数据（{{selectedCount}} 项）</button>
+    <view class="footer-tip">文件生成后将自动下载至本地</view>
+  </view>
+</view>

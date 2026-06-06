@@ -1,0 +1,159 @@
+<view class="upload-shell">
+  <view class="upload-page">
+    <view class="statusbar-spacer"></view>
+
+    <!-- 顶部导航 -->
+    <view class="topbar">
+      <view class="back-button" bindtap="goBack"></view>
+      <view class="page-title">编辑商品</view>
+    </view>
+
+    <!-- 照片上传 -->
+    <view class="form-card">
+      <view class="card-label">商品照片 <text class="required">*</text></view>
+      <view class="photo-grid">
+        <block wx:for="{{form.images}}" wx:key="index">
+          <view class="photo-item" data-index="{{index}}">
+            <image class="photo-img" src="{{item}}" mode="aspectFill" bindtap="previewImage" bindlongpress="onPhotoLongPress" data-index="{{index}}" />
+            <view wx:if="{{index === 0}}" class="photo-cover-tag">封面</view>
+            <view class="photo-delete-btn" data-index="{{index}}" catchtap="deletePhoto"></view>
+          </view>
+        </block>
+        <view wx:if="{{form.images.length < 9}}" class="photo-item photo-add" bindtap="choosePhoto">
+          <view class="photo-add-icon"></view>
+        </view>
+      </view>
+      <view class="photo-hint">{{form.images.length}} / 9 · 单张 ≤ 5M</view>
+    </view>
+
+    <!-- 商品信息 -->
+    <view class="form-card">
+      <!-- 寄售用户（独占一行） -->
+      <view class="form-field">
+        <view class="card-label">寄售用户 <text class="required">*</text></view>
+        <picker class="owner-picker" mode="selector" range="{{ownerPickerOptions}}" value="{{ownerIndex}}" bindchange="onOwnerChange">
+          <view class="field-input picker-input {{form.owner ? '' : 'is-placeholder'}}">
+            <text>{{form.owner || ownerPickerOptions[0]}}</text>
+            <view class="picker-arrow-btn"></view>
+          </view>
+        </picker>
+        <view wx:if="{{errors.owner}}" class="error-inline">{{errors.owner}}</view>
+      </view>
+
+      <!-- IP + 角色 并排 -->
+      <view class="field-row">
+        <view class="field-col">
+          <view class="card-label">IP <text class="required">*</text></view>
+          <view class="field-input">
+            <input class="field-input-text" placeholder="IP 名称" placeholder-class="placeholder" maxlength="12" value="{{form.ip}}" bindinput="onFieldInput" data-field="ip" />
+          </view>
+          <view wx:if="{{errors.ip}}" class="error-inline">{{errors.ip}}</view>
+        </view>
+        <view class="field-col">
+          <view class="card-label">角色 <text class="required">*</text></view>
+          <view class="field-input">
+            <input class="field-input-text" placeholder="角色名称" placeholder-class="placeholder" maxlength="12" value="{{form.role}}" bindinput="onFieldInput" data-field="role" />
+          </view>
+          <view wx:if="{{errors.role}}" class="error-inline">{{errors.role}}</view>
+        </view>
+      </view>
+
+      <!-- 系列（独占一行） -->
+      <view class="form-field">
+        <view class="card-label">系列 <text class="required">*</text></view>
+        <view class="field-input">
+          <input class="field-input-text" placeholder="输入系列名称" placeholder-class="placeholder" maxlength="12" value="{{form.series}}" bindinput="onFieldInput" data-field="series" />
+        </view>
+        <view wx:if="{{errors.series}}" class="error-inline">{{errors.series}}</view>
+      </view>
+
+      <!-- 类型（独占一行） -->
+      <view class="form-field">
+        <view class="card-label">类型 <text class="required">*</text></view>
+        <view class="field-dropdown {{activeDropdown === 'type' ? 'field-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="type">
+          <text class="field-dropdown-text">{{form.type}}</text>
+          <text class="field-dropdown-arrow {{activeDropdown === 'type' ? 'field-dropdown-arrow--up' : ''}}">▼</text>
+        </view>
+        <view wx:if="{{activeDropdown === 'type'}}" class="dropdown-panel">
+          <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+          <view class="dropdown-panel-content">
+            <view class="dropdown-option {{form.type === item ? 'dropdown-option--active' : ''}}" wx:for="{{typeOptions}}" wx:key="index" data-value="{{item}}" bindtap="onTypeSelect">
+              <text>{{item}}</text>
+              <text wx:if="{{form.type === item}}" class="dropdown-check">✓</text>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{form.type === '自定义'}}" class="custom-wrap">
+          <view class="field-input">
+            <input class="field-input-text" placeholder="请输入自定义类型" placeholder-class="placeholder" maxlength="12" value="{{form.customType}}" bindinput="onFieldInput" data-field="customType" />
+          </view>
+          <view wx:if="{{errors.customType}}" class="error-inline">{{errors.customType}}</view>
+        </view>
+      </view>
+
+      <!-- 数量 + 价格 并排 -->
+      <view class="field-row">
+        <view class="field-col">
+          <view class="card-label">数量 <text class="required">*</text></view>
+          <view class="field-input">
+            <input class="field-input-text" type="number" placeholder="数量" placeholder-class="placeholder" value="{{form.totalQuantity}}" bindinput="onFieldInput" data-field="totalQuantity" />
+          </view>
+          <view wx:if="{{errors.totalQuantity}}" class="error-inline">{{errors.totalQuantity}}</view>
+        </view>
+        <view class="field-col">
+          <view class="card-label">价格 <text class="required">*</text></view>
+          <view class="field-input">
+            <input class="field-input-text" type="digit" placeholder="价格" placeholder-class="placeholder" value="{{form.price}}" bindinput="onFieldInput" data-field="price" />
+          </view>
+          <view wx:if="{{errors.price}}" class="error-inline">{{errors.price}}</view>
+        </view>
+      </view>
+
+      <!-- 质量（独占一行） -->
+      <view class="form-field">
+        <view class="card-label">质量 <text class="required">*</text></view>
+        <view class="seg-row">
+          <view class="seg-item {{form.quality === 'flaw' ? 'seg-item--active' : ''}}" data-value="flaw" bindtap="chooseQuality">有瑕</view>
+          <view class="seg-item {{form.quality === 'clean' ? 'seg-item--active' : ''}}" data-value="clean" bindtap="chooseQuality">无暇</view>
+        </view>
+        <view wx:if="{{errors.quality}}" class="error-inline">{{errors.quality}}</view>
+      </view>
+
+      <!-- 购买记录（独占一行） -->
+      <view class="form-field">
+        <view class="card-label">购买记录 <text class="required">*</text></view>
+        <view class="seg-row">
+          <view class="seg-item {{form.purchaseRecord === '有' ? 'seg-item--active' : ''}}" data-value="有" bindtap="choosePurchaseRecord">有</view>
+          <view class="seg-item {{form.purchaseRecord === '无' ? 'seg-item--active' : ''}}" data-value="无" bindtap="choosePurchaseRecord">无</view>
+        </view>
+        <view wx:if="{{errors.purchaseRecord}}" class="error-inline">{{errors.purchaseRecord}}</view>
+      </view>
+
+      <!-- 商品状态（独占一行） -->
+      <view class="form-field">
+        <view class="card-label">商品状态 <text class="required">*</text></view>
+        <view class="seg-row">
+          <view class="seg-item {{form.status === 'down' ? 'seg-item--active' : ''}}" data-value="down" bindtap="chooseStatus">已下架</view>
+          <view class="seg-item {{form.status === 'up' ? 'seg-item--active' : ''}}" data-value="up" bindtap="chooseStatus">已上架</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 备注 -->
+    <view class="form-card">
+      <view class="card-label-row">
+        <view class="card-label">备注</view>
+        <view class="char-count">{{form.remark.length}} / 200</view>
+      </view>
+      <view class="textarea-wrap">
+        <textarea class="remark-textarea" placeholder="可填写瑕疵、包装、到货说明" placeholder-class="placeholder" maxlength="200" value="{{form.remark}}" bindinput="onFieldInput" data-field="remark"></textarea>
+      </view>
+      <view wx:if="{{errors.remark}}" class="error-inline">{{errors.remark}}</view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="submit-wrap">
+      <button class="submit-btn" bindtap="handleSubmit">保存修改</button>
+    </view>
+  </view>
+</view>

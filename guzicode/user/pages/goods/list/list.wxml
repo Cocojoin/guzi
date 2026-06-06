@@ -1,0 +1,103 @@
+<view class="u-page goods-list-page">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="u-top-title">{{searchMode ? '搜索' : '谷子集市'}}</view>
+    </view>
+
+    <view class="search-shell">
+      <view class="u-search {{searchMode ? 'u-search--focus' : ''}}">
+        <text class="u-search-icon">⌕</text>
+        <input class="u-search-input" placeholder="搜索 IP / 角色 / 系列名" placeholder-class="u-placeholder" value="{{keyword}}" bindfocus="onSearchFocus" bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search" adjust-position="{{false}}" />
+        <view wx:if="{{searchMode && keyword}}" class="search-clear" catchtap="clearKeyword">×</view>
+      </view>
+      <view wx:if="{{searchMode}}" class="search-btn" catchtap="onSearchConfirm">搜索</view>
+    </view>
+
+    <view wx:if="{{!searchMode}}" class="filter-panel">
+      <view class="filter-row">
+        <view class="filter-dropdown {{activeDropdown === 'role' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="role">
+          <text class="filter-dropdown-text">{{roleOptions[roleIndex]}}</text>
+          <text class="filter-arrow {{activeDropdown === 'role' ? 'filter-arrow--up' : ''}}">▼</text>
+        </view>
+        <view class="filter-dropdown {{activeDropdown === 'ip' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="ip">
+          <text class="filter-dropdown-text">{{ipOptions[ipIndex]}}</text>
+          <text class="filter-arrow {{activeDropdown === 'ip' ? 'filter-arrow--up' : ''}}">▼</text>
+        </view>
+      </view>
+
+      <view wx:if="{{activeDropdown === 'role'}}" class="dropdown-panel">
+        <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+        <view class="dropdown-panel-content">
+          <view class="dropdown-option {{roleIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{roleOptions}}" wx:key="index" data-key="role" data-index="{{index}}" bindtap="onDropdownSelect">
+            <text>{{item}}</text>
+            <text wx:if="{{roleIndex === index}}" class="dropdown-check">✓</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{activeDropdown === 'ip'}}" class="dropdown-panel">
+        <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+        <view class="dropdown-panel-content">
+          <view class="dropdown-option {{ipIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{ipOptions}}" wx:key="index" data-key="ip" data-index="{{index}}" bindtap="onDropdownSelect">
+            <text>{{item}}</text>
+            <text wx:if="{{ipIndex === index}}" class="dropdown-check">✓</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{searchMode && !showResult}}" class="search-info">
+      <view wx:if="{{searchHistory && searchHistory.length}}" class="history-section">
+        <view class="section-header">
+          <text class="section-title">搜索历史</text>
+          <text class="clear-history" catchtap="clearHistory">清空</text>
+        </view>
+        <view class="history-tags">
+          <view class="tag-pill" wx:for="{{searchHistory}}" wx:key="*this" data-keyword="{{item}}" bindtap="useKeyword">{{item}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{hotTerms && hotTerms.length}}" class="hot-section">
+        <view class="section-header">
+          <text class="section-title">热门IP</text>
+        </view>
+        <view class="hot-tags">
+          <view class="tag-pill tag-pill--hot" wx:for="{{hotTerms}}" wx:key="*this" data-keyword="{{item}}" bindtap="useKeyword">{{item}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{(!searchMode || (searchMode && showResult))}}" class="goods-list">
+      <view wx:if="{{loading}}" class="list-refresh-tip">加载中…</view>
+      <block wx:else>
+        <view wx:if="{{!products || products.length === 0}}" class="empty-card">
+          <view class="empty-title">{{searchMode ? '未找到相关商品' : '暂无商品'}}</view>
+          <view wx:if="{{searchMode}}" class="empty-desc">换个关键词试试</view>
+        </view>
+
+        <block wx:else>
+          <view class="goods-card u-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+            <view class="goods-thumb">
+              <image class="goods-img" src="{{item.picture}}" mode="aspectFill" />
+              <view wx:if="{{item.displayStatus === 'sold'}}" class="badge badge-flaw">已售</view>
+              <view wx:if="{{item.displayStatus === 'settled'}}" class="badge badge-clean">已结算</view>
+            </view>
+            <view class="goods-body">
+              <view class="goods-title">{{item.title}}</view>
+              <view class="goods-meta">{{item.ip}} · {{item.role}}</view>
+              <view class="goods-price">{{item.priceText}}</view>
+            </view>
+            <view class="goods-side">
+              <view class="status-pill {{item.statusClassName}}">{{item.statusLabel}}</view>
+            </view>
+          </view>
+        </block>
+      </block>
+
+      <view wx:if="{{!loading && products && products.length && hasLoaded}}" class="end-line">
+        <text>— 没有更多了 —</text>
+      </view>
+    </view>
+  </view>
+</view>

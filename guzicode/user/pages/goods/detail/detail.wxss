@@ -1,0 +1,153 @@
+@import "../../../user.wxss";
+
+.detail-page {
+  overflow: auto;
+  padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 230, 0.5), transparent 22%),
+    radial-gradient(circle at right 25%, rgba(201, 194, 255, 0.5), transparent 20%),
+    linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%);
+}
+
+.detail-page .u-topbar {
+  padding-right: env(safe-area-inset-right);
+  gap: 16rpx;
+}
+
+.detail-page .u-top-title {
+  max-width: none;
+  min-width: 0;
+  flex: 1;
+}
+
+.hero-photo {
+  max-height: 760rpx;
+  border-radius: 42rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 24rpx;
+  line-height: 0;
+}
+
+.hero-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.detail-head {
+  padding: 30rpx 34rpx;
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 22rpx;
+}
+
+.detail-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #26384f;
+}
+
+.detail-sub {
+  margin-top: 12rpx;
+  color: #7485a4;
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.detail-price {
+  color: #f05e83;
+  font-size: 44rpx;
+  font-weight: 900;
+}
+
+.detail-badges {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-top: 22rpx;
+}
+
+.spec-card,
+.desc-card {
+  padding: 28rpx 34rpx;
+  margin-bottom: 22rpx;
+}
+
+.spec-row {
+  height: 82rpx;
+  border-bottom: 2rpx solid rgba(209, 218, 233, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #5e6d85;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.spec-row:last-child {
+  border-bottom: 0;
+}
+
+.spec-row text:last-child {
+  color: #26384f;
+}
+
+.section-title {
+  color: #26384f;
+  font-size: 28rpx;
+  font-weight: 900;
+  margin-bottom: 20rpx;
+}
+
+.desc-text {
+  color: #63718b;
+  font-size: 28rpx;
+  line-height: 1.75;
+  font-weight: 600;
+}
+
+.detail-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28rpx 34rpx calc(28rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.94);
+  display: flex;
+  gap: 24rpx;
+  z-index: 50;
+}
+
+.invalid-btn {
+  width: 240rpx;
+  margin: 26rpx auto 0;
+}
+
+.action-btn {
+  flex: 1;
+  height: 86rpx;
+  border-radius: 28rpx;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.action-btn::after {
+  border: 0;
+}
+
+.edit-btn {
+  color: #65748d;
+  background: #ffffff;
+  border: 2rpx solid #cfd8ef;
+}
+
+.delete-btn {
+  color: #ffffff;
+  background: linear-gradient(180deg, #f784a5, #e56790);
+}

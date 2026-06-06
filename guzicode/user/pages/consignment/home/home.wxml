@@ -1,0 +1,46 @@
+<view class="u-page consignment-home-page">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="title-wrap">
+        <view class="u-top-title">我的寄售</view>
+      </view>
+    </view>
+
+    <view class="rate-card">
+      <view class="rate-label">我的寄售抽成比例</view>
+      <view class="rate-value">{{rateText}}</view>
+      <view class="rate-desc">售出时按此比例锁定，平台代售代结算</view>
+    </view>
+
+    <view class="u-card manage-row" bindtap="goList">
+      <view class="manage-icon">◇</view>
+      <view class="manage-text">
+        <view class="manage-title">寄售商品</view>
+        <view class="manage-desc">查看与管理我的全部寄售</view>
+      </view>
+      <view class="manage-count">{{counts.all}}</view>
+      <view class="manage-arrow">›</view>
+    </view>
+
+    <view class="u-card manage-row" bindtap="goSold">
+      <view class="manage-icon">⌞</view>
+      <view class="manage-text">
+        <view class="manage-title">已出售</view>
+        <view class="manage-desc">已售出待结算</view>
+      </view>
+      <view class="manage-count">{{counts.sold}}</view>
+      <view class="manage-arrow">›</view>
+    </view>
+
+    <view class="u-card manage-row" bindtap="goSettled">
+      <view class="manage-icon">＄</view>
+      <view class="manage-text">
+        <view class="manage-title">已结算</view>
+        <view class="manage-desc">历史结算单据与金额</view>
+      </view>
+      <view class="manage-count">{{counts.settled}}</view>
+      <view class="manage-arrow">›</view>
+    </view>
+  </view>
+</view>

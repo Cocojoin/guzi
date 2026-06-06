@@ -1,0 +1,31 @@
+{
+  "collectionName": "users",
+  "indexes": [
+    {
+      "name": "idx_account_unique",
+      "fields": [
+        {
+          "field": "account",
+          "order": "asc"
+        }
+      ],
+      "unique": true,
+      "description": "账号唯一索引"
+    },
+    {
+      "name": "idx_role_status",
+      "fields": [
+        {
+          "field": "role",
+          "order": "asc"
+        },
+        {
+          "field": "status",
+          "order": "asc"
+        }
+      ],
+      "unique": false,
+      "description": "角色和状态联合索引"
+    }
+  ]
+}

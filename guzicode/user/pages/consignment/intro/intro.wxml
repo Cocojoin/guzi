@@ -1,0 +1,55 @@
+<view class="u-page consignment-home-page">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="u-top-title">寄售说明</view>
+    </view>
+
+    <view class="intro-hero">
+      <view class="hero-icon">🪧</view>
+      <view class="hero-title">开通寄售，闲置谷子轻松变现</view>
+      <view class="hero-desc">由星社代为上架、销售与结算，省心省力</view>
+    </view>
+
+    <view class="u-card intro-card">
+      <view class="step-row">
+        <view class="step-no">1</view>
+        <view class="step-body">
+          <view class="manage-title">提交寄售申请</view>
+          <view class="manage-desc">联系客服开通寄售权限</view>
+        </view>
+      </view>
+      <view class="step-line"></view>
+      <view class="step-row">
+        <view class="step-no">2</view>
+        <view class="step-body">
+          <view class="manage-title">上传寄售商品</view>
+          <view class="manage-desc">拍照填写信息，星社代为上架</view>
+        </view>
+      </view>
+      <view class="step-line"></view>
+      <view class="step-row">
+        <view class="step-no">3</view>
+        <view class="step-body">
+          <view class="manage-title">售出后结算</view>
+          <view class="manage-desc">按约定抽成比例结算货款</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="u-card note-card">
+      <view class="manage-title">注意事项</view>
+      <view class="note-item">· 请如实描述商品成色，瑕疵需实拍说明</view>
+      <view class="note-item">· 抽成比例以开通时约定为准</view>
+      <view class="note-item">· 结算周期与到账方式请咨询客服</view>
+    </view>
+
+    <view class="u-card contact-card">
+      <view class="contact-icon">📱</view>
+      <view class="contact-info">
+        <view class="contact-title">联系客服开通</view>
+      </view>
+      <button class="contact-btn" open-type="contact">联系客服</button>
+    </view>
+  </view>
+</view>

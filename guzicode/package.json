@@ -1,0 +1,11 @@
+{
+  "name": "goku-consignment-miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "ai:proxy": "node server/ai-proxy.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

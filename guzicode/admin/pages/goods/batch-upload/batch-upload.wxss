@@ -1,0 +1,380 @@
+@import "../../../../app.wxss";
+
+/* ===== 页面背景（同注册登录页） ===== */
+.batch-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 230, 0.5), transparent 22%),
+    radial-gradient(circle at right 25%, rgba(201, 194, 255, 0.5), transparent 20%),
+    linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%) !important;
+}
+
+.batch-page {
+  min-height: 100vh;
+  padding: 24rpx 28rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* ===== 状态栏占位 ===== */
+.batch-page .statusbar-spacer {
+  height: calc(120rpx + env(safe-area-inset-top));
+}
+
+/* ===== 顶部导航栏 ===== */
+.batch-page .topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+  padding-right: calc(220rpx + env(safe-area-inset-right));
+  box-sizing: border-box;
+  min-height: 64rpx;
+}
+
+.batch-page .back-button {
+  width: 64rpx !important;
+  height: 64rpx !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.78);
+  border: 2rpx solid rgba(217, 236, 248, 0.9);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 64rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  z-index: 1;
+}
+
+.batch-page .back-button::before {
+  content: "";
+  width: 14rpx;
+  height: 14rpx;
+  border-left: 3rpx solid #4b617a;
+  border-bottom: 3rpx solid #4b617a;
+  transform: rotate(45deg);
+  margin-right: 4rpx;
+}
+
+.batch-page .page-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 340rpx);
+  max-width: 420rpx;
+  color: #1a1a1a;
+  font-size: 40rpx !important;
+  line-height: 1.2;
+  font-weight: 800;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 表单卡片 ===== */
+.batch-page .form-card {
+  margin-bottom: 20rpx;
+  padding: 28rpx 24rpx !important;
+  border-radius: 24rpx !important;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2rpx solid rgba(217, 236, 248, 0.92) !important;
+  box-shadow: 0 8rpx 24rpx rgba(45, 76, 120, 0.06) !important;
+}
+
+/* ===== 卡片标签 ===== */
+.batch-page .card-label {
+  color: #8b7e9b;
+  font-size: 28rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.batch-page .card-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.batch-page .card-label-row .card-label {
+  margin-bottom: 0;
+}
+
+.batch-page .required {
+  color: #e53935;
+  font-size: 28rpx;
+}
+
+.batch-page .link-hint {
+  margin-bottom: 0;
+  color: #8a9ab1;
+  font-size: 24rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+}
+
+/* ===== 输入框 ===== */
+.batch-page .field-input {
+  flex: unset !important;
+  width: 100% !important;
+  height: 84rpx !important;
+  padding: 0 24rpx !important;
+  border-radius: 24rpx !important;
+  border: 2rpx solid #e8edf2 !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+
+.batch-page .field-input-text {
+  width: 100%;
+  height: 84rpx;
+  font-size: 32rpx;
+  color: #1a1a1a;
+  line-height: 84rpx;
+  font-weight: 500;
+}
+
+.batch-page .placeholder {
+  color: #a5b3c7;
+  font-weight: 400;
+}
+
+/* ===== 下拉选择器 ===== */
+.batch-page .picker-input {
+  justify-content: space-between;
+}
+
+.batch-page .is-placeholder {
+  color: #a5b3c7;
+}
+
+.batch-page .picker-arrow-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #e8f4fd;
+  position: relative;
+  flex: 0 0 48rpx;
+}
+
+.batch-page .picker-arrow-btn::after {
+  content: "";
+  display: block;
+  width: 10rpx;
+  height: 10rpx;
+  border-right: 3rpx solid #4a90d9;
+  border-bottom: 3rpx solid #4a90d9;
+  transform: rotate(45deg);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -5rpx;
+  margin-top: -8rpx;
+}
+
+/* ===== 上传操作按钮 ===== */
+.upload-action-btn {
+  margin-top: 12rpx;
+  height: 88rpx;
+  border-radius: 24rpx;
+  border: 2rpx dashed #a0c4e8;
+  background: rgba(242, 250, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.upload-action-icon {
+  width: 36rpx;
+  height: 36rpx;
+  position: relative;
+}
+
+.upload-action-icon::before,
+.upload-action-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #4a90d9;
+  border-radius: 999rpx;
+  transform: translate(-50%, -50%);
+}
+
+.upload-action-icon::before {
+  width: 36rpx;
+  height: 4rpx;
+}
+
+.upload-action-icon::after {
+  width: 4rpx;
+  height: 36rpx;
+}
+
+.upload-action-text {
+  color: #4a90d9;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.upload-success-hint {
+  margin-top: 12rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 18rpx;
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+  font-size: 24rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ===== 表格文件上传 ===== */
+.upload-file-icon {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 12rpx;
+  background: linear-gradient(180deg, #e8f6ff 0%, #c9e8fc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.upload-file-icon::after {
+  content: "表";
+  position: absolute;
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #24435a;
+}
+
+.upload-file-info {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #e8edf2;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.file-icon-tag {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(180deg, #e8f6ff 0%, #c9e8fc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #24435a;
+  font-size: 24rpx;
+  font-weight: 800;
+  flex: 0 0 64rpx;
+}
+
+.file-name-text {
+  flex: 1;
+  min-width: 0;
+  color: #1a1a1a;
+  font-size: 28rpx;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-delete-btn {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 18rpx;
+  background: rgba(0, 0, 0, 0.08);
+  position: relative;
+  flex: 0 0 36rpx;
+}
+
+.file-delete-btn::before,
+.file-delete-btn::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #999;
+  border-radius: 999rpx;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.file-delete-btn::before {
+  width: 18rpx;
+  height: 3rpx;
+}
+
+.file-delete-btn::after {
+  width: 3rpx;
+  height: 18rpx;
+}
+
+/* ===== 表格提示 ===== */
+.table-hint {
+  margin-bottom: 12rpx;
+  color: #8a9ab1;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+/* ===== 文本域 ===== */
+.textarea-wrap {
+  border: 2rpx solid #e8edf2;
+  border-radius: 24rpx;
+  padding: 18rpx 24rpx;
+  background: rgba(255, 255, 255, 0.92);
+  box-sizing: border-box;
+}
+
+.batch-textarea {
+  width: 100%;
+  min-height: 240rpx;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  color: #1a1a1a;
+}
+
+/* ===== 错误提示 ===== */
+.batch-page .error-inline {
+  margin-top: 6rpx !important;
+  color: #e14d69;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+/* ===== 提交按钮 ===== */
+.batch-page .submit-wrap {
+  padding: 20rpx 0 0;
+}
+
+.batch-page .submit-btn {
+  width: 100% !important;
+  height: 88rpx !important;
+  line-height: 88rpx !important;
+  border: 0 !important;
+  border-radius: 28rpx !important;
+  background: linear-gradient(180deg, #c0e7ff 0%, #b0ddfa 100%) !important;
+  color: #24435a;
+  font-size: 32rpx;
+  font-weight: 800;
+  box-shadow: 0 12rpx 28rpx rgba(176, 221, 250, 0.28);
+  margin-top: 0 !important;
+  padding: 0 !important;
+}
+
+.batch-page .submit-btn::after {
+  border: 0;
+}

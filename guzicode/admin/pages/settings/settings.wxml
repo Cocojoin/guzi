@@ -1,0 +1,80 @@
+<view class="management-shell">
+  <view class="management-page">
+    <view class="statusbar-spacer"></view>
+    <view class="management-header settings-header">
+      <view class="management-title">设置</view>
+    </view>
+
+    <view class="settings-stack">
+      <view class="profile-card">
+        <view class="profile-avatar">{{profile.initial}}</view>
+        <view class="profile-main">
+          <view class="profile-name">{{profile.name}}</view>
+          <view class="profile-meta">{{profile.account}} · {{profile.roleLabel}}</view>
+        </view>
+      </view>
+
+      <view class="section-title">系统与数据</view>
+      <view
+        wx:for="{{systemItems}}"
+        wx:key="key"
+        class="list-card setting-card"
+        data-key="{{item.key}}"
+        bindtap="openSettingDetail"
+      >
+        <view class="setting-icon {{item.accentClass}}">{{item.iconText}}</view>
+        <view class="setting-main">
+          <view class="setting-title">{{item.title}}</view>
+          <view class="setting-subtitle">{{item.subtitle}}</view>
+        </view>
+        <view class="setting-arrow">›</view>
+      </view>
+
+      <view class="section-title section-title--spaced">关于</view>
+      <view class="about-card">
+        <view
+          wx:for="{{aboutItems}}"
+          wx:key="key"
+          class="about-row"
+          data-key="{{item.key}}"
+          bindtap="handleAboutTap"
+        >
+          <view class="about-title">{{item.title}}</view>
+          <view class="about-side">
+            <view wx:if="{{item.value}}" class="about-value">{{item.value}}</view>
+            <view class="setting-arrow">›</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goStats">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/stat.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">统计</view>
+    </view>
+    <view class="nav-item" bindtap="goGoods">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/product.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">商品</view>
+    </view>
+    <view class="nav-item" bindtap="goUsers">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/user.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">用户</view>
+    </view>
+    <view class="nav-item nav-item--active" bindtap="goSettings">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/setting-active.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">设置</view>
+    </view>
+  </view>
+</view>

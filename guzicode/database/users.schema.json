@@ -1,0 +1,93 @@
+{
+  "collectionName": "users",
+  "description": "用户账号表，存储登录注册、角色、分佣和联系方式信息",
+  "fields": [
+    {
+      "name": "account",
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "description": "登录账号，6-12位数字字母组合；管理员账号允许为 admin"
+    },
+    {
+      "name": "nickname",
+      "type": "string",
+      "required": false,
+      "description": "用户昵称"
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "required": true,
+      "description": "登录密码，正式开发建议加密存储"
+    },
+    {
+      "name": "role",
+      "type": "string",
+      "required": true,
+      "enum": ["admin", "consignment_user", "normal_user"],
+      "description": "用户角色"
+    },
+    {
+      "name": "isAgentEnabled",
+      "type": "boolean",
+      "required": true,
+      "description": "是否开启代理权限"
+    },
+    {
+      "name": "platformRate",
+      "type": "number",
+      "required": false,
+      "description": "平台抽成比例，0-1"
+    },
+    {
+      "name": "commissionRate",
+      "type": "number",
+      "required": false,
+      "description": "开启代理权限后可配置的佣金比例，0-1"
+    },
+    {
+      "name": "contactWechat",
+      "type": "string",
+      "required": false,
+      "description": "微信联系方式"
+    },
+    {
+      "name": "contactMobile",
+      "type": "string",
+      "required": false,
+      "description": "手机号联系方式"
+    },
+    {
+      "name": "avatarUrl",
+      "type": "string",
+      "required": false,
+      "description": "头像地址"
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "required": true,
+      "enum": ["active", "disabled"],
+      "description": "账号状态"
+    },
+    {
+      "name": "lastLoginAt",
+      "type": "date",
+      "required": false,
+      "description": "最后一次登录时间"
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "required": true,
+      "description": "创建时间"
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "required": true,
+      "description": "更新时间"
+    }
+  ]
+}

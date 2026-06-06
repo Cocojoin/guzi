@@ -1,0 +1,311 @@
+@import "../app.wxss";
+
+page {
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 230, 0.5), transparent 22%),
+    radial-gradient(circle at right 25%, rgba(201, 194, 255, 0.5), transparent 20%),
+    linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%);
+  color: #293a50;
+  font-family: "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+.u-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: calc(110rpx + env(safe-area-inset-top)) 34rpx calc(150rpx + env(safe-area-inset-bottom));
+  background: transparent;
+  position: relative;
+  overflow: auto;
+}
+
+.u-page::after {
+  content: "";
+  position: absolute;
+  right: 88rpx;
+  top: 166rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #ffb8c8;
+}
+
+.u-content {
+  position: relative;
+  z-index: 1;
+}
+
+.u-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #26384f;
+}
+
+.u-subtitle {
+  margin-top: 8rpx;
+  color: #8291ad;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.u-topbar {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+  padding-right: calc(220rpx + env(safe-area-inset-right));
+  box-sizing: border-box;
+  min-height: 66rpx;
+}
+
+.u-back,
+.u-icon-btn {
+  width: 66rpx;
+  height: 66rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.74);
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2b3d55;
+  font-size: 42rpx;
+  font-weight: 400;
+  box-sizing: border-box;
+}
+
+.u-back::before {
+  content: "";
+  width: 16rpx;
+  height: 16rpx;
+  border-left: 4rpx solid #2b3d55;
+  border-bottom: 4rpx solid #2b3d55;
+  transform: rotate(45deg);
+  margin-left: 6rpx;
+}
+
+.u-top-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #26384f;
+  line-height: 1.1;
+  max-width: calc(100% - 240rpx);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.u-card {
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.86);
+  border: 2rpx solid rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18rpx 42rpx rgba(116, 148, 181, 0.12);
+}
+
+.u-search {
+  height: 84rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.82);
+  display: flex;
+  align-items: center;
+  padding: 0 28rpx;
+  box-sizing: border-box;
+  color: #95a3bb;
+  margin: 28rpx 0 20rpx;
+}
+
+.u-search-icon {
+  font-size: 42rpx;
+  margin-right: 16rpx;
+}
+
+.u-search-input {
+  flex: 1;
+  height: 84rpx;
+  color: #293a50;
+  font-size: 32rpx;
+  line-height: 84rpx;
+}
+
+.u-placeholder {
+  color: #a8b2c5;
+}
+
+.filter-row {
+  display: flex;
+  gap: 18rpx;
+  margin-bottom: 28rpx;
+}
+
+.filter-pill {
+  height: 68rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.78);
+  color: #60708a;
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.filter-pill::after {
+  content: "⌄";
+  margin-left: 10rpx;
+  font-size: 22rpx;
+}
+
+.goods-card {
+  min-height: 156rpx;
+  margin-bottom: 20rpx;
+  padding: 28rpx;
+  display: flex;
+  gap: 24rpx;
+  box-sizing: border-box;
+}
+
+.goods-thumb {
+  width: 124rpx;
+  height: 124rpx;
+  border-radius: 22rpx;
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 58rpx;
+  flex: 0 0 124rpx;
+  position: relative;
+}
+
+.goods-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.goods-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.goods-title {
+  color: #25374e;
+  font-size: 32rpx;
+  font-weight: 900;
+  line-height: 1.38;
+}
+
+.goods-meta {
+  margin-top: 10rpx;
+  color: #8795ad;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.goods-price {
+  margin-top: 12rpx;
+  color: #f05e83;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.goods-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 112rpx;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 48rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.badge-flaw,
+.status-pill--sold {
+  color: #d85070;
+  background: #ffe5ee;
+}
+
+.badge-clean,
+.status-pill--settled {
+  color: #349a76;
+  background: #d8f5e9;
+}
+
+.status-pill--up {
+  color: #377ba9;
+  background: #dcefff;
+}
+
+.status-pill--down {
+  color: #7d8ba0;
+  background: #edf2f8;
+}
+
+.end-line,
+.empty-note {
+  text-align: center;
+  color: #b4bdcd;
+  font-size: 28rpx;
+  padding: 26rpx 0;
+}
+
+.list-refresh-tip {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 18rpx 0 6rpx;
+}
+
+.empty-card {
+  padding: 72rpx 36rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.86);
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18rpx 42rpx rgba(116, 148, 181, 0.12);
+  text-align: center;
+  color: #7f8da6;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #34465f;
+}
+
+.empty-desc {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.primary-btn {
+  margin-top: 28rpx;
+  height: 88rpx;
+  border: 0;
+  border-radius: 28rpx;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 900;
+  background: linear-gradient(90deg, #f7b6cf, #aee0ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.primary-btn::after {
+  border: 0;
+}

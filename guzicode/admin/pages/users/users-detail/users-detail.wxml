@@ -1,0 +1,140 @@
+<view class="user-detail-page">
+  <!-- 状态栏占位 -->
+  <view class="statusbar-spacer"></view>
+  
+  <!-- 顶部导航栏 -->
+  <view class="page-header">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <text class="page-title">用户详情</text>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <scroll-view class="content-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <!-- Header卡片：用户信息 -->
+    <view class="hero-card">
+      <view class="avatar-wrap">
+        <view class="avatar">桃</view>
+      </view>
+      <view class="user-info">
+        <view class="name-line">
+          <text class="nickname">{{userData.nickname}}</text>
+          <view class="role-tag">寄售</view>
+        </view>
+        <view class="account-line">
+          <text class="label">账号</text>
+          <text class="value">{{userData.account}}</text>
+        </view>
+        <view class="contact-line">
+          <text class="label">联系方式：</text>
+          <text class="value">{{userData.contact}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 统计区 -->
+    <view class="stats-row">
+      <view class="stat-card" bindtap="goToGoods">
+        <text class="stat-num">{{userData.goodsCount}}</text>
+        <text class="stat-label">寄售商品</text>
+      </view>
+      <view class="stat-card" bindtap="goToSold">
+        <text class="stat-num">{{userData.soldCount}}</text>
+        <text class="stat-label">待结算</text>
+      </view>
+      <view class="stat-card" bindtap="goToSettled">
+        <text class="stat-num">{{userData.settledCount}}</text>
+        <text class="stat-label">已结算</text>
+      </view>
+    </view>
+
+    <!-- 用户信息区 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-title">用户信息</text>
+      </view>
+      <view class="info-list">
+        <view class="info-item" bindtap="startEdit" data-field="nickname">
+          <text class="item-label">昵称</text>
+          <view class="item-value-wrap">
+            <text class="item-value">{{userData.nickname}}</text>
+            <text class="edit-icon">✏️</text>
+          </view>
+        </view>
+        <view class="info-item" bindtap="startEdit" data-field="contact">
+          <text class="item-label">联系方式</text>
+          <view class="item-value-wrap">
+            <text class="item-value">{{userData.contact}}</text>
+            <text class="edit-icon">✏️</text>
+          </view>
+        </view>
+        <view class="info-item" bindtap="startEdit" data-field="rate">
+          <text class="item-label">抽成比例</text>
+          <view class="item-value-wrap">
+            <text class="item-value">{{userData.rate}}%</text>
+            <text class="edit-icon">✏️</text>
+          </view>
+        </view>
+        <view class="info-item">
+          <text class="item-label">账号</text>
+          <text class="item-value">{{userData.account}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 寄售权限区 -->
+    <view class="permission-card">
+      <view class="permission-row">
+        <text class="card-title">寄售权限</text>
+        <view class="switch-wrap">
+          <switch class="custom-switch" checked="{{canConsign}}" bindchange="toggleConsign" color="#7bb8e9" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 重置密码按钮 -->
+    <button class="reset-btn" bindtap="resetPassword">重置密码</button>
+  </scroll-view>
+
+  <!-- 编辑弹窗 -->
+  <view class="edit-popup" wx:if="{{showEditPopup}}">
+    <view class="popup-mask" bindtap="closeEdit"></view>
+    <view class="popup-content">
+      <view class="popup-header">
+        <text class="popup-title">编辑{{editFieldName}}</text>
+        <view class="popup-close" bindtap="closeEdit">×</view>
+      </view>
+      <view class="popup-body">
+        <input 
+          class="popup-input" 
+          value="{{editValue}}" 
+          placeholder="请输入{{editFieldName}}"
+          bindinput="onInputChange"
+        />
+        <view class="error-msg" wx:if="{{errorMsg}}">{{errorMsg}}</view>
+      </view>
+      <view class="popup-footer">
+        <view class="btn btn-cancel" bindtap="closeEdit">取消</view>
+        <view class="btn btn-confirm" bindtap="saveEdit">保存</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 确认弹窗 -->
+  <view class="confirm-popup" wx:if="{{showConfirmPopup}}">
+    <view class="popup-mask" bindtap="closeConfirm"></view>
+    <view class="popup-content popup-content--small">
+      <view class="popup-header">
+        <text class="popup-title">{{confirmTitle}}</text>
+      </view>
+      <view class="popup-body">
+        <text class="confirm-text">{{confirmContent}}</text>
+      </view>
+      <view class="popup-footer">
+        <view class="btn btn-cancel" bindtap="closeConfirm">取消</view>
+        <view class="btn btn-confirm" bindtap="confirmAction">{{confirmBtnText}}</view>
+      </view>
+    </view>
+  </view>
+</view>

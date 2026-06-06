@@ -1,0 +1,90 @@
+{
+  "collectionName": "settlement_records",
+  "description": "结算记录表，存储每次结算的商品、金额、凭证等信息",
+  "fields": [
+    {
+      "name": "userId",
+      "type": "string",
+      "required": true,
+      "description": "寄售用户ID（users._id）"
+    },
+    {
+      "name": "userNickname",
+      "type": "string",
+      "required": true,
+      "description": "寄售用户昵称"
+    },
+    {
+      "name": "userAccount",
+      "type": "string",
+      "required": true,
+      "description": "寄售用户账号"
+    },
+    {
+      "name": "date",
+      "type": "string",
+      "required": true,
+      "description": "结算日期，格式 YYYY-MM-DD"
+    },
+    {
+      "name": "month",
+      "type": "string",
+      "required": true,
+      "description": "结算月份，格式 YYYY · MM"
+    },
+    {
+      "name": "items",
+      "type": "number",
+      "required": true,
+      "description": "结算商品总件数"
+    },
+    {
+      "name": "gross",
+      "type": "number",
+      "required": true,
+      "description": "商品总额（寄售价）"
+    },
+    {
+      "name": "commission",
+      "type": "number",
+      "required": true,
+      "description": "平台抽成金额"
+    },
+    {
+      "name": "payable",
+      "type": "number",
+      "required": true,
+      "description": "应付寄售用户金额"
+    },
+    {
+      "name": "actualIncome",
+      "type": "number",
+      "required": true,
+      "description": "商品实际收入（仅平台统计）"
+    },
+    {
+      "name": "settlementItems",
+      "type": "array",
+      "required": true,
+      "description": "结算商品明细数组"
+    },
+    {
+      "name": "vouchers",
+      "type": "array",
+      "required": false,
+      "description": "结算凭证图片地址数组"
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "required": true,
+      "description": "创建时间"
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "required": true,
+      "description": "更新时间"
+    }
+  ]
+}

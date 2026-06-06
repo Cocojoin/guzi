@@ -1,0 +1,367 @@
+<view class="stats-shell">
+  <view class="stats-page">
+    <view class="statusbar-spacer"></view>
+    <view wx:if="{{statsLoading && !statsLoaded}}" class="stats-loading-card">
+      <view class="stats-loading-title">统计加载中</view>
+      <view class="stats-loading-subtitle">正在同步商品、结算和支出数据</view>
+    </view>
+    <view wx:if="{{statsLoading && statsLoaded}}" class="stats-refresh-tip">刷新中…</view>
+
+    <block wx:if="{{statsLoaded && view === 'home'}}">
+      <view class="head-row">
+        <view class="head-title-wrap">
+          <view class="title">统计</view>
+        </view>
+        <view class="switch-pill">
+          <view class="switch-thumb {{statMode === 'all' ? 'switch-thumb--right' : ''}}"></view>
+          <view class="switch-item {{statMode === 'month' ? 'active' : ''}}" data-mode="month" bindtap="switchMode">本月</view>
+          <view class="switch-item {{statMode === 'all' ? 'active' : ''}}" data-mode="all" bindtap="switchMode">累计</view>
+        </view>
+      </view>
+
+      <view class="hero-card">
+        <view class="hero-top">
+          <view class="hero-title">{{heroTitle}}</view>
+          <view class="month-btn" bindtap="toggleMonthPanel">{{statMode === 'all' ? '全部' : selectedMonth}} ˇ</view>
+        </view>
+        <view class="hero-amount {{heroAmountClass}}">{{heroAmountDisplay}}</view>
+        <view class="hero-mini-row">
+          <view><text class="mini-label">抽成收益</text><text class="mini-value">{{commissionIncome}}</text></view>
+          <view><text class="mini-label">差价收益</text><text class="mini-value">{{spreadIncome}}</text></view>
+          <view><text class="mini-label">总支出</text><text class="mini-value neg">{{totalExpense}}</text></view>
+        </view>
+      </view>
+
+      <view class="count-grid">
+        <view class="count-item"><view class="count-num">{{totalCount}}</view><view class="count-label">总商品</view></view>
+        <view class="count-item"><view class="count-num">{{upCount}}</view><view class="count-label">在售</view></view>
+        <view class="count-item"><view class="count-num">{{soldCount}}</view><view class="count-label">已出售</view></view>
+        <view class="count-item"><view class="count-num">{{settledCount}}</view><view class="count-label">已结算</view></view>
+      </view>
+
+      <view class="money-grid">
+        <view class="money-item" bindtap="goView" data-view="income"><view class="money-title">实际销售额</view><view class="money-value">{{actualSale}}</view></view>
+        <view class="money-item" bindtap="goView" data-view="expense"><view class="money-title">费用支出</view><view class="money-value neg">{{totalExpense}}</view></view>
+        <view class="money-item" bindtap="goView" data-view="income"><view class="money-title">结算金额</view><view class="money-value">{{settleIncome}}</view></view>
+      </view>
+
+      <view class="net-card" bindtap="goView" data-view="summary">
+        <text>实际收益（平台净收入）</text>
+        <text class="net-value {{netIncomeClass}}">{{netIncomeDisplay}}</text>
+      </view>
+    </block>
+
+    <block wx:if="{{statsLoaded && view === 'summary'}}">
+      <view class="sub-head sub-head--summary">
+        <view class="back-chip" bindtap="goBackHome">‹</view>
+        <view>
+          <view class="sub-title">统计汇总</view>
+          <view class="sub-caption">累计口径 · 仅已结算商品</view>
+        </view>
+      </view>
+
+      <view class="summary-section-title">平台净收入</view>
+      <view class="sum-hero sum-hero--summary">
+        <view class="sum-label">平台净收入</view>
+        <view class="sum-amount {{summaryNetIncomeClass}}">{{summaryNetIncomeDisplay}}</view>
+        <view class="sum-formula-card">
+          <view> = 抽成 ¥261.60</view>
+          <view> + 差价 ¥257.00</view>
+          <view> - 总支出 ¥302.10</view>
+        </view>
+      </view>
+
+      <view class="summary-section-title summary-section-title--base">基础汇总项</view>
+      <view class="summary-list-card">
+        <block wx:for="{{summaryRows}}" wx:key="label">
+          <view class="summary-list-row">
+            <view class="summary-list-main">
+              <view class="summary-list-title">{{item.label}}</view>
+              <view class="summary-list-note">{{item.note}}</view>
+            </view>
+            <view class="summary-list-value {{item.negative ? 'neg' : ''}} {{item.positive ? 'pos' : ''}}">{{item.value}}</view>
+          </view>
+        </block>
+      </view>
+    </block>
+
+    <block wx:if="{{statsLoaded && view === 'income'}}">
+      <view class="sub-head">
+        <view class="back-chip" bindtap="goBackHome">‹</view>
+        <view>
+          <view class="sub-title">收入明细</view>
+          <view class="sub-caption">已结算 {{selectedMonth}}</view>
+        </view>
+      </view>
+      <view class="search-bar">
+        <text class="search-icon-mark">🔍</text>
+        <input
+          class="search-input-field"
+          placeholder="商品编号 / 名称 / 用户昵称"
+          placeholder-class="search-input-placeholder"
+          value="{{incomeKeyword}}"
+          bindinput="onIncomeKeywordInput"
+        />
+      </view>
+      <view class="chip-row">
+        <view class="chip {{incomeFilter === 'today' ? 'active' : ''}}" data-filter="today" bindtap="onIncomeFilterTap">今日</view>
+        <view class="chip {{incomeFilter === 'week' ? 'active' : ''}}" data-filter="week" bindtap="onIncomeFilterTap">本周</view>
+        <view class="chip {{incomeFilter === 'month' ? 'active' : ''}}" data-filter="month" bindtap="onIncomeFilterTap">本月</view>
+        <view class="chip {{incomeFilter === 'lastMonth' ? 'active' : ''}}" data-filter="lastMonth" bindtap="onIncomeFilterTap">上月</view>
+        <view class="chip {{incomeFilter === 'custom' ? 'active' : ''}}" data-filter="custom" bindtap="onIncomeFilterTap">自定义</view>
+      </view>
+      <scroll-view class="list-scroll" scroll-y="true">
+        <block wx:for="{{filteredIncomeItems}}" wx:key="title">
+          <view class="income-card" bindtap="openIncomeDetail" data-record-id="{{item.settlementRecordId}}">
+            <view class="income-title">{{item.title}}</view>
+            <view class="income-meta">{{item.code}}</view>
+            <view class="income-meta income-meta-link" catchtap="goUserFromIncome" data-user-id="{{item.userId}}" data-user-name="{{item.userNickname}}">寄售用户：{{item.userNickname}}</view>
+            <view class="income-split">
+              <view><view class="k">商品价格</view><view class="v">{{item.price}}</view></view>
+              <view><view class="k">结算金额</view><view class="v green">{{item.income}}</view></view>
+              <view><view class="k">抽成</view><view class="v orange">{{item.commission}}</view></view>
+            </view>
+            <view class="income-foot">
+              <text>{{item.time}}</text>
+              <text class="income-rate">{{item.rateText}}</text>
+              <text class="income-status">{{item.statusText}}</text>
+            </view>
+            <view class="income-remark" wx:if="{{item.remark}}">{{item.remark}}</view>
+          </view>
+        </block>
+        <view class="empty-card" wx:if="{{filteredIncomeItems.length === 0}}">
+          <view class="empty-title">暂无匹配数据</view>
+          <view class="empty-hint">试试调整关键词或筛选条件</view>
+        </view>
+      </scroll-view>
+
+      <view class="dialog-mask" wx:if="{{showIncomeDatePanel}}" bindtap="cancelIncomeCustomDate">
+        <view class="income-date-panel" catchtap="noop">
+          <view class="income-date-title">自定义时间范围</view>
+          <view class="income-date-row">
+            <text>开始日期</text>
+            <picker mode="date" value="{{incomeDateStart}}" bindchange="onIncomeStartDateChange">
+              <view class="income-date-value">{{incomeDateStart}}</view>
+            </picker>
+          </view>
+          <view class="income-date-row">
+            <text>结束日期</text>
+            <picker mode="date" value="{{incomeDateEnd}}" bindchange="onIncomeEndDateChange">
+              <view class="income-date-value">{{incomeDateEnd}}</view>
+            </picker>
+          </view>
+          <view class="income-date-actions">
+            <view class="dialog-btn" bindtap="cancelIncomeCustomDate">取消</view>
+            <view class="dialog-btn danger" bindtap="confirmIncomeCustomDate">确认</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <block wx:if="{{statsLoaded && view === 'expense'}}">
+      <view class="sub-head sub-head--expense">
+        <view class="back-chip" bindtap="goBackHome">‹</view>
+        <view>
+          <view class="sub-title">费用支出</view>
+          <view class="sub-caption">材料 + 物流 · {{selectedMonth}}</view>
+        </view>
+      </view>
+      <view class="expense-hero expense-hero--main">
+        <view class="switch-pill switch-pill--top-right">
+          <view class="switch-thumb {{statMode === 'all' ? 'switch-thumb--right' : ''}}"></view>
+          <view class="switch-item {{statMode === 'month' ? 'active' : ''}}" data-mode="month" bindtap="switchMode">本月</view>
+          <view class="switch-item {{statMode === 'all' ? 'active' : ''}}" data-mode="all" bindtap="switchMode">累计</view>
+        </view>
+        <view class="sum-label">{{statMode === 'all' ? '累计总支出' : '本月总支出'}}</view>
+        <view class="expense-amount">{{totalExpense}}</view>
+      </view>
+      <view class="entry-card" bindtap="goView" data-view="material"><view><view class="entry-title">材料费用支出</view><view class="entry-note">本月 5 笔 · 包装 / 耗材</view></view><view class="entry-amount">{{materialTotal}}</view></view>
+      <view class="entry-card" bindtap="goView" data-view="logistics"><view><view class="entry-title">物流费用支出</view><view class="entry-note">本月 4 笔 · 寄件 / 退件</view></view><view class="entry-amount">{{logisticsTotal}}</view></view>
+    </block>
+
+    <block wx:if="{{statsLoaded && (view === 'material' || view === 'logistics')}}">
+      <view class="sub-head sub-head--material">
+        <view class="sub-head-left">
+          <view class="back-chip" bindtap="goView" data-view="expense">‹</view>
+          <view class="sub-title">{{view === 'material' ? '材料费用支出' : '物流费用支出'}}</view>
+        </view>
+        <view class="back-chip" bindtap="openExpenseCreateForm" data-type="{{view}}">＋</view>
+      </view>
+      <view class="expense-hero compact">
+        <view class="switch-pill switch-pill--top-right">
+          <view class="switch-thumb {{view === 'material' ? (materialStatMode === 'all' ? 'switch-thumb--right' : '') : (logisticsStatMode === 'all' ? 'switch-thumb--right' : '')}}"></view>
+          <view class="switch-item {{view === 'material' ? (materialStatMode === 'month' ? 'active' : '') : (logisticsStatMode === 'month' ? 'active' : '')}}" data-mode="month" bindtap="{{view === 'material' ? 'switchMaterialStatMode' : 'switchLogisticsStatMode'}}">本月</view>
+          <view class="switch-item {{view === 'material' ? (materialStatMode === 'all' ? 'active' : '') : (logisticsStatMode === 'all' ? 'active' : '')}}" data-mode="all" bindtap="{{view === 'material' ? 'switchMaterialStatMode' : 'switchLogisticsStatMode'}}">累计</view>
+        </view>
+        <view class="sum-label">{{view === 'material' ? (materialStatMode === 'all' ? '累计材料总支出' : '本月材料总支出') : (logisticsStatMode === 'all' ? '累计物流总支出' : '本月物流总支出')}}</view>
+        <view class="hero-amount-row">
+          <view class="expense-amount">{{view === 'material' ? (materialStatMode === 'all' ? materialTotalAll : materialTotal) : (logisticsStatMode === 'all' ? logisticsTotalAll : logisticsTotal)}}</view>
+          <view class="hero-count" wx:if="{{view === 'material'}}">{{materialStatMode === 'all' ? materialCountAll : materialCountMonth}} 笔</view>
+        </view>
+      </view>
+      <block wx:for="{{view === 'material' ? materialItems : logisticsItems}}" wx:key="meta">
+        <view class="entry-card">
+          <view class="entry-left">
+            <view class="entry-icon">{{view === 'material' ? '◈' : '▭'}}</view>
+            <view><view class="entry-title">{{item.name}}</view><view class="entry-note">{{item.meta}}</view></view>
+          </view>
+          <view class="entry-right"><view class="entry-amount">{{item.amount}}</view><view class="entry-tools"><text class="edit-icon" bindtap="onExpenseEditTap" data-id="{{item.id}}" data-type="{{view}}">✎</text><text class="danger" bindtap="openDeleteDialog" data-id="{{item.id}}" data-type="{{view}}">🗑</text></view></view>
+        </view>
+      </block>
+    </block>
+
+    <block wx:if="{{statsLoaded && (view === 'materialForm' || view === 'logisticsForm')}}">
+      <view class="sub-head sub-head--material-form">
+        <view class="back-chip" bindtap="goView" data-view="{{view === 'materialForm' ? 'material' : 'logistics'}}">‹</view>
+        <view class="sub-title">{{view === 'materialForm' ? (expenseFormMode === 'edit' ? '编辑材料支出' : '新增材料支出') : (expenseFormMode === 'edit' ? '编辑物流支出' : '新增物流支出')}}</view>
+      </view>
+      <view class="form-card">
+        <view class="field" wx:if="{{view === 'materialForm'}}">
+          <view class="field-title">支出项目 <text class="required-mark">*</text></view>
+          <view class="tag-row">
+            <view class="tag {{expenseMaterialPreset === 'box' ? 'active' : ''}}" data-preset="box" bindtap="onExpenseMaterialPresetTap">包装盒</view>
+            <view class="tag {{expenseMaterialPreset === 'protect' ? 'active' : ''}}" data-preset="protect" bindtap="onExpenseMaterialPresetTap">防撞材料</view>
+            <view class="tag {{expenseMaterialPreset === 'bag' ? 'active' : ''}}" data-preset="bag" bindtap="onExpenseMaterialPresetTap">透明袋</view>
+            <view class="tag {{expenseMaterialPreset === 'label' ? 'active' : ''}}" data-preset="label" bindtap="onExpenseMaterialPresetTap">标签纸</view>
+            <view class="tag {{expenseMaterialPreset === 'custom' ? 'active' : ''}}" data-preset="custom" bindtap="onExpenseMaterialPresetTap">其他耗材</view>
+          </view>
+          <input wx:if="{{expenseMaterialPreset === 'custom'}}" class="input-box input-box-field" value="{{expenseMaterialItemName}}" bindinput="onExpenseMaterialItemNameInput" />
+        </view>
+        <view class="field">
+          <view class="field-title">支出金额 <text class="required-mark">*</text></view>
+          <input class="input-box input-box-field" value="{{expenseFormAmount}}" bindinput="onExpenseAmountInput" />
+        </view>
+        <view class="field">
+          <view class="field-title">发生日期 <text class="required-mark">*</text></view>
+          <picker mode="date" value="{{expenseFormDate}}" bindchange="onExpenseFormDateChange">
+            <view class="input-box input-box--date">{{expenseFormDate}}</view>
+          </picker>
+        </view>
+        <view class="field">
+          <view class="field-title">备注</view>
+          <textarea class="input-box multi input-box-area" value="{{expenseFormNote}}" bindinput="onExpenseNoteInput"></textarea>
+        </view>
+        <view class="field" wx:if="{{view === 'materialForm'}}">
+          <view class="field-title">凭证图片</view>
+          <view class="upload-row">
+            <block wx:for="{{expenseVoucherImages}}" wx:key="*this">
+              <view class="upload-thumb-wrap">
+                <image class="upload-thumb" src="{{item}}" mode="aspectFill"></image>
+                <view class="upload-thumb-remove" data-index="{{index}}" bindtap="removeExpenseVoucherImage">×</view>
+              </view>
+            </block>
+            <view class="upload-tile add" wx:if="{{expenseVoucherImages.length < 3}}" bindtap="chooseExpenseVoucherImage">＋</view>
+          </view>
+        </view>
+      </view>
+      <view class="submit-btn" bindtap="submitExpenseForm">保存支出</view>
+    </block>
+
+    <block wx:if="{{statsLoaded && view === 'settledDetail' && settledDetail}}">
+      <view class="sub-head">
+        <view class="back-chip" bindtap="goBackHome">‹</view>
+        <view>
+          <view class="sub-title">结算详情</view>
+          <view class="sub-caption">{{settledDetail.date}} · 共 {{settledDetail.items}} 件商品</view>
+        </view>
+      </view>
+
+      <scroll-view class="list-scroll" scroll-y="true">
+        <view class="settled-detail-top">
+          <view class="settlement-hint">本次应付寄售用户</view>
+          <view class="settled-detail-main-money">¥ {{settledDetailPayable}}</view>
+          <view class="settled-detail-nums">
+            <view><view class="settlement-hint">商品总额</view><view class="money-text-red">¥ {{settledDetailGross}}</view></view>
+            <view><view class="settlement-hint">平台抽成</view><view class="money-text-red">¥ {{settledDetailCommission}}</view></view>
+            <view><view class="settlement-hint">实际收入</view><view class="money-text-red">¥ {{settledDetailActualIncome}}</view></view>
+          </view>
+        </view>
+
+        <view class="settled-user-info detail-card">
+          <view class="mini-title">寄售用户</view>
+          <view class="user-info-row">
+            <text class="user-label">昵称</text>
+            <text class="user-value">{{settledDetail.userNickname}}</text>
+          </view>
+          <view class="user-info-row">
+            <text class="user-label">账号</text>
+            <text class="user-value">{{settledDetail.userAccount}}</text>
+          </view>
+        </view>
+
+        <view class="detail-card section-card settlement-list-card">
+          <view class="section-head"><view class="mini-title">结算商品</view><view class="settlement-hint">共 {{settledDetail.items}} 件</view></view>
+          <view wx:for="{{settlementItems}}" wx:key="rowKey" class="settlement-item-row">
+            <view class="settlement-item-thumb-wrap">
+              <view class="settlement-item-thumb">
+                <image
+                  wx:if="{{item.coverImage}}"
+                  class="settlement-item-image"
+                  src="{{item.coverImage}}"
+                  mode="aspectFill"
+                />
+                <view wx:else class="goods-star"></view>
+              </view>
+            </view>
+            <view class="settlement-item-main">
+              <view class="list-title">{{item.title}}</view>
+              <view class="list-subtitle">{{item.series}} · {{item.type}} · 抽成 {{item.rate}}%</view>
+              <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
+            </view>
+            <view class="settlement-item-side">
+              <view class="price">¥{{item.totalPrice}}</view>
+              <view class="list-subtitle">单价：¥{{item.price}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{settlementVouchers && settlementVouchers.length > 0}}" class="detail-card section-card">
+          <view class="section-head"><view class="mini-title">结算凭证</view><view class="settlement-hint">{{settlementVouchers.length}} 张 · 点击放大</view></view>
+          <view class="photo-grid">
+            <block wx:for="{{settlementVouchers}}" wx:key="index">
+              <view class="photo-item" data-index="{{index}}">
+                <image class="photo-img" src="{{item}}" mode="aspectFill" bindtap="previewSettlementVoucher" data-index="{{index}}" />
+              </view>
+            </block>
+          </view>
+        </view>
+      </scroll-view>
+    </block>
+
+    <view class="bottom-nav" wx:if="{{statsLoaded && (view === 'home' || view === 'expense')}}">
+      <view class="nav-item nav-item--active" bindtap="goStats"><view class="nav-icon"><image class="nav-icon-image" src="/assets/nav-icons/stat-active.svg" mode="aspectFit" /></view><view class="nav-label">统计</view></view>
+      <view class="nav-item" bindtap="goGoods"><view class="nav-icon"><image class="nav-icon-image" src="/assets/nav-icons/product.svg" mode="aspectFit" /></view><view class="nav-label">商品</view></view>
+      <view class="nav-item" bindtap="goUsers"><view class="nav-icon"><image class="nav-icon-image" src="/assets/nav-icons/user.svg" mode="aspectFit" /></view><view class="nav-label">用户</view></view>
+      <view class="nav-item" bindtap="goSettings"><view class="nav-icon"><image class="nav-icon-image" src="/assets/nav-icons/setting.svg" mode="aspectFit" /></view><view class="nav-label">设置</view></view>
+    </view>
+  </view>
+
+  <view class="month-mask" wx:if="{{showMonthPanel}}" bindtap="toggleMonthPanel">
+    <view class="month-panel" catchtap="noop">
+      <view class="panel-head-row">
+        <view class="year-switch {{!canPrevYear ? 'disabled' : ''}}" bindtap="prevYear">‹</view>
+        <view class="panel-head">{{panelYear}} 年</view>
+        <view class="year-switch {{!canNextYear ? 'disabled' : ''}}" bindtap="nextYear">›</view>
+      </view>
+      <view class="month-grid">
+        <block wx:for="{{months}}" wx:key="value">
+          <view class="month-item {{item.active ? 'active' : ''}} {{item.disabled ? 'disabled' : ''}}" data-value="{{item.value}}" data-disabled="{{item.disabled}}" bindtap="chooseMonth">
+            <text>{{item.label}}</text>
+            <view class="month-dot {{item.active ? 'active' : ''}}" wx:if="{{item.hint || item.active}}"></view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <view class="dialog-mask" wx:if="{{showDeleteDialog}}" bindtap="closeDeleteDialog">
+    <view class="dialog" catchtap="noop">
+      <view class="dialog-title">确认删除该条支出？</view>
+      <view class="dialog-sub">删除后不可恢复</view>
+      <view class="dialog-actions">
+        <view class="dialog-btn" bindtap="closeDeleteDialog">取消</view>
+        <view class="dialog-btn danger" bindtap="confirmDeleteExpense">删除</view>
+      </view>
+    </view>
+  </view>
+</view>

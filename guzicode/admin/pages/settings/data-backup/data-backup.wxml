@@ -1,0 +1,48 @@
+<view class="detail-shell">
+  <view class="detail-page">
+    <view class="statusbar-spacer"></view>
+
+    <view class="page-topbar data-backup-header">
+      <view class="back-button" bindtap="handleBack"></view>
+      <view class="page-title">数据备份</view>
+    </view>
+
+    <view class="hero-card">
+      <view class="hero-head">
+        <view class="hero-label">最近一次备份</view>
+        <view class="hero-status">{{backupStatus}}</view>
+      </view>
+      <view class="hero-time">{{lastBackupAt}}</view>
+      <view class="hero-meta-row">
+        <view class="hero-meta-item">
+          <view class="hero-meta-label">文件大小</view>
+          <view class="hero-meta-value">{{fileSize}}</view>
+        </view>
+        <view class="hero-meta-item">
+          <view class="hero-meta-label">数据条数</view>
+          <view class="hero-meta-value">{{recordCount}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel-card">
+      <view class="panel-row">
+        <view>
+          <view class="panel-title">自动备份</view>
+          <view class="panel-subtitle">系统按计划自动执行备份</view>
+        </view>
+        <view class="switch {{autoBackup ? 'switch--on' : ''}}" bindtap="toggleAutoBackup">
+          <view class="switch-knob"></view>
+        </view>
+      </view>
+      <view class="split-line"></view>
+      <view class="panel-row panel-row--compact" bindtap="chooseFrequency">
+        <view class="panel-title">备份频率</view>
+        <view class="panel-side">{{selectedFrequency}} ›</view>
+      </view>
+    </view>
+
+    <button class="primary-btn" bindtap="runManualBackup">立即手动备份</button>
+    <view class="footer-tip">备份数据用于系统恢复，请妥善保管</view>
+  </view>
+</view>

@@ -1,0 +1,3651 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>谷圈星社商品管理页面视觉预览</title>
+  <style>
+    :root {
+      --primary: #B0DDFA;
+      --primary-deep: #79A7C7;
+      --ink: #24364A;
+      --muted: #6B7F95;
+      --soft: #F7FCFF;
+      --line: #D9ECF8;
+      --pink: #FFD7E6;
+      --pink-deep: #E55472;
+      --green: #7EDDBB;
+      --violet: #C9C2FF;
+      --amber: #FFE7B8;
+      --white: rgba(255, 255, 255, 0.92);
+      --shadow: 0 22px 52px rgba(92, 127, 166, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #FCFEFF 0%, #F4FBFF 56%, #FFF8FB 100%);
+      color: var(--ink);
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    .preview-page {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: 34px 28px 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      color: #24364A;
+    }
+
+    .title-block p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .palette {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(16px);
+    }
+
+    .swatch {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(45, 76, 120, 0.12);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 26px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tab {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.66);
+      color: #6B7F95;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: #24435A;
+      background: linear-gradient(180deg, #FFFFFF 0%, #E8F6FF 100%);
+      box-shadow: 0 12px 24px rgba(176, 221, 250, 0.28);
+      border-color: rgba(255, 255, 255, 0.94);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .phone-wrap {
+      display: flex;
+      justify-content: center;
+      position: sticky;
+      top: 24px;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      padding: 14px;
+      border-radius: 42px;
+      background:
+        linear-gradient(135deg, #1F2B3D 0%, #33475F 55%, #29334F 100%);
+      box-shadow: 0 34px 82px rgba(28, 56, 88, 0.26);
+    }
+
+    .screen {
+      height: 100%;
+      overflow: hidden;
+      border-radius: 32px;
+      background: linear-gradient(180deg, #FCFEFF 0%, #F2FAFF 56%, #FFF8FB 100%);
+      position: relative;
+    }
+
+    .screen::before,
+    .screen::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      display: none;
+    }
+
+    .screen::before {
+      left: 30px;
+      right: 30px;
+      top: 96px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(140, 203, 255, 0.65), rgba(255, 184, 209, 0.65), transparent);
+    }
+
+    .screen::after {
+      width: 128px;
+      height: 128px;
+      right: -38px;
+      bottom: 88px;
+      border-radius: 50%;
+      background: rgba(140, 203, 255, 0.12);
+      opacity: 1;
+    }
+
+    .status {
+      height: 86px;
+      padding: 15px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      color: #24364A;
+      font-size: 12px;
+      font-weight: 800;
+      position: relative;
+      z-index: 4;
+    }
+
+    .status::after {
+      content: "";
+      position: absolute;
+      right: 18px;
+      top: 42px;
+      width: 86px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      box-shadow: 0 8px 20px rgba(45, 76, 120, 0.08);
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    .view {
+      display: none;
+      height: calc(100% - 86px);
+      padding: 0 24px 24px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .brand {
+      padding: 20px 0 24px;
+      text-align: center;
+    }
+
+    .brand-mark {
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 16px;
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      color: #3B4E67;
+      font-size: 32px;
+      font-weight: 900;
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(176, 221, 250, 0.84));
+      border: 2px solid rgba(255, 255, 255, 0.95);
+      box-shadow:
+        0 14px 30px rgba(176, 221, 250, 0.3),
+        0 0 0 8px rgba(255, 255, 255, 0.42);
+      transform: rotate(-3deg);
+    }
+
+    .brand-title {
+      font-size: 34px;
+      line-height: 1.18;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #24364A;
+      text-shadow: 0 2px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .brand-subtitle {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .form-card {
+      padding: 24px 22px;
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 253, 255, 0.92));
+      border: 1px solid rgba(217, 236, 248, 0.96);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-card::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 0;
+      height: 7px;
+      border-radius: 0 0 999px 999px;
+      background: linear-gradient(90deg, var(--primary-deep), var(--primary), var(--pink), var(--violet));
+    }
+
+    .form-card::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      right: 18px;
+      top: 18px;
+      border-radius: 6px;
+      background:
+        linear-gradient(45deg, transparent 0 42%, rgba(121, 167, 199, 0.28) 42% 58%, transparent 58%),
+        linear-gradient(-45deg, transparent 0 42%, rgba(255, 215, 230, 0.5) 42% 58%, transparent 58%);
+      border: 1px solid rgba(121, 167, 199, 0.08);
+    }
+
+    .card-title {
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .card-subtitle {
+      margin-top: 8px;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      color: #557087;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .input {
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background:
+        rgba(255, 255, 255, 0.94);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      color: #A0AEC0;
+      font-size: 14px;
+    }
+
+    .input strong {
+      color: #24364A;
+      font-weight: 600;
+    }
+
+    .eye {
+      margin-left: auto;
+      width: 22px;
+      height: 14px;
+      border: 2px solid var(--primary-deep);
+      border-radius: 16px / 11px;
+      position: relative;
+    }
+
+    .eye::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--primary-deep);
+    }
+
+    .button {
+      height: 52px;
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+      color: #24435A;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow:
+        0 14px 28px rgba(176, 221, 250, 0.32);
+    }
+
+    .upload-submit {
+      margin-top: 34px;
+      margin-bottom: 26px;
+    }
+
+    .link-line {
+      margin-top: 17px;
+      text-align: center;
+      color: #6C8AA3;
+      font-size: 14px;
+    }
+
+    .avatar-area {
+      text-align: center;
+      margin: 4px 0 24px;
+    }
+
+    .avatar {
+      width: 116px;
+      height: 116px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      border: 2px dashed rgba(121, 167, 199, 0.56);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(234, 247, 255, 0.9));
+      display: grid;
+      place-items: center;
+      color: #3B4E67;
+      font-size: 38px;
+      box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.45);
+    }
+
+    .avatar-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .admin-view {
+      padding: 0 10px 80px;
+      height: calc(100% - 86px);
+      background: linear-gradient(180deg, #FCFEFF 0%, #F2FAFF 56%, #FFF8FB 100%);
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0 14px;
+    }
+
+    .admin-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #24364A;
+    }
+
+    .icon-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .icon-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--primary-deep);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    .search-page {
+      padding: 0 10px 16px;
+      height: calc(100% - 86px);
+      overflow: hidden;
+      background: linear-gradient(180deg, #FCFEFF 0%, #F2FAFF 56%, #FFF8FB 100%);
+    }
+
+    .search-shell {
+      height: calc(100% - 58px);
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      padding-bottom: 10px;
+      scrollbar-width: none;
+    }
+
+    .search-shell::-webkit-scrollbar {
+      display: none;
+    }
+
+    .search-bar {
+      display: grid;
+      grid-template-columns: 1fr 48px;
+      gap: 10px;
+    }
+
+    .search-input-card {
+      min-height: 48px;
+      border-radius: 18px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #9AAAC0;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.08);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .search-input-card strong {
+      color: #60718A;
+      font-weight: 900;
+    }
+
+    .search-submit {
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--primary-deep);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.08);
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .search-section {
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(220, 233, 248, 0.92);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.08);
+    }
+
+    .search-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .search-section-title {
+      color: #24364A;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .search-clear {
+      color: #8AA5C2;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .search-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .search-tag {
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #60718A;
+      background: rgba(242, 250, 255, 0.92);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .search-tag.active {
+      color: #24435A;
+      background: linear-gradient(180deg, #FCE8F0 0%, #E3F3FF 100%);
+      border-color: rgba(210, 230, 248, 0.96);
+    }
+
+    .search-result-meta {
+      color: #8EA1B8;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .filters {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      color: #60718A;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .filters span:last-child {
+      margin-left: auto;
+      color: #4B84BF;
+      background: rgba(176, 221, 250, 0.26);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .filter-dropdowns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: -8px 0 12px;
+    }
+
+    .filter-menu {
+      padding: 7px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(217, 236, 248, 0.95);
+      box-shadow: 0 12px 24px rgba(45, 76, 120, 0.08);
+    }
+
+    .filter-menu-title {
+      padding: 0 6px 5px;
+      color: #8EA1B8;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .filter-menu-option {
+      min-height: 28px;
+      border-radius: 11px;
+      padding: 0 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #60718A;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .filter-menu-option.active {
+      color: #24435A;
+      background: #DFF2FF;
+    }
+
+    .filter-menu-option.active::after {
+      content: "✓";
+      color: #4B84BF;
+      font-weight: 900;
+    }
+
+    .batch-panel {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      align-items: center;
+      gap: 7px;
+      margin: -6px 0 12px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      box-shadow: 0 10px 20px rgba(45, 76, 120, 0.08);
+    }
+
+    .batch-count {
+      color: #60718A;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .batch-count strong {
+      color: #4B84BF;
+      font-size: 15px;
+    }
+
+    .batch-action {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #24435A;
+      background: linear-gradient(180deg, #E8F6FF 0%, #C9E8FC 100%);
+      border: 1px solid rgba(176, 221, 250, 0.86);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .batch-action.warn {
+      color: #D94D70;
+      background: rgba(255, 230, 239, 0.92);
+      border-color: rgba(255, 199, 219, 0.88);
+    }
+
+    .goods-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .goods-card {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 252, 255, 0.9));
+      border: 1px solid rgba(220, 233, 248, 0.92);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.1);
+      position: relative;
+    }
+
+    .goods-card.batch-selected {
+      border-color: rgba(176, 221, 250, 1);
+      box-shadow:
+        0 12px 26px rgba(45, 76, 120, 0.12),
+        inset 0 0 0 2px rgba(176, 221, 250, 0.36);
+    }
+
+    .batch-check {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(176, 221, 250, 0.92);
+      box-shadow: 0 6px 12px rgba(45, 76, 120, 0.12);
+    }
+
+    .batch-check.checked {
+      background: linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+      border-color: rgba(75, 132, 191, 0.4);
+    }
+
+    .batch-check.checked::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 4px;
+      width: 6px;
+      height: 10px;
+      border-right: 2px solid #24435A;
+      border-bottom: 2px solid #24435A;
+      transform: rotate(45deg);
+    }
+
+    .batch-operation-view {
+      padding: 0 10px 78px;
+      height: calc(100% - 86px);
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(180deg, #FCFEFF 0%, #F2FAFF 56%, #FFF8FB 100%);
+    }
+
+    .batch-operation-view .filters {
+      margin-bottom: 10px;
+    }
+
+    .cancel-batch {
+      margin-left: auto;
+      color: #4B84BF;
+      background: transparent;
+      padding: 0;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .batch-scroll {
+      height: calc(100% - 100px);
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      padding-bottom: 84px;
+      scrollbar-width: none;
+    }
+
+    .batch-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .batch-row-card {
+      display: grid;
+      grid-template-columns: 30px 76px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 252, 255, 0.9));
+      border: 1px solid rgba(220, 233, 248, 0.92);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.1);
+      position: relative;
+    }
+
+    .batch-row-card.muted {
+      opacity: 0.58;
+    }
+
+    .batch-select-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: transparent;
+      border: 2px solid #C5D6F0;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .batch-select-dot.checked {
+      background: #1F2940;
+      border-color: #1F2940;
+    }
+
+    .batch-thumb {
+      width: 76px;
+      height: 76px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #FFE0F0 0%, #DDEBFF 54%, #C9E8FC 100%);
+      font-size: 28px;
+      font-weight: 900;
+      position: relative;
+    }
+
+    .batch-thumb .quality {
+      left: 7px;
+      top: 7px;
+    }
+
+    .batch-row-card .goods-body {
+      min-width: 0;
+    }
+
+    .batch-bottom-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: 1fr 120px 128px;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px 16px;
+      background: rgba(255, 255, 255, 0.94);
+      border-top: 1px solid rgba(217, 236, 248, 0.9);
+      box-shadow: 0 -12px 24px rgba(45, 76, 120, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .batch-all {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      column-gap: 8px;
+      align-items: center;
+    }
+
+    .batch-all-title {
+      color: #24364A;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .batch-all-sub {
+      margin-top: 2px;
+      color: #8493AA;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .batch-all-sub strong {
+      color: #E55472;
+    }
+
+    .batch-bottom-btn {
+      height: 44px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #24435A;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .batch-bottom-btn.danger {
+      color: #D94D70;
+      background: rgba(255, 230, 239, 0.72);
+      border: 1px solid rgba(255, 199, 219, 0.82);
+      box-shadow: none;
+    }
+
+    .batch-status-summary {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .batch-status-item {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px;
+      border-radius: 16px;
+      background: rgba(242, 250, 255, 0.82);
+    }
+
+    .batch-status-thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-weight: 900;
+    }
+
+    .batch-status-name {
+      color: #24364A;
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 900;
+    }
+
+    .status-choice-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .status-choice {
+      min-height: 52px;
+      border-radius: 18px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #60718A;
+      background: rgba(242, 250, 255, 0.86);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .status-choice span {
+      display: block;
+    }
+
+    .status-choice small {
+      display: block;
+      margin-top: 4px;
+      color: #8493AA;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .status-choice.active {
+      color: #24435A;
+      background: #DFF2FF;
+      border-color: rgba(176, 221, 250, 0.95);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.82);
+    }
+
+    .status-choice.active::after {
+      content: "✓";
+      color: #4B84BF;
+      font-weight: 900;
+    }
+
+    .sold-quantity-row {
+      display: grid;
+      grid-template-columns: 1fr 86px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid rgba(217, 236, 248, 0.72);
+    }
+
+    .sold-quantity-row:first-of-type {
+      border-top: 0;
+    }
+
+    .sold-quantity-name {
+      color: #24364A;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 900;
+    }
+
+    .sold-quantity-meta {
+      margin-top: 4px;
+      color: #8493AA;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .thumb {
+      width: 76px;
+      height: 76px;
+      border-radius: 16px;
+      background:
+        linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .quality {
+      position: absolute;
+      left: 21px;
+      top: 21px;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 10px;
+      line-height: 20px;
+      font-weight: 900;
+      background: #79A7C7;
+    }
+
+    .quality.flaw {
+      background: #CF4F70;
+    }
+
+    .goods-body {
+      min-width: 0;
+    }
+
+    .goods-title {
+      margin: 0;
+      color: #23304D;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 900;
+    }
+
+    .goods-title-line {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .goods-row {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .meta {
+      color: #68709A;
+      font-size: 11px;
+      line-height: 1.8;
+      white-space: nowrap;
+    }
+
+    .price {
+      color: var(--pink-deep);
+      font-size: 18px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .price-owner {
+      min-width: 70px;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .owner {
+      margin-top: auto;
+      color: #747AA0;
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      margin-top: 0;
+      flex: 0 0 auto;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #4B84BF;
+      background: rgba(176, 221, 250, 0.28);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .status-pill.sold {
+      color: #1E8E69;
+      background: rgba(120, 199, 162, 0.22);
+    }
+
+    .status-pill.down {
+      color: #718097;
+      background: rgba(148, 163, 184, 0.16);
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: -10px;
+      right: -10px;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 9px 18px 14px;
+      background: rgba(255, 255, 255, 0.9);
+      border-top: 1px solid rgba(217, 236, 248, 0.9);
+      box-shadow: 0 -12px 28px rgba(45, 76, 120, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-item {
+      display: grid;
+      place-items: center;
+      gap: 4px;
+      color: #8C9BB0;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .nav-item.active {
+      color: #24364A;
+      font-weight: 900;
+    }
+
+    .nav-icon {
+      width: 48px;
+      height: 30px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+      position: relative;
+      color: inherit;
+      transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .nav-item.active .nav-icon {
+      background: linear-gradient(180deg, #FFE2EC 0%, #CFE7FF 100%);
+      box-shadow: 0 8px 18px rgba(45, 76, 120, 0.12);
+    }
+
+    .nav-symbol {
+      width: 20px;
+      height: 20px;
+      position: relative;
+      display: block;
+    }
+
+    .nav-symbol::before,
+    .nav-symbol::after {
+      content: "";
+      position: absolute;
+      box-sizing: border-box;
+    }
+
+    .nav-symbol.stats::before {
+      left: 2px;
+      bottom: 2px;
+      width: 4px;
+      height: 9px;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 7px -5px 0 currentColor, 14px -1px 0 currentColor;
+    }
+
+    .nav-symbol.stats::after {
+      left: 1px;
+      right: 1px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.35;
+    }
+
+    .nav-symbol.goods::before {
+      inset: 2px 3px 3px 3px;
+      border: 2px solid currentColor;
+      border-radius: 5px;
+      transform: rotate(-5deg);
+    }
+
+    .nav-symbol.goods::after {
+      right: 6px;
+      top: 6px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .nav-symbol.users::before {
+      left: 6px;
+      top: 2px;
+      width: 8px;
+      height: 8px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .nav-symbol.users::after {
+      left: 3px;
+      bottom: 2px;
+      width: 14px;
+      height: 8px;
+      border: 2px solid currentColor;
+      border-bottom: 0;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .nav-symbol.settings::before {
+      inset: 3px;
+      border: 2px dotted currentColor;
+      border-radius: 50%;
+    }
+
+    .nav-symbol.settings::after {
+      left: 8px;
+      top: 8px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .admin-subpage {
+      padding: 0 10px 84px;
+      height: calc(100% - 86px);
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(180deg, #FCFEFF 0%, #F2FAFF 56%, #FFF8FB 100%);
+    }
+
+    .sub-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0 12px;
+    }
+
+    .back-chip {
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: #557087;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(217, 236, 248, 0.9);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .sub-title-group {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .sub-title {
+      color: #24364A;
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .sub-caption {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .sub-scroll {
+      height: calc(100% - 58px);
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      padding-bottom: 10px;
+      scrollbar-width: none;
+    }
+
+    #goodsUpload,
+    #batchUpload,
+    #goodsEdit {
+      padding-bottom: 0;
+    }
+
+    #goodsUpload .sub-scroll,
+    #batchUpload .sub-scroll,
+    #goodsEdit .sub-scroll {
+      padding-bottom: 88px;
+    }
+
+    #goodsUpload .upload-submit,
+    #batchUpload .batch-upload-submit,
+    #goodsEdit .edit-submit {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 16px;
+      width: auto;
+      margin: 0;
+    }
+
+    .sub-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .detail-gallery {
+      height: 228px;
+      border-radius: 26px;
+      background:
+        linear-gradient(145deg, rgba(176, 221, 250, 0.92), rgba(201, 194, 255, 0.8) 52%, rgba(255, 215, 230, 0.82));
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      font-size: 34px;
+      font-weight: 900;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detail-gallery::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      border-radius: 20px;
+      pointer-events: none;
+    }
+
+    .gallery-slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+    }
+
+    .gallery-slide.active {
+      opacity: 1;
+    }
+
+    .gallery-slide:nth-child(2) {
+      background: linear-gradient(145deg, #C0E7FF, #FFD7E6 56%, #F7FCFF);
+    }
+
+    .gallery-slide:nth-child(3) {
+      background: linear-gradient(145deg, #DDF1FF, #C9C2FF 52%, #FFE2EC);
+    }
+
+    .gallery-symbol {
+      color: #FFFFFF;
+      font-size: 34px;
+      font-weight: 900;
+      text-shadow: 0 8px 18px rgba(45, 76, 120, 0.16);
+    }
+
+    .gallery-dots {
+      position: absolute;
+      right: 16px;
+      bottom: 20px;
+      z-index: 2;
+      display: flex;
+      gap: 5px;
+    }
+
+    .gallery-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .gallery-dot.active {
+      width: 14px;
+      border-radius: 999px;
+      background: #FFFFFF;
+    }
+
+    .gallery-arrow {
+      position: absolute;
+      top: 50%;
+      z-index: 3;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      transform: translateY(-50%);
+      color: #4B84BF;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .gallery-arrow.prev {
+      left: 12px;
+    }
+
+    .gallery-arrow.next {
+      right: 12px;
+    }
+
+    .viewer-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 38px 18px;
+      background: rgba(28, 38, 58, 0.68);
+      backdrop-filter: blur(12px);
+    }
+
+    .viewer-overlay.active {
+      display: grid;
+    }
+
+    .viewer-stage {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      box-shadow: 0 24px 48px rgba(12, 22, 40, 0.28);
+      font-size: 52px;
+      font-weight: 900;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .viewer-top {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .viewer-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+    }
+
+    .viewer-hint {
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .detail-summary-card,
+    .mini-card,
+    .form-section,
+    .link-card {
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      box-shadow: 0 10px 22px rgba(45, 76, 120, 0.09);
+    }
+
+    .detail-summary-card {
+      padding: 14px;
+    }
+
+    .detail-title-line {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .detail-name {
+      color: #23304D;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 900;
+    }
+
+    .detail-price {
+      color: var(--pink-deep);
+      font-size: 22px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .info-cell {
+      padding: 10px 8px;
+      border-radius: 16px;
+      background: rgba(242, 250, 255, 0.84);
+      text-align: center;
+    }
+
+    .info-label {
+      color: #7A8AA0;
+      font-size: 10px;
+    }
+
+    .info-value {
+      margin-top: 4px;
+      color: #24364A;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .mini-card {
+      padding: 13px 14px;
+    }
+
+    .mini-title {
+      color: #24364A;
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .line-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 7px 0;
+      color: #718097;
+      font-size: 12px;
+      border-top: 1px solid rgba(217, 236, 248, 0.72);
+    }
+
+    .line-item:first-of-type {
+      border-top: 0;
+    }
+
+    .line-item strong {
+      color: #24364A;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .platform-link-item > span:first-child {
+      min-width: 70px;
+      text-align: left;
+      line-height: 26px;
+    }
+
+    .open-link-btn {
+      min-width: 54px;
+      height: 26px;
+      padding: 0 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #24435A;
+      background: linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+      font-size: 11px;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow: 0 8px 16px rgba(176, 221, 250, 0.28);
+    }
+
+    .empty-link-text {
+      color: #9AA9BA;
+      font-weight: 800;
+    }
+
+    .record-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .record-item {
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(242, 250, 255, 0.84);
+    }
+
+    .record-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #24364A;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .record-meta {
+      margin-top: 5px;
+      color: #718097;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .remark-text {
+      color: #60718A;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .action-dock {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .dock-btn {
+      height: 44px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.94);
+      color: #4B84BF;
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      box-shadow: 0 10px 20px rgba(45, 76, 120, 0.1);
+    }
+
+    .dock-btn.primary {
+      color: #24435A;
+      border: 0;
+      background: linear-gradient(180deg, #C0E7FF 0%, #B0DDFA 100%);
+    }
+
+    .form-section {
+      padding: 13px;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .upload-tile {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #79A7C7;
+      background: rgba(242, 250, 255, 0.9);
+      border: 1px dashed rgba(121, 167, 199, 0.5);
+      font-size: 24px;
+      font-weight: 300;
+    }
+
+    .upload-tile.empty {
+      color: transparent;
+      border-style: solid;
+      border-color: rgba(217, 236, 248, 0.72);
+      background: rgba(255, 255, 255, 0.48);
+    }
+
+    .upload-tile.filled {
+      color: #FFFFFF;
+      border: 0;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-weight: 900;
+    }
+
+    .form-row {
+      margin-top: 10px;
+    }
+
+    .form-row:first-child {
+      margin-top: 0;
+    }
+
+    .small-label {
+      display: block;
+      color: #60718A;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .required::after {
+      content: "*";
+      color: #E55472;
+      margin-left: 3px;
+      font-weight: 900;
+    }
+
+    .fake-input,
+    .fake-select {
+      min-height: 42px;
+      border-radius: 16px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #9AA9BA;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(217, 236, 248, 0.96);
+      font-size: 12px;
+    }
+
+    .fake-select {
+      position: relative;
+      padding-right: 42px;
+      color: #60718A;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 250, 255, 0.9));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+    }
+
+    .fake-select .select-arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(180deg, #E8F6FF 0%, #C9E8FC 100%);
+      border: 1px solid rgba(176, 221, 250, 0.95);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .fake-select .select-arrow::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      border-right: 2px solid #4B84BF;
+      border-bottom: 2px solid #4B84BF;
+      transform: translate(-50%, -62%) rotate(45deg);
+    }
+
+    .select-wrap {
+      position: relative;
+    }
+
+    .select-wrap.open .fake-select {
+      border-color: rgba(176, 221, 250, 0.95);
+      box-shadow:
+        0 10px 20px rgba(176, 221, 250, 0.2),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.86);
+    }
+
+    .select-wrap.open .select-arrow::after {
+      transform: translate(-50%, -38%) rotate(225deg);
+    }
+
+    .select-popover {
+      margin-top: 6px;
+      padding: 6px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(217, 236, 248, 0.95);
+      box-shadow: 0 14px 28px rgba(45, 76, 120, 0.12);
+    }
+
+    .select-option {
+      min-height: 34px;
+      border-radius: 13px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #60718A;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .select-option.active {
+      color: #24435A;
+      background: linear-gradient(90deg, rgba(205, 239, 255, 0.92), rgba(231, 247, 255, 0.88));
+    }
+
+    .select-option.active::after {
+      content: "✓";
+      color: #4B84BF;
+      font-weight: 900;
+    }
+
+    .custom-type-input {
+      margin-top: 8px;
+      border-color: rgba(176, 221, 250, 0.98);
+      background: rgba(242, 250, 255, 0.92);
+    }
+
+    .fake-input strong,
+    .fake-select strong {
+      color: #24364A;
+    }
+
+    .form-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .segment {
+      min-height: 36px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #6B7F95;
+      background: rgba(242, 250, 255, 0.86);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .segment.active {
+      color: #24435A;
+      background: #DFF2FF;
+      border: 1px solid rgba(121, 167, 199, 0.36);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.74);
+    }
+
+    .link-card {
+      padding: 12px;
+    }
+
+    .link-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .link-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: linear-gradient(145deg, #8CCBFF, #B7A8FF 52%, #FFB8D1);
+      font-weight: 900;
+    }
+
+    .link-title {
+      color: #24364A;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .batch-upload-tip {
+      padding: 12px;
+      border-radius: 18px;
+      color: #60718A;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .batch-upload-card {
+      padding: 12px;
+    }
+
+    .batch-upload-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .batch-upload-index {
+      color: #24364A;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .batch-upload-remove {
+      color: #E55472;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .batch-add-card {
+      min-height: 54px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #4B84BF;
+      background: rgba(242, 250, 255, 0.9);
+      border: 1px dashed rgba(176, 221, 250, 0.96);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .batch-upload-zone {
+      padding: 14px;
+    }
+
+    .upload-zone-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .upload-zone-title {
+      color: #24364A;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .upload-zone-desc {
+      margin-top: 4px;
+      color: #7A8AA0;
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .upload-count {
+      flex: 0 0 auto;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      color: #4B84BF;
+      background: rgba(176, 221, 250, 0.24);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .excel-card {
+      min-height: 96px;
+      border-radius: 18px;
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      background: rgba(242, 250, 255, 0.9);
+      border: 1px dashed rgba(176, 221, 250, 0.96);
+    }
+
+    .excel-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #24435A;
+      background: linear-gradient(180deg, #E8F6FF 0%, #C9E8FC 100%);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .excel-name {
+      color: #24364A;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .excel-meta {
+      margin-top: 5px;
+      color: #7A8AA0;
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .excel-action {
+      margin-top: 8px;
+      color: #4B84BF;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .link-code {
+      margin-top: 3px;
+      color: #7A8AA0;
+      font-size: 10px;
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .link-row .fake-select,
+    .link-row .fake-input {
+      min-height: 36px;
+      font-size: 11px;
+      border-radius: 13px;
+    }
+
+    .link-row .fake-select {
+      min-width: 0;
+      padding: 0 16px;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    .notes {
+      display: grid;
+      gap: 18px;
+    }
+
+    .note-card {
+      padding: 22px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.66);
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 16px 36px rgba(116, 148, 181, 0.1);
+      backdrop-filter: blur(14px);
+    }
+
+    .note-card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
+    .note-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .spec-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .spec-list div {
+      padding-left: 14px;
+      border-left: 4px solid var(--pink);
+    }
+
+    .magic-book {
+      position: relative;
+      height: 100%;
+      padding-top: 8px;
+      perspective: 900px;
+    }
+
+    .book-spread {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 118px;
+      height: 404px;
+      display: grid;
+      grid-template-columns: 1fr;
+      opacity: 0;
+      transform: translateY(24px) scale(0.94);
+      transform-origin: center bottom;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .spread-page {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(140, 203, 255, 0.18), rgba(255, 255, 255, 0.68), rgba(255, 184, 209, 0.16));
+      border: 1px solid rgba(219, 234, 254, 0.9);
+      box-shadow:
+        inset 0 0 0 8px rgba(255, 255, 255, 0.34),
+        0 20px 44px rgba(75, 127, 217, 0.1);
+    }
+
+    .spread-page::before,
+    .spread-page::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .spread-page::before {
+      width: 86px;
+      height: 122px;
+      left: 50%;
+      top: 22%;
+      border: 1px solid rgba(183, 168, 255, 0.22);
+      border-radius: 10px;
+      transform: translate(-50%, -50%);
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 179, 210, 0.2), transparent 24%),
+        linear-gradient(180deg, rgba(158, 216, 255, 0.12), rgba(255, 255, 255, 0.28));
+    }
+
+    .spread-page::after {
+      left: 18px;
+      right: 18px;
+      bottom: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(109, 87, 217, 0.18), transparent);
+      box-shadow: 0 18px 0 rgba(255, 140, 203, 0.1), 0 36px 0 rgba(49, 86, 216, 0.1);
+    }
+
+    .spread-page--left {
+      border-radius: 34px;
+      transform-origin: center center;
+    }
+
+    .spread-page--right {
+      display: none;
+    }
+
+    .book-spine {
+      display: none;
+    }
+
+    .floating-card {
+      position: absolute;
+      width: 44px;
+      height: 62px;
+      border-radius: 8px;
+      background:
+        linear-gradient(45deg, transparent 0 42%, rgba(255, 255, 255, 0.68) 42% 48%, transparent 48%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(236, 247, 255, 0.9));
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 12px 22px rgba(75, 127, 217, 0.16);
+      opacity: 0;
+      z-index: 6;
+    }
+
+    .floating-card::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border: 1px solid rgba(183, 168, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    .floating-card--one {
+      left: 66px;
+      top: 202px;
+      transform: rotate(-16deg);
+    }
+
+    .floating-card--two {
+      right: 58px;
+      top: 178px;
+      transform: rotate(14deg);
+    }
+
+    .floating-card--three {
+      left: 50%;
+      top: 116px;
+      transform: translateX(-50%) rotate(4deg);
+    }
+
+    .book-cover {
+      position: absolute;
+      left: 44px;
+      right: 44px;
+      top: 124px;
+      height: 370px;
+      border-radius: 34px;
+      transform-origin: center center;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.52) 0 8px, transparent 9px),
+        linear-gradient(145deg, #8CCBFF 0%, #B7A8FF 50%, #FFB8D1 100%);
+      border: 3px solid rgba(255, 255, 255, 0.84);
+      box-shadow:
+        0 26px 48px rgba(75, 127, 217, 0.2),
+        0 0 38px rgba(255, 179, 210, 0.16),
+        inset 0 0 0 12px rgba(255, 255, 255, 0.12),
+        inset 0 0 0 24px rgba(255, 255, 255, 0.12);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .book-cover::before,
+    .book-cover::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .book-cover::before {
+      width: 126px;
+      height: 168px;
+      left: 50%;
+      top: 43%;
+      border-radius: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.74);
+      transform: translate(-50%, -50%);
+      background:
+        radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.92) 0 9px, transparent 10px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+    }
+
+    .book-cover::after {
+      left: calc(50% - 19px);
+      top: calc(43% - 19px);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FFFFFF, #9ED8FF 42%, #FFB3D2);
+      box-shadow: 0 0 22px rgba(255, 255, 255, 0.62), 0 0 34px rgba(158, 216, 255, 0.42);
+      transform: rotate(45deg);
+    }
+
+    .book-pages {
+      position: relative;
+      z-index: 3;
+      opacity: 0;
+      transform: translateY(24px) scale(0.96);
+    }
+
+    .book-pages::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 122px;
+      height: 392px;
+      border-radius: 34px;
+      background:
+        linear-gradient(90deg, rgba(49, 86, 216, 0.08), transparent 14%, transparent 86%, rgba(255, 140, 203, 0.09)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent);
+      box-shadow: inset 0 0 0 1px rgba(217, 221, 248, 0.54);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .book-spark {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 3px;
+      background: linear-gradient(135deg, #FFFFFF, #DFF7FF);
+      border: 1px solid rgba(109, 87, 217, 0.14);
+      box-shadow: 0 0 16px rgba(120, 214, 255, 0.9);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 6;
+      transform: rotate(18deg);
+    }
+
+    .book-spark:nth-child(1) {
+      left: 74px;
+      top: 126px;
+    }
+
+    .book-spark:nth-child(2) {
+      right: 66px;
+      top: 236px;
+      background: linear-gradient(135deg, #FFFFFF, #FFE7F5);
+      box-shadow: 0 0 16px rgba(255, 140, 203, 0.9);
+    }
+
+    .book-spark:nth-child(3) {
+      left: 54%;
+      top: 92px;
+      width: 6px;
+      height: 6px;
+    }
+
+    .view.active .magic-book .book-cover {
+      animation: cleanCoverReveal 1.05s cubic-bezier(.2, .74, .18, 1) forwards;
+    }
+
+    .view.active .magic-book .book-spread {
+      animation: cleanPanelReveal 0.82s ease-out 0.28s forwards;
+    }
+
+    .view.active .magic-book .spread-page--left {
+      animation: none;
+    }
+
+    .view.active .magic-book .spread-page--right {
+      animation: none;
+    }
+
+    .view.active .magic-book .floating-card {
+      animation: cardFloat 1.1s ease-out 0.55s both;
+    }
+
+    .view.active .magic-book .floating-card--two {
+      animation-delay: 0.68s;
+    }
+
+    .view.active .magic-book .floating-card--three {
+      animation-delay: 0.62s;
+    }
+
+    .view.active .magic-book .book-pages {
+      animation: pagesRise 0.58s ease-out 0.72s forwards;
+    }
+
+    .view.active .magic-book .brand {
+      animation: floatIn 0.56s ease-out 0.82s both;
+    }
+
+    .view.active .magic-book .form-card {
+      animation: pageGlow 0.62s ease-out 0.92s both;
+    }
+
+    .view.active .magic-book .book-spark {
+      animation: sparkleDrift 1.5s ease-out 0.7s both;
+    }
+
+    .view.active .magic-book .book-spark:nth-child(2) {
+      animation-delay: 0.86s;
+    }
+
+    .view.active .magic-book .book-spark:nth-child(3) {
+      animation-delay: 0.78s;
+    }
+
+    .contract-scene {
+      position: relative;
+      height: 100%;
+      padding-top: 8px;
+    }
+
+    .contract-paper {
+      position: relative;
+      padding: 6px 0 0;
+      opacity: 0;
+      transform: translateY(34px) scaleY(0.82);
+      transform-origin: top center;
+    }
+
+    .contract-paper::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      top: 54px;
+      bottom: 34px;
+      border-radius: 34px 8px 34px 8px;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(120, 214, 255, 0.18), transparent 22%),
+        radial-gradient(circle at 78% 70%, rgba(255, 140, 203, 0.16), transparent 20%),
+        repeating-linear-gradient(0deg, transparent 0 28px, rgba(49, 86, 216, 0.055) 29px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(250, 246, 255, 0.7));
+      border: 1px solid rgba(217, 221, 248, 0.86);
+      box-shadow: var(--shadow);
+      z-index: -1;
+    }
+
+    .contract-paper::after {
+      content: "";
+      position: absolute;
+      left: 32px;
+      right: 32px;
+      top: 80px;
+      height: 88px;
+      border: 1px solid rgba(109, 87, 217, 0.16);
+      border-radius: 50%;
+      background: conic-gradient(from 8deg, transparent 0 12%, rgba(255, 140, 203, 0.18) 12% 14%, transparent 14% 36%, rgba(120, 214, 255, 0.18) 36% 38%, transparent 38% 100%);
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .contract-seal {
+      position: absolute;
+      right: 18px;
+      bottom: 126px;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      font-size: 28px;
+      font-weight: 900;
+      background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.28) 0 24%, transparent 25%),
+        linear-gradient(135deg, #3156D8, #FF8CCB);
+      border: 4px double rgba(255, 255, 255, 0.82);
+      box-shadow:
+        0 16px 28px rgba(217, 77, 157, 0.24),
+        0 0 22px rgba(120, 214, 255, 0.22);
+      opacity: 0;
+      transform: scale(1.8) rotate(18deg);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .contract-quill {
+      position: absolute;
+      left: 48px;
+      bottom: 126px;
+      width: 116px;
+      height: 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #6D57D9 24%, #FF8CCB 78%, transparent);
+      opacity: 0;
+      transform: rotate(-22deg) translateX(-40px);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .contract-quill::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: -7px;
+      width: 24px;
+      height: 30px;
+      border-radius: 50% 0 50% 50%;
+      background: linear-gradient(135deg, #FFFFFF, #78D6FF);
+      transform: rotate(38deg);
+    }
+
+    .view.active .contract-paper {
+      animation: contractUnfold 0.95s cubic-bezier(.18, .86, .25, 1) forwards;
+    }
+
+    .view.active .contract-paper .brand {
+      animation: floatIn 0.7s ease-out 0.36s both;
+    }
+
+    .view.active .contract-paper .form-card {
+      animation: pageGlow 0.72s ease-out 0.56s both;
+    }
+
+    .view.active .contract-quill {
+      animation: quillSign 1s ease-out 0.72s both;
+    }
+
+    .view.active .contract-seal {
+      animation: sealDrop 0.7s cubic-bezier(.18, .86, .25, 1.2) 1.2s forwards;
+    }
+
+    @keyframes cleanCoverReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(28px) scale(0.92);
+        filter: blur(2px);
+      }
+      32% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+      68% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-14px) scale(1.04);
+        filter: blur(1px);
+      }
+    }
+
+    @keyframes cleanPanelReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes cardFloat {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.88) rotate(-4deg);
+      }
+      36% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-38px) scale(1) rotate(5deg);
+      }
+    }
+
+    @keyframes pagesRise {
+      0% {
+        opacity: 0;
+        transform: translateY(22px) scale(0.97);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes floatIn {
+      0% {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pageGlow {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        box-shadow: 0 0 0 rgba(120, 214, 255, 0);
+      }
+      70% {
+        box-shadow:
+          0 26px 58px rgba(38, 48, 118, 0.18),
+          0 0 34px rgba(120, 214, 255, 0.28);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes sparkleDrift {
+      0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.4);
+      }
+      42% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-42px) translateX(18px) scale(1.25);
+      }
+    }
+
+    @keyframes contractUnfold {
+      0% {
+        opacity: 0;
+        transform: translateY(34px) scaleY(0.2);
+        filter: blur(2px);
+      }
+      72% {
+        opacity: 1;
+        transform: translateY(0) scaleY(1.04);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+        filter: blur(0);
+      }
+    }
+
+    @keyframes quillSign {
+      0% {
+        opacity: 0;
+        transform: rotate(-22deg) translateX(-40px);
+      }
+      22% {
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+        transform: rotate(-18deg) translateX(112px) translateY(20px);
+      }
+      100% {
+        opacity: 0;
+        transform: rotate(-16deg) translateX(150px) translateY(16px);
+      }
+    }
+
+    @keyframes sealDrop {
+      0% {
+        opacity: 0;
+        transform: scale(1.8) rotate(18deg);
+      }
+      62% {
+        opacity: 1;
+        transform: scale(0.86) rotate(-5deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(-8deg);
+      }
+    }
+
+    .book-cover,
+    .book-spread,
+    .book-spark,
+    .floating-card,
+    .contract-quill,
+    .contract-seal {
+      display: none;
+    }
+
+    .book-pages {
+      opacity: 1;
+      transform: none;
+    }
+
+    .book-pages::before,
+    .contract-paper::before,
+    .contract-paper::after {
+      display: none;
+    }
+
+    .view.active .magic-book .book-pages,
+    .view.active .magic-book .brand,
+    .view.active .magic-book .form-card,
+    .view.active .contract-paper,
+    .view.active .contract-paper .brand,
+    .view.active .contract-paper .form-card {
+      animation: softFadeIn 0.42s ease-out both;
+    }
+
+    .contract-paper {
+      opacity: 1;
+      transform: none;
+    }
+
+    @keyframes softFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 920px) {
+      .topbar,
+      .workspace {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .phone-wrap {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview-page">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>谷圈星社商品管理页面视觉预览</h1>
+        <p>商品管理独立设计稿，包含列表、详情、上传、编辑、批量上架页面。沿用蓝粉轻二次元风格：浅蓝主色、柔粉点缀、白色玻璃卡片，信息清楚不杂乱。</p>
+      </div>
+      <div class="palette" aria-label="主题色板">
+        <div class="swatch" style="background:#B0DDFA" title="#B0DDFA"></div>
+        <div class="swatch" style="background:#FFD7E6" title="#FFD7E6"></div>
+        <div class="swatch" style="background:#C9C2FF" title="#C9C2FF"></div>
+        <div class="swatch" style="background:#F7FCFF" title="#F7FCFF"></div>
+        <div class="swatch" style="background:#24364A" title="#24364A"></div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="页面切换">
+      <button class="tab" data-target="goods">商品列表</button>
+      <button class="tab" data-target="goodsSearch">商品搜索</button>
+      <button class="tab active" data-target="batchOperation">批量操作</button>
+      <button class="tab" data-target="batchStatus">批量改状态</button>
+      <button class="tab" data-target="batchSold">批量售出</button>
+      <button class="tab" data-target="goodsDetail">商品详情</button>
+      <button class="tab" data-target="goodsUpload">上传商品</button>
+      <button class="tab" data-target="batchUpload">批量上传</button>
+      <button class="tab" data-target="goodsEdit">编辑商品</button>
+      <button class="tab" data-target="batchLinks">批量上架</button>
+    </nav>
+
+    <section class="workspace">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="status">
+              <span>9:41</span>
+              <span class="signal"><span class="dot"></span><span class="dot"></span><span class="dot"></span> 100%</span>
+            </div>
+
+            <section class="view" id="login">
+              <div class="magic-book">
+                <div class="book-spread">
+                  <div class="spread-page spread-page--left"></div>
+                  <div class="spread-page spread-page--right"></div>
+                  <div class="book-spine"></div>
+                </div>
+                <div class="book-cover"></div>
+                <span class="book-spark"></span>
+                <span class="book-spark"></span>
+                <span class="book-spark"></span>
+                <span class="floating-card floating-card--one"></span>
+                <span class="floating-card floating-card--two"></span>
+                <span class="floating-card floating-card--three"></span>
+                <div class="book-pages">
+                  <div class="brand">
+                    <div class="brand-mark">✦</div>
+                    <div class="brand-title">谷圈星社</div>
+                    <div class="brand-subtitle">收集热爱，也让喜欢流转起来</div>
+                  </div>
+                  <div class="form-card">
+                    <div class="card-title">欢迎回来</div>
+                    <div class="card-subtitle">登录后查看你的寄售与收藏</div>
+                    <div class="field">
+                      <span class="label">账号</span>
+                      <div class="input">请输入账号</div>
+                    </div>
+                    <div class="field">
+                      <span class="label">密码</span>
+                      <div class="input">请输入密码 <span class="eye"></span></div>
+                    </div>
+                    <button class="button">登录</button>
+                    <div class="link-line">没有账号？去注册</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="register">
+              <div class="magic-book">
+                <div class="book-spread">
+                  <div class="spread-page spread-page--left"></div>
+                  <div class="spread-page spread-page--right"></div>
+                  <div class="book-spine"></div>
+                </div>
+                <div class="book-cover"></div>
+                <span class="book-spark"></span>
+                <span class="book-spark"></span>
+                <span class="book-spark"></span>
+                <span class="floating-card floating-card--one"></span>
+                <span class="floating-card floating-card--two"></span>
+                <span class="floating-card floating-card--three"></span>
+                <div class="book-pages">
+                  <div class="brand">
+                    <div class="brand-mark">♡</div>
+                    <div class="brand-title">创建账号</div>
+                    <div class="brand-subtitle">开始记录你的喜欢与寄售</div>
+                  </div>
+                  <div class="form-card">
+                    <div class="field">
+                      <span class="label">账号</span>
+                      <div class="input">请输入6-12英文和数字</div>
+                    </div>
+                    <div class="field">
+                      <span class="label">密码</span>
+                      <div class="input">请输入6-12位的英文或数字 <span class="eye"></span></div>
+                    </div>
+                    <div class="field">
+                      <span class="label">确认密码</span>
+                      <div class="input">请再次输入密码 <span class="eye"></span></div>
+                    </div>
+                    <button class="button">注册</button>
+                    <div class="link-line">已有账号？去登录</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="profile">
+              <div class="contract-scene">
+                <div class="contract-paper">
+                  <div class="brand">
+                    <div class="brand-mark">☁</div>
+                    <div class="brand-title">填写资料</div>
+                    <div class="brand-subtitle">还差一步，就可以开始逛啦</div>
+                  </div>
+                  <div class="form-card">
+                    <div class="avatar-area">
+                      <div class="avatar">星</div>
+                      <div class="avatar-note">点击上传头像</div>
+                    </div>
+                    <div class="field">
+                      <span class="label">昵称</span>
+                      <div class="input"><strong>小谷收藏家</strong></div>
+                    </div>
+                    <button class="button">完成</button>
+                  </div>
+                </div>
+                <div class="contract-quill"></div>
+                <div class="contract-seal">契</div>
+              </div>
+            </section>
+
+            <section class="view admin-view" id="goods">
+              <div class="admin-header">
+                <div class="admin-title">商品管理</div>
+                <div class="icon-actions">
+                  <div class="icon-button">⌕</div>
+                  <div class="icon-button">＋</div>
+                </div>
+              </div>
+              <div class="filters">
+                <span>全部用户 ▼</span>
+                <span>商品状态 ▼</span>
+                <span>角色 ▼</span>
+                <span>批量</span>
+              </div>
+              <div class="filter-dropdowns">
+                <div class="filter-menu">
+                  <div class="filter-menu-title">全部用户</div>
+                  <div class="filter-menu-option active">全部</div>
+                  <div class="filter-menu-option">桃桃寄售</div>
+                  <div class="filter-menu-option">夏油厨</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">商品状态</div>
+                  <div class="filter-menu-option active">全部</div>
+                  <div class="filter-menu-option">已上架</div>
+                  <div class="filter-menu-option">已下架</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">角色</div>
+                  <div class="filter-menu-option active">全部</div>
+                  <div class="filter-menu-option">流萤</div>
+                  <div class="filter-menu-option">五条悟</div>
+                </div>
+              </div>
+              <div class="goods-list">
+                <article class="goods-card">
+                  <span class="quality">无暇</span>
+                  <div class="thumb">✦</div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">流萤 · 星穹铁道镭射票</div>
+                      <div class="status-pill">已上架</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：崩坏星穹铁道<br>数量 2<br>类型：镭射票</div>
+                      <div class="price-owner">
+                        <div class="price">¥68</div>
+                        <div class="owner">桃桃寄售</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                <article class="goods-card">
+                  <span class="quality flaw">有瑕</span>
+                  <div class="thumb">✧</div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">五条悟 · 怀玉玉折小卡</div>
+                      <div class="status-pill down">已下架</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：咒术回战<br>数量 1<br>类型：小卡</div>
+                      <div class="price-owner">
+                        <div class="price">¥32</div>
+                        <div class="owner">夏油厨</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                <article class="goods-card">
+                  <span class="quality">无暇</span>
+                  <div class="thumb">✦</div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">宫侑 · 稻荷崎吧唧</div>
+                      <div class="status-pill sold">已售出</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：排球少年<br>数量 1<br>类型：吧唧</div>
+                      <div class="price-owner">
+                        <div class="price">¥45</div>
+                        <div class="owner">北队推</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-item"><div class="nav-icon"><span class="nav-symbol stats"></span></div><div>统计</div></div>
+                <div class="nav-item active"><div class="nav-icon"><span class="nav-symbol goods"></span></div><div>商品</div></div>
+                <div class="nav-item"><div class="nav-icon"><span class="nav-symbol users"></span></div><div>用户</div></div>
+                <div class="nav-item"><div class="nav-icon"><span class="nav-symbol settings"></span></div><div>设置</div></div>
+              </div>
+            </section>
+
+            <section class="view search-page" id="goodsSearch">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">搜索商品</div>
+                </div>
+              </div>
+              <div class="search-shell">
+                <div class="search-bar">
+                  <div class="search-input-card"><strong>流萤</strong></div>
+                  <div class="search-submit">⌕</div>
+                </div>
+                <div class="search-section">
+                  <div class="search-section-head">
+                    <div class="search-section-title">搜索结果</div>
+                    <div class="search-clear">共 2 件</div>
+                  </div>
+                  <div class="goods-list">
+                    <article class="goods-card">
+                      <span class="quality">无暇</span>
+                      <div class="thumb">✦</div>
+                      <div class="goods-body">
+                        <div class="search-result-meta">角色匹配：流萤</div>
+                        <div class="goods-title-line">
+                          <div class="goods-title">流萤 · 星穹铁道镭射票</div>
+                          <div class="status-pill">已上架</div>
+                        </div>
+                        <div class="goods-row">
+                          <div class="meta">IP：崩坏星穹铁道<br>数量 2<br>类型：镭射票</div>
+                          <div class="price-owner">
+                            <div class="price">¥68</div>
+                            <div class="owner">桃桃寄售</div>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                    <article class="goods-card">
+                      <span class="quality">无暇</span>
+                      <div class="thumb">✧</div>
+                      <div class="goods-body">
+                        <div class="search-result-meta">系列匹配：流萤生日会</div>
+                        <div class="goods-title-line">
+                          <div class="goods-title">流萤 · 星愿徽章套组</div>
+                          <div class="status-pill sold">已售出</div>
+                        </div>
+                        <div class="goods-row">
+                          <div class="meta">IP：崩坏星穹铁道<br>数量 1<br>类型：徽章</div>
+                          <div class="price-owner">
+                            <div class="price">¥88</div>
+                            <div class="owner">桃桃寄售</div>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view batch-operation-view active" id="batchOperation">
+              <div class="admin-header">
+                <div class="admin-title">商品管理</div>
+                <div class="icon-actions">
+                  <div class="icon-button">⌕</div>
+                  <div class="icon-button">＋</div>
+                </div>
+              </div>
+              <div class="filters">
+                <span>寄售用户 ▼</span>
+                <span>商品状态 ▼</span>
+                <span>角色 ▼</span>
+                <span class="cancel-batch">取消批量</span>
+              </div>
+              <div class="filter-dropdowns">
+                <div class="filter-menu">
+                  <div class="filter-menu-title">寄售用户</div>
+                  <div class="filter-menu-option active">全部</div>
+                  <div class="filter-menu-option">桃桃寄售</div>
+                  <div class="filter-menu-option">夏油厨</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">商品状态</div>
+                  <div class="filter-menu-option active">全部</div>
+                  <div class="filter-menu-option">已上架</div>
+                  <div class="filter-menu-option">已售出</div>
+                </div>
+                <div class="filter-menu">
+                  <div class="filter-menu-title">角色</div>
+                  <div class="filter-menu-option active">全部</div>
+                  <div class="filter-menu-option">宫侑</div>
+                  <div class="filter-menu-option">凪诚士郎</div>
+                </div>
+              </div>
+              <div class="batch-scroll">
+                <article class="batch-row-card">
+                  <div class="batch-select-dot checked">✓</div>
+                  <div class="batch-thumb">
+                    <span class="quality">无暇</span>
+                    ✦
+                  </div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">流萤 · 星穹铁道镭射票</div>
+                      <div class="status-pill">已上架</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：崩坏星穹铁道<br>数量 2<br>类型：镭射票</div>
+                      <div class="price-owner">
+                        <div class="price">¥68</div>
+                        <div class="owner">桃桃寄售</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                <article class="batch-row-card">
+                  <div class="batch-select-dot checked">✓</div>
+                  <div class="batch-thumb">
+                    <span class="quality flaw">有瑕</span>
+                    ✦
+                  </div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">五条悟 · 怀玉玉折小卡</div>
+                      <div class="status-pill down">已下架</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：咒术回战<br>数量 1<br>类型：小卡</div>
+                      <div class="price-owner">
+                        <div class="price">¥32</div>
+                        <div class="owner">夏油厨</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                <article class="batch-row-card muted">
+                  <div class="batch-select-dot"></div>
+                  <div class="batch-thumb">
+                    <span class="quality">无暇</span>
+                    ✦
+                  </div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">宫侑 · 稻荷崎吧唧</div>
+                      <div class="status-pill sold">已售出</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：排球少年<br>数量 1<br>类型：吧唧</div>
+                      <div class="price-owner">
+                        <div class="price">¥45</div>
+                        <div class="owner">北队推</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                <article class="batch-row-card">
+                  <div class="batch-select-dot"></div>
+                  <div class="batch-thumb">
+                    <span class="quality">无暇</span>
+                    ✦
+                  </div>
+                  <div class="goods-body">
+                    <div class="goods-title-line">
+                      <div class="goods-title">凪诚士郎 · 蓝色监狱生日透卡</div>
+                      <div class="status-pill">已上架</div>
+                    </div>
+                    <div class="goods-row">
+                      <div class="meta">IP：BLUE LOCK<br>数量 1<br>类型：透卡</div>
+                      <div class="price-owner">
+                        <div class="price">¥128</div>
+                        <div class="owner">凪推寄售</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div class="batch-bottom-bar">
+                <div class="batch-all">
+                  <div class="batch-select-dot"></div>
+                  <div>
+                    <div class="batch-all-title">全选</div>
+                    <div class="batch-all-sub">已选 <strong>2</strong> 个商品</div>
+                  </div>
+                </div>
+                <div class="batch-bottom-btn" data-target="batchStatus">修改状态</div>
+                <div class="batch-bottom-btn danger">批量删除</div>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="batchStatus">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">批量修改状态</div>
+                  <div class="sub-caption">已选择 2 个商品</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="mini-card batch-status-summary">
+                  <div class="mini-title">已选商品</div>
+                  <div class="batch-status-item">
+                    <div class="batch-status-thumb">✦</div>
+                    <div class="batch-status-name">流萤 · 星穹铁道镭射票</div>
+                    <span class="status-pill">已上架</span>
+                  </div>
+                  <div class="batch-status-item">
+                    <div class="batch-status-thumb">✧</div>
+                    <div class="batch-status-name">五条悟 · 怀玉玉折小卡</div>
+                    <span class="status-pill down">已下架</span>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="mini-title required">修改为</div>
+                  <div class="status-choice-grid">
+                    <div class="status-choice active"><span>已上架</span><small>确认后进入批量上架，补充平台链接</small></div>
+                    <div class="status-choice"><span>已下架</span><small>无需补充其他信息，确认后直接修改</small></div>
+                    <div class="status-choice" data-target="batchSold"><span>已售出</span><small>需要填写每个商品的售出数量</small></div>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="mini-title">备注</div>
+                  <div class="fake-input">可填写本次批量修改说明</div>
+                </div>
+                <button class="button" data-target="batchLinks">下一步：填写平台链接</button>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="batchSold">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">批量售出</div>
+                  <div class="sub-caption">填写已选商品售出数量</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="mini-card batch-status-summary">
+                  <div class="mini-title required">售出数量</div>
+                  <div class="sold-quantity-row">
+                    <div>
+                      <div class="sold-quantity-name">流萤 · 星穹铁道镭射票</div>
+                      <div class="sold-quantity-meta">当前库存 2 · 最多可售出 2</div>
+                    </div>
+                    <div class="fake-input"><strong>1</strong></div>
+                  </div>
+                  <div class="sold-quantity-row">
+                    <div>
+                      <div class="sold-quantity-name">五条悟 · 怀玉玉折小卡</div>
+                      <div class="sold-quantity-meta">当前库存 1 · 最多可售出 1</div>
+                    </div>
+                    <div class="fake-input"><strong>1</strong></div>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="mini-title">售出备注</div>
+                  <div class="fake-input">可填写售出渠道、买家备注或结算说明</div>
+                </div>
+                <button class="button">确认标记售出</button>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="goodsDetail">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">商品详情</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="detail-gallery" id="detailGallery">
+                  <div class="gallery-slide active"><span class="gallery-symbol">✦</span></div>
+                  <div class="gallery-slide"><span class="gallery-symbol">✧</span></div>
+                  <div class="gallery-slide"><span class="gallery-symbol">♡</span></div>
+                  <div class="gallery-arrow prev" data-gallery-prev>‹</div>
+                  <div class="gallery-arrow next" data-gallery-next>›</div>
+                  <div class="gallery-dots">
+                    <span class="gallery-dot active"></span>
+                    <span class="gallery-dot"></span>
+                    <span class="gallery-dot"></span>
+                  </div>
+                </div>
+                <div class="detail-summary-card">
+                  <div class="detail-title-line">
+                    <div class="detail-name">流萤 · 星穹铁道镭射票</div>
+                    <div class="detail-price">¥68</div>
+                  </div>
+                  <div class="info-grid">
+                    <div class="info-cell">
+                      <div class="info-label">库存</div>
+                      <div class="info-value">2</div>
+                    </div>
+                    <div class="info-cell">
+                      <div class="info-label">质量</div>
+                      <div class="info-value">无暇</div>
+                    </div>
+                    <div class="info-cell">
+                      <div class="info-label">类型</div>
+                      <div class="info-value">镭射票</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-title">基础信息</div>
+                  <div class="line-item"><span>IP</span><strong>崩坏星穹铁道</strong></div>
+                  <div class="line-item"><span>商品状态</span><strong><span class="status-pill">已上架</span></strong></div>
+                  <div class="line-item"><span>寄售用户</span><strong>桃桃寄售</strong></div>
+                  <div class="line-item"><span>商品编号</span><strong>#A00128</strong></div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-title">平台链接</div>
+                  <div class="line-item platform-link-item">
+                    <span>淘宝/天猫</span>
+                    <a class="open-link-btn" href="https://item.taobao.com/" target="_blank" rel="noopener">打开</a>
+                  </div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-title">备注</div>
+                  <div class="remark-text">买家需确认镭射票表面轻微运输痕迹；发货前请再次检查保护膜和卡套。</div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-title">购买记录</div>
+                  <div class="record-list">
+                    <div class="record-item">
+                      <div class="record-top">
+                        <span>售出 1 件</span>
+                        <span>¥68</span>
+                      </div>
+                      <div class="record-meta">2026-05-28 14:22 · 淘宝/天猫 · 待结算</div>
+                    </div>
+                    <div class="record-item">
+                      <div class="record-top">
+                        <span>暂无更多记录</span>
+                        <span>剩余 1 件</span>
+                      </div>
+                      <div class="record-meta">后续售出会继续追加在这里</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="action-dock">
+                <div class="dock-btn">编辑商品</div>
+                <div class="dock-btn primary">修改状态</div>
+              </div>
+              <div class="viewer-overlay" id="imageViewer">
+                <div class="viewer-top">
+                  <span id="viewerCount">1 / 3</span>
+                  <span class="viewer-close" data-close-viewer>×</span>
+                </div>
+                <div class="viewer-stage" id="viewerStage">✦</div>
+                <div class="viewer-hint">左右滑动或点击箭头切换图片</div>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="goodsUpload">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">上传商品</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="form-section">
+                  <div class="mini-title required">商品照片</div>
+                  <div class="upload-grid">
+                    <div class="upload-tile">＋</div>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="form-row">
+                    <span class="small-label required">寄售用户</span>
+                    <div class="select-wrap">
+                      <div class="fake-select"><strong>桃桃寄售</strong><span class="select-arrow"></span></div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">IP</span>
+                    <div class="fake-input"><strong>崩坏星穹铁道</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">角色</span>
+                    <div class="fake-input"><strong>流萤</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">系列</span>
+                    <div class="fake-input"><strong>星旅票</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">价格</span>
+                    <div class="fake-input"><strong>¥68</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">类型</span>
+                    <div class="select-wrap open">
+                      <div class="fake-select"><strong>自定义</strong><span class="select-arrow"></span></div>
+                      <div class="select-popover">
+                        <div class="select-option">镭射票</div>
+                        <div class="select-option">小卡</div>
+                        <div class="select-option">亚克力</div>
+                        <div class="select-option active">自定义</div>
+                      </div>
+                    </div>
+                    <div class="fake-input custom-type-input">请输入自定义类型，如：拍立得</div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">数量</span>
+                    <div class="fake-input"><strong>2</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">质量</span>
+                    <div class="segmented">
+                      <div class="segment active">无暇</div>
+                      <div class="segment">有瑕</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">初始状态</span>
+                    <div class="segmented">
+                      <div class="segment active">已下架</div>
+                      <div class="segment">已上架</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label">购物平台链接</span>
+                    <div class="link-row">
+                      <div class="fake-select"><strong>淘宝/天猫</strong></div>
+                      <div class="fake-input">请输入淘宝/天猫链接</div>
+                    </div>
+                    <div class="link-row">
+                      <div class="fake-select"><strong>拼多多</strong></div>
+                      <div class="fake-input">请输入拼多多链接</div>
+                    </div>
+                    <div class="link-row">
+                      <div class="fake-select"><strong>小红书</strong></div>
+                      <div class="fake-input">请输入小红书链接</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label">备注</span>
+                    <div class="fake-input">可填写瑕疵、包装、到货说明</div>
+                  </div>
+                </div>
+                <button class="button upload-submit">提交上传</button>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="batchUpload">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">批量上传</div>
+                  <div class="sub-caption">上传图片和商品 Excel 表格</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="batch-upload-tip">商品状态、IP、角色、系列、价格、类型、数量等字段在 Excel 表格内填写；图片按表格内图片编号匹配。</div>
+                <div class="batch-upload-zone form-section">
+                  <div class="upload-zone-head">
+                    <div>
+                      <div class="upload-zone-title">批量上传商品图片</div>
+                      <div class="upload-zone-desc">支持一次选择多张图片，最多 9 张预览；图片名称与 Excel 图片编号对应。</div>
+                    </div>
+                    <div class="upload-count">已选 5 张</div>
+                  </div>
+                  <div class="upload-grid">
+                    <div class="upload-tile filled">1</div>
+                    <div class="upload-tile filled">2</div>
+                    <div class="upload-tile filled">3</div>
+                    <div class="upload-tile filled">4</div>
+                    <div class="upload-tile filled">5</div>
+                    <div class="upload-tile">＋</div>
+                  </div>
+                </div>
+                <div class="batch-upload-zone form-section">
+                  <div class="upload-zone-head">
+                    <div>
+                      <div class="upload-zone-title">上传 Excel 商品表格</div>
+                      <div class="upload-zone-desc">表格内包含寄售用户、商品状态、IP、角色、系列、价格、类型、数量、质量、平台链接等字段。</div>
+                    </div>
+                    <div class="upload-count">必填</div>
+                  </div>
+                  <div class="excel-card">
+                    <div class="excel-icon">XLS</div>
+                    <div>
+                      <div class="excel-name">商品批量上传模板.xlsx</div>
+                      <div class="excel-meta">已读取 24 条商品信息 · 状态字段来自表格</div>
+                      <div class="excel-action">重新上传表格</div>
+                    </div>
+                  </div>
+                </div>
+                <button class="button batch-upload-submit">提交批量上传</button>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="goodsEdit">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">编辑商品</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="form-section">
+                  <div class="mini-title required">商品照片</div>
+                  <div class="upload-grid">
+                    <div class="upload-tile filled">✧</div>
+                    <div class="upload-tile">＋</div>
+                  </div>
+                </div>
+                <div class="form-section">
+                  <div class="form-row">
+                    <span class="small-label required">寄售用户</span>
+                    <div class="select-wrap">
+                      <div class="fake-select"><strong>夏油厨</strong><span class="select-arrow"></span></div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">IP</span>
+                    <div class="fake-input"><strong>咒术回战</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">角色</span>
+                    <div class="fake-input"><strong>五条悟</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">系列</span>
+                    <div class="fake-input"><strong>怀玉玉折</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">价格</span>
+                    <div class="fake-input"><strong>¥32</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">类型</span>
+                    <div class="select-wrap">
+                      <div class="fake-select"><strong>小卡</strong><span class="select-arrow"></span></div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">数量</span>
+                    <div class="fake-input"><strong>1</strong></div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">质量</span>
+                    <div class="segmented">
+                      <div class="segment">无暇</div>
+                      <div class="segment active">有瑕</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label required">初始状态</span>
+                    <div class="segmented">
+                      <div class="segment active">已下架</div>
+                      <div class="segment">已上架</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label">购物平台链接</span>
+                    <div class="link-row">
+                      <div class="fake-select"><strong>淘宝/天猫</strong></div>
+                      <div class="fake-input"><strong>https://item.taobao...</strong></div>
+                    </div>
+                    <div class="link-row">
+                      <div class="fake-select"><strong>拼多多</strong></div>
+                      <div class="fake-input">请输入拼多多链接</div>
+                    </div>
+                    <div class="link-row">
+                      <div class="fake-select"><strong>小红书</strong></div>
+                      <div class="fake-input">请输入小红书链接</div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <span class="small-label">备注</span>
+                    <div class="fake-input"><strong>背面轻微压痕，发货前需确认卡套</strong></div>
+                  </div>
+                </div>
+                <button class="button edit-submit">保存修改</button>
+              </div>
+            </section>
+
+            <section class="view admin-subpage" id="batchLinks">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">批量上架</div>
+                  <div class="sub-caption">共 2 件，需补充平台链接</div>
+                </div>
+              </div>
+              <div class="sub-scroll">
+                <div class="link-card">
+                  <div class="link-head">
+                    <div class="link-thumb">✦</div>
+                    <div>
+                      <div class="link-title">流萤 · 星旅票</div>
+                      <div class="link-code">#A00128 · 桃桃寄售</div>
+                    </div>
+                  </div>
+                  <div class="link-row">
+                    <div class="fake-select"><strong>淘宝/天猫</strong></div>
+                    <div class="fake-input">https://item.taobao...</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="fake-select"><strong>小红书</strong></div>
+                    <div class="fake-input">请输入小红书链接</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="fake-select"><strong>拼多多</strong></div>
+                    <div class="fake-input">请输入拼多多链接</div>
+                  </div>
+                </div>
+                <div class="link-card">
+                  <div class="link-head">
+                    <div class="link-thumb">✧</div>
+                    <div>
+                      <div class="link-title">五条悟 · 小卡</div>
+                      <div class="link-code">#A00131 · 夏油厨</div>
+                    </div>
+                  </div>
+                  <div class="link-row">
+                    <div class="fake-select"><strong>淘宝/天猫</strong></div>
+                    <div class="fake-input">请输入淘宝/天猫链接</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="fake-select"><strong>小红书</strong></div>
+                    <div class="fake-input">请输入小红书链接</div>
+                  </div>
+                  <div class="link-row">
+                    <div class="fake-select"><strong>拼多多</strong></div>
+                    <div class="fake-input">请输入拼多多链接</div>
+                  </div>
+                </div>
+                <button class="button">提交批量上架</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <div class="note-card">
+          <h2>视觉关键词</h2>
+          <p>浅蓝主色、柔粉点缀、白色玻璃卡片、清晰表单和轻量淡入。用户端有二次元谷圈氛围，管理端保留清楚的筛选和卡片层级。</p>
+        </div>
+        <div class="note-card">
+          <h2>页面范围</h2>
+          <div class="spec-list">
+            <div>登录页：品牌露出、账号密码表单和注册入口。</div>
+            <div>注册页：三项表单保持清楚，不做角色选择。</div>
+            <div>资料页：头像上传和昵称填写，完成后进入商品浏览。</div>
+            <div>商品列表：筛选、批量入口、商品卡片、管理端底部导航。</div>
+            <div>商品详情 / 上传 / 编辑 / 批量上架：沿用同一套蓝粉玻璃卡片和清晰表单层级。</div>
+          </div>
+        </div>
+        <div class="note-card">
+          <h2>落地建议</h2>
+          <p>确认这版页面气质后，再把视觉变量沉淀到小程序公共 WXSS：蓝粉主题、轻量淡入、表单卡片、底部导航和商品卡片都可以复用。</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const views = document.querySelectorAll(".view");
+
+    function showView(target) {
+      tabs.forEach((item) => item.classList.toggle("active", item.dataset.target === target));
+      views.forEach((view) => view.classList.toggle("active", view.id === target));
+      const activeView = document.getElementById(target);
+      activeView?.getAnimations({ subtree: true }).forEach((animation) => {
+        animation.cancel();
+        animation.play();
+      });
+    }
+
+    document.querySelectorAll("[data-target]").forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        showView(trigger.dataset.target);
+      });
+    });
+
+    const gallery = document.getElementById("detailGallery");
+    const imageViewer = document.getElementById("imageViewer");
+    const viewerStage = document.getElementById("viewerStage");
+    const viewerCount = document.getElementById("viewerCount");
+    const gallerySymbols = ["✦", "✧", "♡"];
+    let galleryIndex = 0;
+    let touchStartX = 0;
+
+    function renderGallery() {
+      if (!gallery) return;
+      gallery.querySelectorAll(".gallery-slide").forEach((slide, index) => {
+        slide.classList.toggle("active", index === galleryIndex);
+      });
+      gallery.querySelectorAll(".gallery-dot").forEach((dot, index) => {
+        dot.classList.toggle("active", index === galleryIndex);
+      });
+      if (viewerStage) viewerStage.textContent = gallerySymbols[galleryIndex];
+      if (viewerCount) viewerCount.textContent = `${galleryIndex + 1} / ${gallerySymbols.length}`;
+    }
+
+    function moveGallery(step) {
+      galleryIndex = (galleryIndex + step + gallerySymbols.length) % gallerySymbols.length;
+      renderGallery();
+    }
+
+    document.querySelector("[data-gallery-prev]")?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      moveGallery(-1);
+    });
+
+    document.querySelector("[data-gallery-next]")?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      moveGallery(1);
+    });
+
+    gallery?.addEventListener("click", () => {
+      imageViewer?.classList.add("active");
+      renderGallery();
+    });
+
+    document.querySelector("[data-close-viewer]")?.addEventListener("click", () => {
+      imageViewer?.classList.remove("active");
+    });
+
+    [gallery, imageViewer].forEach((target) => {
+      target?.addEventListener("touchstart", (event) => {
+        touchStartX = event.touches[0].clientX;
+      });
+      target?.addEventListener("touchend", (event) => {
+        const touchEndX = event.changedTouches[0].clientX;
+        const distance = touchEndX - touchStartX;
+        if (Math.abs(distance) > 32) moveGallery(distance > 0 ? -1 : 1);
+      });
+    });
+  </script>
+</body>
+</html>

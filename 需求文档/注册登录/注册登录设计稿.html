@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>谷圈星社｜注册登录设计稿</title>
+    <style>
+      :root {
+        --primary: #b0ddfa;
+        --primary-dark: #8ecbed;
+        --primary-soft: #eaf7ff;
+        --pink: #ffd7e6;
+        --purple: #c9c2ff;
+        --bg: #f7fcff;
+        --card: rgba(255, 255, 255, 0.92);
+        --text: #334155;
+        --muted: #64748b;
+        --line: #d9ecf8;
+        --danger: #ff7f96;
+        --shadow: 0 18px 40px rgba(109, 150, 186, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 230, 0.6), transparent 26%),
+          radial-gradient(circle at right 20%, rgba(201, 194, 255, 0.45), transparent 24%),
+          linear-gradient(180deg, #fcfeff 0%, var(--bg) 100%);
+      }
+
+      .page {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .preview-shell {
+        padding: 20px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.52);
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        box-shadow: var(--shadow);
+      }
+
+      .preview-head h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      .preview-head p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .preview-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 18px 0 22px;
+      }
+
+      .tab {
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+        color: #62849f;
+        box-shadow: 0 8px 18px rgba(176, 221, 250, 0.14);
+        cursor: pointer;
+      }
+
+      .tab.active {
+        background: linear-gradient(180deg, #d5efff 0%, var(--primary) 100%);
+        color: #24435a;
+        font-weight: 600;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .phone {
+        padding: 14px;
+        border-radius: 34px;
+        background: linear-gradient(180deg, #fefeff, #edf8ff);
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.92);
+      }
+
+      .phone-shell {
+        min-height: 720px;
+        border-radius: 24px;
+        overflow: hidden;
+        position: relative;
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 230, 0.5), transparent 22%),
+          radial-gradient(circle at right 25%, rgba(201, 194, 255, 0.5), transparent 20%),
+          linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%);
+      }
+
+      .screen {
+        display: none;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .statusbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 14px 18px 8px;
+        font-size: 12px;
+        color: #6b7f92;
+      }
+
+      .decor {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .dot,
+      .star {
+        position: absolute;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 215, 230, 0.55);
+      }
+
+      .star {
+        width: 9px;
+        height: 9px;
+        background: rgba(255, 255, 255, 0.95);
+        transform: rotate(45deg);
+      }
+
+      .screen-content {
+        padding: 10px 18px 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand {
+        margin: 24px 0 22px;
+        text-align: center;
+      }
+
+      .brand-mark {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 14px;
+        border-radius: 22px;
+        background: linear-gradient(160deg, rgba(255,255,255,0.86), rgba(176,221,250,0.8));
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 10px 26px rgba(176, 221, 250, 0.28);
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+      }
+
+      .brand h2 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      .brand p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .glass-card {
+        padding: 20px;
+        border-radius: 24px;
+        background: var(--card);
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 12px 30px rgba(116, 148, 181, 0.12);
+      }
+
+      .glass-card h3 {
+        margin: 0 0 6px;
+        font-size: 18px;
+      }
+
+      .sub {
+        margin-bottom: 18px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #557087;
+      }
+
+      .field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 48px;
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.95);
+        color: #9aafbf;
+        font-size: 14px;
+      }
+
+      .field + .error,
+      .field + .hint {
+        margin: 7px 4px 12px;
+        font-size: 12px;
+      }
+
+      .field-icon {
+        width: 18px;
+        text-align: center;
+        color: #6c8aa3;
+      }
+
+      .field-action {
+        width: 20px;
+        height: 20px;
+        margin-left: auto;
+        position: relative;
+        flex: 0 0 20px;
+      }
+
+      .eye-icon::before {
+        content: "";
+        position: absolute;
+        inset: 4px 1px;
+        border: 2px solid #79a7c7;
+        border-radius: 12px / 8px;
+      }
+
+      .eye-icon::after {
+        content: "";
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        left: 7px;
+        top: 7px;
+        background: #79a7c7;
+        border-radius: 50%;
+      }
+
+      .eye-icon.closed span {
+        position: absolute;
+        left: 1px;
+        top: 9px;
+        width: 18px;
+        height: 2px;
+        background: #79a7c7;
+        transform: rotate(-28deg);
+        border-radius: 999px;
+      }
+
+      .hint {
+        color: #76a3c4;
+      }
+
+      .error {
+        color: var(--danger);
+      }
+
+      .button {
+        width: 100%;
+        height: 48px;
+        border: 0;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #c0e7ff 0%, var(--primary) 100%);
+        color: #24435a;
+        font-size: 16px;
+        font-weight: 600;
+        box-shadow: 0 12px 22px rgba(176, 221, 250, 0.35);
+      }
+
+      .button-row {
+        margin-top: 8px;
+      }
+
+      .linkline {
+        margin-top: 14px;
+        text-align: center;
+        font-size: 13px;
+        color: #6c8aa3;
+      }
+
+      .avatar-card {
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      .avatar {
+        width: 108px;
+        height: 108px;
+        margin: 0 auto 12px;
+        border-radius: 18px;
+        border: 2px dashed rgba(142, 203, 237, 0.7);
+        background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(234,247,255,0.85));
+        display: grid;
+        place-items: center;
+        font-size: 42px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+      }
+
+      .avatar-meta {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .spec-card {
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 8px 22px rgba(117, 155, 189, 0.08);
+      }
+
+      .spec-card h3 {
+        margin: 0 0 10px;
+        font-size: 22px;
+      }
+
+      .spec-card p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .spec-item {
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(234, 247, 255, 0.62);
+        border: 1px solid rgba(176, 221, 250, 0.4);
+      }
+
+      .spec-item strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .spec-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 1080px) {
+        .stage {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="preview-shell">
+        <div class="preview-head">
+          <h1>谷圈星社注册登录设计稿</h1>
+          <p>按微信小程序真机稿表达，优先看页面层级、表单结构和视觉气质。</p>
+        </div>
+
+        <div class="preview-tabs">
+          <button class="tab active" data-tab="login">登录页</button>
+          <button class="tab" data-tab="register">创建账号</button>
+          <button class="tab" data-tab="profile">填写资料</button>
+        </div>
+
+        <div class="stage">
+          <div class="phone">
+            <div class="phone-shell">
+              <article class="screen active" data-screen="login">
+                <div class="decor">
+                  <span class="star" style="left:30px;top:96px;"></span>
+                  <span class="dot" style="right:38px;top:88px;"></span>
+                  <span class="star" style="right:84px;top:228px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <section class="brand">
+                    <div class="brand-mark">✦</div>
+                    <h2>谷圈星社</h2>
+                    <p>收集热爱，也让喜欢流转起来</p>
+                  </section>
+                  <section class="glass-card">
+                    <h3>欢迎回来</h3>
+                    <div class="sub">登录后查看你的寄售与收藏</div>
+                    <label class="label">账号</label>
+                    <div class="field">
+                      <span>请输入账号</span>
+                    </div>
+                    <div class="error">账号需为 6-12 位数字和字母组合</div>
+                    <label class="label">密码</label>
+                    <div class="field">
+                      <span>请输入密码</span>
+                      <span class="field-action eye-icon open"></span>
+                    </div>
+                    <div class="button-row"><button class="button">登录</button></div>
+                    <div class="linkline">没有账号？去注册</div>
+                  </section>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="register">
+                <div class="decor">
+                  <span class="dot" style="left:28px;top:84px;background:rgba(201,194,255,.55);"></span>
+                  <span class="star" style="right:38px;top:100px;"></span>
+                  <span class="dot" style="right:54px;top:244px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <section class="brand">
+                    <div class="brand-mark">♡</div>
+                    <h2>创建账号</h2>
+                    <p>开始记录你的喜欢与寄售</p>
+                  </section>
+                  <section class="glass-card">
+                    <label class="label">账号</label>
+                    <div class="field">
+                      <span>请输入6-12英文和数字</span>
+                    </div>
+                    <label class="label">密码</label>
+                    <div class="field">
+                      <span>请输入6-12位的英文或数字</span>
+                      <span class="field-action eye-icon open"></span>
+                    </div>
+                    <label class="label">确认密码</label>
+                    <div class="field">
+                      <span>请再次输入密码</span>
+                      <span class="field-action eye-icon closed"><span></span></span>
+                    </div>
+                    <div class="error">两次输入的密码不一致</div>
+                    <div class="button-row"><button class="button">注册</button></div>
+                    <div class="linkline">已有账号？去登录</div>
+                  </section>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="profile">
+                <div class="decor">
+                  <span class="star" style="left:48px;top:104px;"></span>
+                  <span class="dot" style="left:22px;top:252px;"></span>
+                  <span class="star" style="right:72px;top:264px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <section class="brand">
+                    <div class="brand-mark">☁</div>
+                    <h2>填写资料</h2>
+                    <p>还差一步，就可以开始逛啦</p>
+                  </section>
+                  <section class="glass-card">
+                    <div class="avatar-card">
+                      <div class="avatar">☺</div>
+                      <div class="avatar-meta">点击上传头像</div>
+                    </div>
+                    <label class="label">昵称</label>
+                    <div class="field">
+                      <span class="field-icon">✎</span>
+                      <span>请输入昵称</span>
+                    </div>
+                    <div class="error">昵称仅支持中文、英文或数字</div>
+                    <div class="button-row"><button class="button">完成</button></div>
+                  </section>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <aside class="spec-card" id="spec-card">
+            <h3>登录页</h3>
+            <p>首屏更像打开一张收藏卡，品牌区靠上，表单卡片集中在中部，符合小程序单任务页面的使用习惯。</p>
+            <div class="spec-item"><strong>页面气质</strong><span>浅蓝主色配少量粉紫点缀，保留追星和谷子收藏的精致感。</span></div>
+            <div class="spec-item"><strong>交互重点</strong><span>账号、密码、错误提示和主按钮在一个视线区内，减少上下找信息。</span></div>
+            <div class="spec-item"><strong>小程序表达</strong><span>顶部留足安全区，整页以移动端单栏结构为主。</span></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const specs = {
+        login: {
+          title: "登录页",
+          desc: "首屏更像打开一张收藏卡，品牌区靠上，表单卡片集中在中部，符合小程序单任务页面的使用习惯。",
+          items: [
+            ["页面气质", "浅蓝主色配少量粉紫点缀，保留追星和谷子收藏的精致感。"],
+            ["交互重点", "账号、密码、错误提示和主按钮在一个视线区内，减少上下找信息。"],
+            ["小程序表达", "顶部留足安全区，整页以移动端单栏结构为主。"]
+          ]
+        },
+        register: {
+          title: "创建账号",
+          desc: "注册页比登录页更轻快一点，规则提示缩短到表单附近，降低第一次注册的理解成本。",
+          items: [
+            ["页面气质", "少量粉紫点缀，整体仍然保持轻透干净。"],
+            ["交互重点", "密码和确认密码用显示眼睛与不显示眼睛区分状态。"],
+            ["文案调整", "底部入口改成“已有账号？去登录”。"]
+          ]
+        },
+        profile: {
+          title: "填写资料",
+          desc: "资料页突出头像区域，像在制作一张属于自己的收藏名片，让补资料这一步更有一点仪式感。",
+          items: [
+            ["页面气质", "头像框用卡套感的处理，弱化枯燥表单感。"],
+            ["交互重点", "上传头像是可选动作，昵称输入和完成按钮仍然是主流程。"],
+            ["页面信息", "首屏就能完成当前任务，不需要继续下拉理解。"]
+          ]
+        }
+      };
+
+      const tabs = document.querySelectorAll(".tab");
+      const screens = document.querySelectorAll(".screen");
+      const specCard = document.getElementById("spec-card");
+
+      function renderSpec(key) {
+        const spec = specs[key];
+        specCard.innerHTML =
+          `<h3>${spec.title}</h3><p>${spec.desc}</p>` +
+          spec.items
+            .map(([title, text]) => `<div class="spec-item"><strong>${title}</strong><span>${text}</span></div>`)
+            .join("");
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const key = tab.dataset.tab;
+          tabs.forEach((item) => item.classList.toggle("active", item === tab));
+          screens.forEach((screen) => screen.classList.toggle("active", screen.dataset.screen === key));
+          renderSpec(key);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<view class="u-page" wx:if="{{record}}">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="title-wrap">
+        <view class="u-top-title">结算详情</view>
+      </view>
+    </view>
+
+    <view class="settle-hero">
+      <view>本次结算货款</view>
+      <view class="settle-big">{{netText}}</view>
+      <view class="settle-grid">
+        <view><text>结算时间</text><text>{{dateText}}</text></view>
+        <view><text>商品数量</text><text>{{record.items}} 件</text></view>
+      </view>
+    </view>
+
+    <view class="section-title">结算商品详情</view>
+    <view class="u-card detail-product" wx:for="{{items}}" wx:key="rowId">
+      <view class="goods-thumb small-thumb">
+        <image wx:if="{{item.coverImage}}" class="goods-img" src="{{item.coverImage}}" mode="aspectFill" />
+      </view>
+      <view class="settle-product-body">
+        <view class="goods-title">{{item.title}}</view>
+        <view class="goods-meta">#{{item.productId || item.id}} · {{item.series || item.ip || "-"}} · {{item.soldQty}} 件 · 抽成 {{item.rateText}}</view>
+        <view class="money-cols">
+          <view><text>售价</text><text>{{item.grossText}}</text></view>
+          <view><text>抽成</text><text class="fee">{{item.feeText}}</text></view>
+          <view><text>结算</text><text class="net">{{item.payableText}}</text></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-title">结算凭证</view>
+    <view wx:if="{{vouchers && vouchers.length > 0}}" class="photo-grid">
+      <block wx:for="{{vouchers}}" wx:key="index">
+        <view class="photo-item" data-index="{{index}}">
+          <image class="photo-img" src="{{item}}" mode="aspectFill" bindtap="previewVoucher" data-index="{{index}}" />
+        </view>
+      </block>
+    </view>
+    <view wx:else class="empty-card">
+      <view class="empty-title">暂无结算凭证</view>
+    </view>
+  </view>
+</view>

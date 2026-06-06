@@ -1,0 +1,49 @@
+{
+  "collectionName": "settlement_records",
+  "indexes": [
+    {
+      "name": "idx_user_id",
+      "fields": [
+        {
+          "field": "userId",
+          "order": "asc"
+        }
+      ],
+      "unique": false,
+      "description": "寄售用户ID索引"
+    },
+    {
+      "name": "idx_date_desc",
+      "fields": [
+        {
+          "field": "date",
+          "order": "desc"
+        }
+      ],
+      "unique": false,
+      "description": "结算日期倒序索引"
+    },
+    {
+      "name": "idx_month",
+      "fields": [
+        {
+          "field": "month",
+          "order": "asc"
+        }
+      ],
+      "unique": false,
+      "description": "结算月份索引"
+    },
+    {
+      "name": "idx_created_at_desc",
+      "fields": [
+        {
+          "field": "createdAt",
+          "order": "desc"
+        }
+      ],
+      "unique": false,
+      "description": "创建时间倒序索引"
+    }
+  ]
+}

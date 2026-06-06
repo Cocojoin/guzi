@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>用户详情测试</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <main id="main-container"></main>
+    <div id="dialog-container"></div>
+    <div id="toast-container"></div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    // 直接导航到用户详情页
+    setTimeout(() => {
+      state.currentUser = state.users[0];
+      state.editingUser = false;
+      state.currentPage = 'userDetail';
+      render();
+    }, 100);
+  </script>
+</body>
+</html>

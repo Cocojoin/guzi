@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>谷圈星社统计页面视觉预览</title>
+  <style>
+    :root {
+      --primary: #b0ddfa;
+      --primary-deep: #79a7c7;
+      --primary-soft: #eaf7ff;
+      --pink: #ffd7e6;
+      --violet: #c9c2ff;
+      --ink: #24364a;
+      --muted: #6b7f95;
+      --line: #d9ecf8;
+      --card: rgba(255, 255, 255, 0.92);
+      --danger: #e55472;
+      --danger-soft: #fff0f5;
+      --success: #54b58c;
+      --amber: #f7b35b;
+      --shadow: 0 22px 52px rgba(92, 127, 166, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 215, 230, 0.6), transparent 26%),
+        radial-gradient(circle at right 20%, rgba(201, 194, 255, 0.45), transparent 24%),
+        linear-gradient(180deg, #fcfeff 0%, #f7fcff 100%);
+    }
+
+    .preview-page {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: 30px 26px 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    .title-block p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .palette {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+    }
+
+    .swatch {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(45, 76, 120, 0.12);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 26px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tab {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.66);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: var(--ink);
+      background: linear-gradient(180deg, #ffffff 0%, #e8f6ff 100%);
+      box-shadow: 0 12px 24px rgba(176, 221, 250, 0.28);
+      border-color: rgba(255, 255, 255, 0.94);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .phone-wrap {
+      display: flex;
+      justify-content: center;
+      position: sticky;
+      top: 24px;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      padding: 14px;
+      border-radius: 42px;
+      background: linear-gradient(135deg, #1f2b3d 0%, #33475f 55%, #29334f 100%);
+      box-shadow: 0 34px 82px rgba(28, 56, 88, 0.26);
+    }
+
+    .screen {
+      height: 100%;
+      overflow: hidden;
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 215, 230, 0.48), transparent 24%),
+        radial-gradient(circle at right 20%, rgba(201, 194, 255, 0.35), transparent 22%),
+        linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%);
+      position: relative;
+    }
+
+    .status {
+      height: 86px;
+      padding: 15px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      position: relative;
+      z-index: 4;
+    }
+
+    .status::after {
+      content: "";
+      position: absolute;
+      right: 18px;
+      top: 42px;
+      width: 86px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      box-shadow: 0 8px 20px rgba(45, 76, 120, 0.08);
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    .view {
+      display: none;
+      height: calc(100% - 86px);
+      padding: 0 10px 80px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .admin-header,
+    .sub-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0 14px;
+    }
+
+    .admin-title,
+    .sub-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .sub-title-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sub-caption {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .icon-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .icon-button,
+    .back-chip {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--primary-deep);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 300;
+      box-shadow: 0 10px 20px rgba(45, 76, 120, 0.08);
+    }
+
+    .scroll {
+      height: calc(100% - 64px);
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      padding-bottom: 10px;
+      scrollbar-width: none;
+    }
+
+    .scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .card {
+      border-radius: 24px;
+      background: var(--card);
+      border: 1px solid rgba(220, 233, 248, 0.92);
+      box-shadow: 0 12px 26px rgba(45, 76, 120, 0.08);
+    }
+
+    .hero-card {
+      padding: 18px 16px;
+      background:
+        radial-gradient(circle at 90% 12%, rgba(255, 225, 238, 0.58), transparent 28%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(242, 250, 255, 0.94));
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #60718a;
+    }
+
+    .month-chip {
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .month-chip.disabled {
+      color: #9db0c2;
+      background: rgba(243, 248, 252, 0.8);
+    }
+
+    .hero-amount {
+      font-size: 34px;
+      line-height: 1.1;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .hero-foot {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hero-note {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .trend-chip {
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .trend-chip.up {
+      color: var(--success);
+      background: rgba(126, 221, 187, 0.18);
+    }
+
+    .trend-chip.down {
+      color: var(--danger);
+      background: rgba(255, 215, 230, 0.54);
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-pill {
+      min-height: 40px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #60718a;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(217, 236, 248, 0.9);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .toggle-pill.active {
+      color: var(--ink);
+      background: linear-gradient(180deg, #ffe7ef 0%, #dff1ff 100%);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-tile {
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      box-shadow: 0 10px 20px rgba(45, 76, 120, 0.06);
+    }
+
+    .stat-label {
+      color: #7d91a8;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-size: 26px;
+      line-height: 1.05;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .stat-foot {
+      margin-top: 6px;
+      color: #9aaabc;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .detail-card {
+      padding: 14px;
+    }
+
+    .section-title {
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .money-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-top: 1px solid rgba(217, 236, 248, 0.74);
+      color: #6d7f95;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .money-row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .money-row strong {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .money-row.expense strong {
+      color: var(--danger);
+    }
+
+    .money-row.total strong {
+      color: #3f7fc0;
+      font-size: 20px;
+    }
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 8px;
+    }
+
+    .filter-pill {
+      min-height: 42px;
+      padding: 0 12px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #60718a;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(45, 76, 120, 0.06);
+    }
+
+    .list-card {
+      padding: 14px;
+    }
+
+    .record-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid rgba(217, 236, 248, 0.74);
+    }
+
+    .record-row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .record-title {
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .record-meta {
+      margin-top: 4px;
+      color: #8495ab;
+      font-size: 11px;
+      line-height: 1.6;
+      font-weight: 800;
+    }
+
+    .record-right {
+      text-align: right;
+    }
+
+    .record-money {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .record-money.negative {
+      color: var(--danger);
+    }
+
+    .record-actions {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .action-chip {
+      min-height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      background: rgba(232, 246, 255, 0.84);
+      border: 1px solid rgba(176, 221, 250, 0.84);
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .action-chip.danger {
+      color: var(--danger);
+      background: rgba(255, 235, 242, 0.9);
+      border-color: rgba(255, 199, 219, 0.84);
+    }
+
+    .badge {
+      min-height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #3f7fc0;
+      background: rgba(176, 221, 250, 0.24);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .badge.danger {
+      color: var(--danger);
+      background: rgba(255, 231, 238, 0.9);
+    }
+
+    .badge.gray {
+      color: #718097;
+      background: rgba(148, 163, 184, 0.14);
+    }
+
+    .form-card {
+      padding: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .field:first-child {
+      margin-top: 0;
+    }
+
+    .label {
+      color: #60718a;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .required::after {
+      content: " *";
+      color: var(--danger);
+    }
+
+    .input,
+    .textarea {
+      min-height: 48px;
+      border-radius: 18px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      color: #95a6bc;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .textarea {
+      min-height: 86px;
+      align-items: flex-start;
+      padding-top: 14px;
+      line-height: 1.6;
+    }
+
+    .upload-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .upload-tile {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: #8aa8c2;
+      background: rgba(244, 250, 255, 0.86);
+      border: 1px dashed rgba(176, 221, 250, 0.94);
+      font-size: 28px;
+      font-weight: 300;
+    }
+
+    .upload-tile.filled {
+      color: #ffffff;
+      border: 0;
+      background: linear-gradient(145deg, #8ccbff, #b7a8ff 52%, #ffb8d1);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .button {
+      min-height: 48px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: linear-gradient(180deg, #d5efff 0%, var(--primary) 100%);
+      border: 0;
+      box-shadow: 0 14px 28px rgba(176, 221, 250, 0.28);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .button.secondary {
+      color: var(--primary-deep);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(176, 221, 250, 0.84);
+      box-shadow: none;
+    }
+
+    .summary-list {
+      padding: 14px;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid rgba(217, 236, 248, 0.72);
+      color: #6d7f95;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .summary-row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .summary-row strong {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .summary-row.negative strong {
+      color: var(--danger);
+    }
+
+    .summary-row.highlight strong {
+      color: #3f7fc0;
+      font-size: 20px;
+    }
+
+    .panel-sheet {
+      padding: 16px 14px 18px;
+      border-radius: 26px 26px 0 0;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(217, 236, 248, 0.94);
+      border-bottom: 0;
+      box-shadow: 0 -14px 30px rgba(45, 76, 120, 0.1);
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .sheet-handle {
+      width: 54px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(141, 161, 184, 0.28);
+      margin: 0 auto 14px;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sheet-title {
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .sheet-year {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .sheet-year span {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(242, 250, 255, 0.92);
+      border: 1px solid rgba(217, 236, 248, 0.92);
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .month-cell {
+      min-height: 42px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #60718a;
+      background: rgba(247, 252, 255, 0.92);
+      border: 1px solid rgba(217, 236, 248, 0.9);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .month-cell.active {
+      color: var(--ink);
+      background: linear-gradient(180deg, #ffe7ef 0%, #dff1ff 100%);
+    }
+
+    .month-cell.disabled {
+      opacity: 0.35;
+    }
+
+    .empty-state {
+      min-height: 520px;
+      padding: 18px 14px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .empty-mark {
+      width: 84px;
+      height: 84px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      color: var(--primary-deep);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(176, 221, 250, 0.78));
+      box-shadow: 0 12px 28px rgba(176, 221, 250, 0.24);
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    .empty-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .empty-text {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+      max-width: 240px;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 74px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: start;
+      padding: 10px 18px 0;
+      background: rgba(255, 255, 255, 0.94);
+      border-top: 1px solid rgba(217, 236, 248, 0.92);
+      box-shadow: 0 -10px 24px rgba(45, 76, 120, 0.08);
+    }
+
+    .nav-item {
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+      color: #8da0b7;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .nav-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(247, 252, 255, 0.92);
+      border: 1px solid rgba(217, 236, 248, 0.88);
+    }
+
+    .nav-symbol {
+      width: 16px;
+      height: 16px;
+      display: block;
+      position: relative;
+    }
+
+    .nav-symbol.stats::before,
+    .nav-symbol.stats::after,
+    .nav-symbol.goods::before,
+    .nav-symbol.goods::after,
+    .nav-symbol.users::before,
+    .nav-symbol.users::after,
+    .nav-symbol.settings::before,
+    .nav-symbol.settings::after {
+      content: "";
+      position: absolute;
+      background: currentColor;
+      border-radius: 4px;
+    }
+
+    .nav-symbol.stats::before {
+      left: 1px;
+      bottom: 1px;
+      width: 4px;
+      height: 10px;
+    }
+
+    .nav-symbol.stats::after {
+      left: 7px;
+      top: 2px;
+      width: 4px;
+      height: 14px;
+      box-shadow: 6px 4px 0 currentColor;
+    }
+
+    .nav-symbol.goods::before {
+      inset: 2px;
+      border: 2px solid currentColor;
+      background: transparent;
+      border-radius: 5px;
+    }
+
+    .nav-symbol.goods::after {
+      left: 4px;
+      top: 7px;
+      width: 8px;
+      height: 2px;
+      box-shadow: 0 4px 0 currentColor;
+    }
+
+    .nav-symbol.users::before {
+      left: 5px;
+      top: 1px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .nav-symbol.users::after {
+      left: 2px;
+      bottom: 1px;
+      width: 12px;
+      height: 7px;
+      border-radius: 8px 8px 5px 5px;
+    }
+
+    .nav-symbol.settings::before {
+      inset: 3px;
+      border: 2px solid currentColor;
+      background: transparent;
+      border-radius: 50%;
+    }
+
+    .nav-symbol.settings::after {
+      inset: -1px 6px;
+      background: transparent;
+      border-left: 2px solid currentColor;
+      border-right: 2px solid currentColor;
+    }
+
+    .nav-item.active {
+      color: var(--ink);
+    }
+
+    .nav-item.active .nav-icon {
+      background: linear-gradient(180deg, #ffe7ef 0%, #dff1ff 100%);
+      border-color: rgba(176, 221, 250, 0.86);
+      box-shadow: 0 10px 20px rgba(176, 221, 250, 0.18);
+    }
+
+    .notes {
+      display: grid;
+      gap: 14px;
+    }
+
+    .note-card {
+      padding: 20px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 34px rgba(45, 76, 120, 0.1);
+    }
+
+    .note-card h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .note-card p,
+    .note-card div {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 920px) {
+      .topbar,
+      .workspace {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .phone-wrap {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview-page">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>谷圈星社统计页面视觉预览</h1>
+        <p>基于统计需求文档设计，覆盖收入概览、收入明细、材料费用、物流费用、统计汇总、月份选择与空态。底色与注册登录页保持一致，延续蓝粉轻二次元氛围，但信息层级更偏管理端。</p>
+      </div>
+      <div class="palette" aria-label="主题色板">
+        <div class="swatch" style="background:#B0DDFA" title="#B0DDFA"></div>
+        <div class="swatch" style="background:#FFD7E6" title="#FFD7E6"></div>
+        <div class="swatch" style="background:#C9C2FF" title="#C9C2FF"></div>
+        <div class="swatch" style="background:#F7FCFF" title="#F7FCFF"></div>
+        <div class="swatch" style="background:#24364A" title="#24364A"></div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="页面切换">
+      <button class="tab active" data-target="statsHome">统计首页</button>
+      <button class="tab" data-target="incomeDetail">收入明细</button>
+      <button class="tab" data-target="materialExpense">材料支出</button>
+      <button class="tab" data-target="logisticsExpense">物流支出</button>
+      <button class="tab" data-target="statsSummary">统计汇总</button>
+      <button class="tab" data-target="monthPanel">月份选择</button>
+      <button class="tab" data-target="statsEmpty">空态</button>
+    </nav>
+
+    <section class="workspace">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="status">
+              <span>9:41</span>
+              <span class="signal"><span class="dot"></span><span class="dot"></span><span class="dot"></span> 100%</span>
+            </div>
+
+            <section class="view active" id="statsHome">
+              <div class="admin-header">
+                <div class="admin-title">统计</div>
+                <div class="icon-actions">
+                  <div class="icon-button">⌕</div>
+                  <div class="icon-button">＋</div>
+                </div>
+              </div>
+              <div class="scroll" style="height:calc(100% - 88px); padding-bottom:90px;">
+                <div class="toggle-row">
+                  <div class="toggle-pill active">本月统计</div>
+                  <div class="toggle-pill">累计统计</div>
+                </div>
+                <div class="card hero-card">
+                  <div class="hero-top">
+                    <div class="hero-title">本月实际收益</div>
+                    <div class="month-chip">2026-05 <span>▾</span></div>
+                  </div>
+                  <div class="hero-amount">¥5,486.20</div>
+                  <div class="hero-foot">
+                    <div class="hero-note">平台净收入 = 抽成收益 + 差价收益 - 材料费用 - 物流费用</div>
+                    <div class="trend-chip up">↑ 较上月 +12.6%</div>
+                  </div>
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-tile">
+                    <div class="stat-label">总商品</div>
+                    <div class="stat-value">286</div>
+                    <div class="stat-foot">含所有状态</div>
+                  </div>
+                  <div class="stat-tile">
+                    <div class="stat-label">在售</div>
+                    <div class="stat-value">82</div>
+                    <div class="stat-foot">当前已上架</div>
+                  </div>
+                  <div class="stat-tile">
+                    <div class="stat-label">已出售</div>
+                    <div class="stat-value">43</div>
+                    <div class="stat-foot">待结算中</div>
+                  </div>
+                  <div class="stat-tile">
+                    <div class="stat-label">已结算</div>
+                    <div class="stat-value">161</div>
+                    <div class="stat-foot">累计完成</div>
+                  </div>
+                </div>
+                <div class="card detail-card">
+                  <div class="section-title">统计明细</div>
+                  <div class="money-row"><span>实际销售额</span><strong>¥18,620.00</strong></div>
+                  <div class="money-row expense"><span>费用支出</span><strong>-¥2,186.00</strong></div>
+                  <div class="money-row"><span>结算金额</span><strong>¥20,580.00</strong></div>
+                  <div class="money-row total"><span>实际收益</span><strong>¥5,486.20</strong></div>
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-item active"><div class="nav-icon"><span class="nav-symbol stats"></span></div><div>统计</div></div>
+                <div class="nav-item"><div class="nav-icon"><span class="nav-symbol goods"></span></div><div>商品</div></div>
+                <div class="nav-item"><div class="nav-icon"><span class="nav-symbol users"></span></div><div>用户</div></div>
+                <div class="nav-item"><div class="nav-icon"><span class="nav-symbol settings"></span></div><div>设置</div></div>
+              </div>
+            </section>
+
+            <section class="view" id="incomeDetail">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">收入明细</div>
+                  <div class="sub-caption">仅统计已结算商品收入</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="filter-bar">
+                  <div class="filter-pill">本月 / 自定义 <span>▾</span></div>
+                  <div class="filter-pill">搜索商品 / 用户 <span>⌕</span></div>
+                </div>
+                <div class="card list-card">
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">#A00128 流萤 · 星穹铁道镭射票</div>
+                      <div class="record-meta">桃桃寄售 · 商品价格 ¥68 · 实际收入 ¥89 · 抽成 10% · 结算 2026-05-28 14:22</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money">¥89</div>
+                      <div class="badge">已结算</div>
+                    </div>
+                  </div>
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">#A00131 五条悟 · 怀玉玉折小卡</div>
+                      <div class="record-meta">夏油厨 · 商品价格 ¥32 · 实际收入 ¥32 · 抽成 12% · 结算 2026-05-27 19:08</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money">¥32</div>
+                      <div class="badge">已结算</div>
+                    </div>
+                  </div>
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">#A00142 凪诚士郎 · 生日透卡 PET 镭射</div>
+                      <div class="record-meta">凪推寄售 · 商品价格 ¥128 · 实际收入 ¥118 · 抽成 10% · 结算 2026-05-25 10:40</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money">¥118</div>
+                      <div class="badge">已结算</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="materialExpense">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">材料费用</div>
+                  <div class="sub-caption">录入包装与耗材支出</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="toggle-row">
+                  <div class="toggle-pill active">本月支出 ¥486</div>
+                  <div class="toggle-pill">累计支出 ¥1,632</div>
+                </div>
+                <div class="card form-card">
+                  <div class="section-title">新增材料支出</div>
+                  <div class="field">
+                    <div class="label required">支出项目</div>
+                    <div class="input">包装盒 <span style="margin-left:auto;">▾</span></div>
+                  </div>
+                  <div class="field">
+                    <div class="label required">支出金额</div>
+                    <div class="input">¥ 48.00</div>
+                  </div>
+                  <div class="field">
+                    <div class="label required">发生日期</div>
+                    <div class="input">2026-05-30 <span style="margin-left:auto;">📅</span></div>
+                  </div>
+                  <div class="field">
+                    <div class="label">备注</div>
+                    <div class="textarea">用于本周批量发货的礼盒与防撞包装</div>
+                  </div>
+                  <div class="field">
+                    <div class="label">凭证图片</div>
+                    <div class="upload-row">
+                      <div class="upload-tile filled">票据</div>
+                      <div class="upload-tile">＋</div>
+                      <div class="upload-tile">＋</div>
+                    </div>
+                  </div>
+                  <div style="margin-top:14px;" class="button">保存支出</div>
+                </div>
+                <div class="card list-card">
+                  <div class="section-title">支出记录</div>
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">包装盒</div>
+                      <div class="record-meta">2026-05-28 · 20 个礼盒补货 · 备注已截断展示…</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money negative">-¥128</div>
+                      <div class="record-actions">
+                        <div class="action-chip">编辑</div>
+                        <div class="action-chip danger">删除</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">透明袋</div>
+                      <div class="record-meta">2026-05-24 · 吧唧与小卡保护袋补货</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money negative">-¥52</div>
+                      <div class="record-actions">
+                        <div class="action-chip">编辑</div>
+                        <div class="action-chip danger">删除</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="logisticsExpense">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">物流费用</div>
+                  <div class="sub-caption">记录寄送、转运与退回支出</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="toggle-row">
+                  <div class="toggle-pill active">本月支出 ¥1,700</div>
+                  <div class="toggle-pill">累计支出 ¥4,260</div>
+                </div>
+                <div class="card form-card">
+                  <div class="section-title">新增物流支出</div>
+                  <div class="field">
+                    <div class="label required">支出金额</div>
+                    <div class="input">¥ 22.00</div>
+                  </div>
+                  <div class="field">
+                    <div class="label required">发生日期</div>
+                    <div class="input">2026-05-30 <span style="margin-left:auto;">📅</span></div>
+                  </div>
+                  <div class="field">
+                    <div class="label">备注</div>
+                    <div class="textarea">顺丰补发运费，含运单号与转运说明</div>
+                  </div>
+                  <div style="margin-top:14px;" class="button">保存支出</div>
+                </div>
+                <div class="card list-card">
+                  <div class="section-title">物流记录</div>
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">物流支出</div>
+                      <div class="record-meta">2026-05-29 · 发往上海 · 运单 SF2039******</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money negative">-¥18</div>
+                      <div class="record-actions">
+                        <div class="action-chip">编辑</div>
+                        <div class="action-chip danger">删除</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="record-row">
+                    <div>
+                      <div class="record-title">物流支出</div>
+                      <div class="record-meta">2026-05-26 · 退件转运补差价</div>
+                    </div>
+                    <div class="record-right">
+                      <div class="record-money negative">-¥26</div>
+                      <div class="record-actions">
+                        <div class="action-chip">编辑</div>
+                        <div class="action-chip danger">删除</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="statsSummary">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">统计汇总</div>
+                  <div class="sub-caption">按需求文档中的口径公式汇总</div>
+                </div>
+              </div>
+              <div class="scroll">
+                <div class="card summary-list">
+                  <div class="section-title">基础汇总项</div>
+                  <div class="summary-row"><span>已结算商品价格总额</span><strong>¥18,620.00</strong></div>
+                  <div class="summary-row"><span>已结算商品实际收入总额</span><strong>¥20,580.00</strong></div>
+                  <div class="summary-row"><span>平台抽成总收入</span><strong>¥2,386.20</strong></div>
+                  <div class="summary-row"><span>寄售用户结算总支出</span><strong>¥16,233.80</strong></div>
+                  <div class="summary-row"><span>材料费用总支出</span><strong>¥486.00</strong></div>
+                  <div class="summary-row"><span>物流费用总支出</span><strong>¥1,700.00</strong></div>
+                  <div class="summary-row negative"><span>平台差价收益</span><strong>-¥426.00</strong></div>
+                  <div class="summary-row highlight"><span>平台净收入</span><strong>¥5,486.20</strong></div>
+                </div>
+                <div class="card detail-card">
+                  <div class="section-title">公式说明</div>
+                  <div class="money-row"><span>平台抽成收益</span><strong>sum(商品价格 × 抽成比例)</strong></div>
+                  <div class="money-row"><span>平台差价收益</span><strong>sum(实际收入 - 商品价格)</strong></div>
+                  <div class="money-row"><span>总支出</span><strong>材料费用 + 物流费用</strong></div>
+                  <div class="money-row total"><span>平台净收入</span><strong>抽成收益 + 差价收益 - 总支出</strong></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="monthPanel">
+              <div class="admin-header">
+                <div class="admin-title">统计</div>
+                <div class="icon-actions">
+                  <div class="icon-button">⌕</div>
+                  <div class="icon-button">＋</div>
+                </div>
+              </div>
+              <div class="scroll" style="height:calc(100% - 88px); padding-bottom:250px;">
+                <div class="toggle-row">
+                  <div class="toggle-pill active">本月统计</div>
+                  <div class="toggle-pill">累计统计</div>
+                </div>
+                <div class="card hero-card">
+                  <div class="hero-top">
+                    <div class="hero-title">本月实际收益</div>
+                    <div class="month-chip">2026-05 <span>▾</span></div>
+                  </div>
+                  <div class="hero-amount">¥5,486.20</div>
+                  <div class="hero-foot">
+                    <div class="hero-note">已切换至 2026 年 5 月</div>
+                    <div class="trend-chip down">↓ 较上月 -4.2%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="panel-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-head">
+                  <div class="sheet-title">选择月份</div>
+                  <div class="sheet-year"><span>‹</span> 2026 年 <span>›</span></div>
+                </div>
+                <div class="month-grid">
+                  <div class="month-cell">1 月</div>
+                  <div class="month-cell">2 月</div>
+                  <div class="month-cell">3 月</div>
+                  <div class="month-cell">4 月</div>
+                  <div class="month-cell active">5 月</div>
+                  <div class="month-cell disabled">6 月</div>
+                  <div class="month-cell disabled">7 月</div>
+                  <div class="month-cell disabled">8 月</div>
+                  <div class="month-cell disabled">9 月</div>
+                  <div class="month-cell disabled">10 月</div>
+                  <div class="month-cell disabled">11 月</div>
+                  <div class="month-cell disabled">12 月</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="statsEmpty">
+              <div class="sub-header">
+                <div class="back-chip">‹</div>
+                <div class="sub-title-group">
+                  <div class="sub-title">收入明细</div>
+                  <div class="sub-caption">搜索 / 筛选结果为空状态</div>
+                </div>
+              </div>
+              <div class="empty-state">
+                <div class="empty-mark">✦</div>
+                <div class="empty-title">暂无统计数据</div>
+                <div class="empty-text">当前时间范围内还没有已结算商品收入，可切换月份或清空筛选后重试。</div>
+                <div class="button secondary" style="width:220px;">清空筛选</div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <div class="note-card">
+          <h2>页面范围</h2>
+          <div>统计首页、收入明细、材料费用、物流费用、统计汇总、月份选择面板、空态页面均已覆盖。</div>
+        </div>
+        <div class="note-card">
+          <h2>视觉方向</h2>
+          <div>底色直接沿用注册登录页的蓝粉轻渐变氛围，卡片继续使用白色玻璃感，但排版更偏管理端，强调金额、口径与筛选结果。</div>
+        </div>
+        <div class="note-card">
+          <h2>重点规则</h2>
+          <div>Hero 主卡区分本月与累计；趋势仅在月维度展示；收入明细只显示已结算商品；材料与物流支出支持新增、列表、编辑/删除；统计汇总用公式化列表收口。</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const views = document.querySelectorAll(".view");
+
+    function showView(target) {
+      views.forEach((view) => view.classList.toggle("active", view.id === target));
+      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.target === target));
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => showView(tab.dataset.target));
+    });
+  </script>
+</body>
+</html>

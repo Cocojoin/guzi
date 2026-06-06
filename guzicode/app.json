@@ -1,0 +1,63 @@
+{
+  "pages": [
+    "auth/pages/login/login",
+    "auth/pages/register/register",
+    "auth/pages/profile/profile",
+    "user/pages/goods/list/list",
+    "user/pages/goods/detail/detail",
+    "user/pages/me/index/index",
+    "user/pages/me/password/password",
+    "user/pages/consignment/home/home",
+    "user/pages/consignment/intro/intro",
+    "user/pages/consignment/list/list",
+    "user/pages/consignment/upload/upload",
+    "user/pages/consignment/sold/sold",
+    "user/pages/consignment/settled/settled",
+    "user/pages/consignment/settlement-detail/settlement-detail",
+    "admin/pages/goods/list/list",
+    "admin/pages/goods/detail/detail",
+    "admin/pages/goods/upload/upload",
+    "admin/pages/goods/edit/edit",
+    "admin/pages/goods/batch-status/batch-status",
+    "admin/pages/goods/batch-sold/batch-sold",
+    "admin/pages/goods/batch-links/batch-links",
+    "admin/pages/goods/batch-upload/batch-upload",
+    "pages/webview/webview",
+    "admin/pages/stats/stats",
+    "admin/pages/users/users",
+    "admin/pages/settings/settings",
+    "admin/pages/settings/operation-log/operation-log",
+    "admin/pages/settings/data-backup/data-backup",
+    "admin/pages/settings/export-data/export-data"
+  ],
+  "window": {
+    "navigationBarTitleText": "谷圈星社",
+    "navigationBarBackgroundColor": "#F7FCFF",
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom",
+    "backgroundColor": "#F7FCFF",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#9AA6BB",
+    "selectedColor": "#6D69D8",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "user/pages/goods/list/list",
+        "text": "商品",
+        "iconPath": "assets/customer-icons/nav-product.png",
+        "selectedIconPath": "assets/customer-icons/nav-product-active.png"
+      },
+      {
+        "pagePath": "user/pages/me/index/index",
+        "text": "我的",
+        "iconPath": "assets/customer-icons/nav-mine.png",
+        "selectedIconPath": "assets/customer-icons/nav-mine-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

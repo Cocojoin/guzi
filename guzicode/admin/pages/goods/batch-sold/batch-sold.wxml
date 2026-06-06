@@ -1,0 +1,39 @@
+<view class="subpage-shell">
+  <view class="subpage">
+    <view class="statusbar-spacer"></view>
+
+    <view class="sub-header">
+      <view class="back-chip" bindtap="goBack">‹</view>
+      <view class="sub-title-group">
+        <view class="sub-title">批量售出</view>
+        <view class="sub-caption">填写已选商品售出数量</view>
+      </view>
+    </view>
+
+    <view class="sub-scroll">
+      <view class="form-section">
+        <view class="section-title required">售出数量</view>
+        <view class="sold-list">
+          <view class="sold-item" wx:for="{{items}}" wx:key="id">
+            <view class="sold-info">
+              <view class="sold-name">{{item.title}}</view>
+              <view class="sold-stock">当前库存 {{item.remainingCount}} · 最多可售出 {{item.remainingCount}}</view>
+            </view>
+            <view class="sold-input-box">
+              <input class="sold-input" type="number" placeholder="0" placeholder-class="placeholder" value="{{item.soldQuantity}}" data-id="{{item.id}}" bindinput="onQtyInput" />
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-section">
+        <view class="section-title">售出备注</view>
+        <view class="remark-input-box">
+          <input class="remark-input" placeholder="可填写售出渠道、买家备注或结算说明" placeholder-class="placeholder" value="{{remark}}" bindinput="onRemarkInput" />
+        </view>
+      </view>
+
+      <button class="submit-btn" bindtap="handleSubmit">确认标记售出</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+
+# WeChat Mini Program
+project.private.config.json
+project.config.json.backup
+miniprogram_npm/
+cloudfunction_npm/
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+test/
+coverage/
+
+# Build
+dist/
+build/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Excel files (if you don't want to commit large files)
+# *.xlsx
+# *.xls

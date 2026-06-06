@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>谷圈星社｜商品管理设计稿</title>
+    <style>
+      :root {
+        --primary: #b0ddfa;
+        --primary-dark: #8ecbed;
+        --primary-soft: #eaf7ff;
+        --pink: #ffd7e6;
+        --purple: #c9c2ff;
+        --bg: #f7fcff;
+        --card: rgba(255, 255, 255, 0.92);
+        --text: #334155;
+        --muted: #64748b;
+        --line: #d9ecf8;
+        --danger: #ff7f96;
+        --success: #7bc79b;
+        --sold: #89d4b1;
+        --shadow: 0 18px 40px rgba(109, 150, 186, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 230, 0.6), transparent 24%),
+          radial-gradient(circle at right 18%, rgba(201, 194, 255, 0.5), transparent 22%),
+          linear-gradient(180deg, #fcfeff 0%, var(--bg) 100%);
+      }
+
+      .page {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .preview-shell {
+        padding: 20px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.52);
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        box-shadow: var(--shadow);
+      }
+
+      .preview-head h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      .preview-head p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .preview-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 18px 0 22px;
+      }
+
+      .tab {
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+        color: #62849f;
+        box-shadow: 0 8px 18px rgba(176, 221, 250, 0.14);
+        cursor: pointer;
+      }
+
+      .tab.active {
+        background: linear-gradient(180deg, #d5efff 0%, var(--primary) 100%);
+        color: #24435a;
+        font-weight: 600;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .phone {
+        padding: 14px;
+        border-radius: 34px;
+        background: linear-gradient(180deg, #fefeff, #edf8ff);
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.92);
+      }
+
+      .phone-shell {
+        min-height: 780px;
+        border-radius: 24px;
+        overflow: hidden;
+        position: relative;
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 230, 0.5), transparent 22%),
+          radial-gradient(circle at right 25%, rgba(201, 194, 255, 0.5), transparent 20%),
+          linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%);
+      }
+
+      .screen {
+        display: none;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .statusbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 14px 18px 8px;
+        font-size: 12px;
+        color: #6b7f92;
+      }
+
+      .decor {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .dot,
+      .star {
+        position: absolute;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 215, 230, 0.55);
+      }
+
+      .star {
+        width: 9px;
+        height: 9px;
+        background: rgba(255, 255, 255, 0.95);
+        transform: rotate(45deg);
+      }
+
+      .screen-content {
+        padding: 10px 16px 22px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+
+      .topbar h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .topbar .minor {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .brand-strip {
+        margin-bottom: 14px;
+        padding: 14px 16px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 24px rgba(116, 148, 181, 0.12);
+      }
+
+      .brand-strip strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 17px;
+      }
+
+      .brand-strip span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .glass-card {
+        padding: 16px;
+        border-radius: 24px;
+        background: var(--card);
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 12px 30px rgba(116, 148, 181, 0.12);
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .section-title strong {
+        font-size: 16px;
+      }
+
+      .section-title span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .search-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .search-pill,
+      .ghost-pill {
+        height: 42px;
+        border-radius: 15px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        color: #7e97ab;
+        font-size: 13px;
+      }
+
+      .search-pill {
+        flex: 1;
+        padding: 0 14px;
+      }
+
+      .ghost-pill {
+        padding: 0 14px;
+        min-width: 62px;
+        justify-content: center;
+      }
+
+      .chip-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(234, 247, 255, 0.88);
+        border: 1px solid rgba(176, 221, 250, 0.52);
+        color: #5a7d97;
+        font-size: 12px;
+      }
+
+      .chip.active {
+        background: linear-gradient(180deg, #d9f1ff 0%, #c1e8ff 100%);
+        color: #24435a;
+        font-weight: 600;
+      }
+
+      .summary-banner {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .summary-item {
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(217, 236, 248, 0.95);
+        text-align: center;
+      }
+
+      .summary-item strong {
+        display: block;
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+
+      .summary-item span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .product-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .product-item {
+        display: grid;
+        grid-template-columns: 58px 1fr auto;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(217, 236, 248, 0.95);
+      }
+
+      .media-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .thumb {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        background: linear-gradient(160deg, rgba(255,255,255,0.82), rgba(176,221,250,0.8));
+        display: grid;
+        place-items: center;
+        color: #5c7e97;
+        font-size: 20px;
+      }
+
+      .meta strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+
+      .meta .subline,
+      .meta .owner {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .meta .owner b {
+        color: #58738a;
+      }
+
+      .rightbox {
+        min-width: 82px;
+        text-align: right;
+      }
+
+      .price {
+        font-size: 15px;
+        font-weight: 700;
+        color: #d24b67;
+        margin-bottom: 8px;
+      }
+
+      .tag-row {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .tag {
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .tag.status-up {
+        background: rgba(176, 221, 250, 0.78);
+        color: #24435a;
+      }
+
+      .tag.status-down {
+        background: rgba(219, 231, 239, 0.88);
+        color: #566b7e;
+      }
+
+      .tag.status-sold {
+        background: rgba(137, 212, 177, 0.35);
+        color: #356652;
+      }
+
+      .tag.flaw {
+        background: rgba(255, 127, 150, 0.18);
+        color: #d24b67;
+      }
+
+      .tag.clean {
+        background: rgba(123, 199, 155, 0.22);
+        color: #2d8457;
+      }
+
+      .floating-bar {
+        margin-top: 14px;
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(217, 236, 248, 0.95);
+        display: flex;
+        gap: 10px;
+      }
+
+      .bar-btn,
+      .primary-btn,
+      .soft-btn {
+        border: 0;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .bar-btn {
+        flex: 1;
+        height: 42px;
+        background: rgba(234, 247, 255, 0.88);
+        color: #4f7089;
+      }
+
+      .primary-btn {
+        width: 100%;
+        height: 46px;
+        background: linear-gradient(180deg, #c0e7ff 0%, var(--primary) 100%);
+        color: #24435a;
+        box-shadow: 0 12px 22px rgba(176, 221, 250, 0.35);
+      }
+
+      .soft-btn {
+        height: 38px;
+        padding: 0 14px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid var(--line);
+        color: #5e7f96;
+      }
+
+      .field-block {
+        margin-bottom: 12px;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 13px;
+        color: #557087;
+      }
+
+      .field,
+      .textarea,
+      .select-grid .cell {
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      .field {
+        height: 44px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        color: #7e97ab;
+        font-size: 13px;
+      }
+
+      .textarea {
+        min-height: 84px;
+        padding: 12px 14px;
+        color: #7e97ab;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .select-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .select-grid .cell {
+        padding: 10px 12px;
+        color: #63829a;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .select-grid .cell.active {
+        background: linear-gradient(180deg, #d9f1ff 0%, #c1e8ff 100%);
+        color: #24435a;
+        font-weight: 600;
+      }
+
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .img-cell {
+        aspect-ratio: 1 / 1;
+        border-radius: 18px;
+        border: 1px dashed rgba(142, 203, 237, 0.86);
+        background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(234,247,255,0.8));
+        display: grid;
+        place-items: center;
+        color: #78a7c5;
+        font-size: 24px;
+      }
+
+      .img-cell.filled {
+        border-style: solid;
+        background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(176,221,250,0.7));
+        font-size: 18px;
+      }
+
+      .link-card {
+        padding: 12px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(217, 236, 248, 0.95);
+        margin-bottom: 10px;
+      }
+
+      .link-row {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .link-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .file-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .file-card {
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(217, 236, 248, 0.95);
+      }
+
+      .file-card strong,
+      .inline-title {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+      }
+
+      .file-card span,
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .detail-hero {
+        display: grid;
+        gap: 12px;
+      }
+
+      .cover-card {
+        height: 220px;
+        border-radius: 22px;
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 230, 0.38), transparent 24%),
+          linear-gradient(180deg, rgba(255,255,255,0.9), rgba(176,221,250,0.72));
+        border: 1px solid rgba(217, 236, 248, 0.95);
+        display: grid;
+        place-items: center;
+        color: #5a7990;
+        font-size: 42px;
+      }
+
+      .info-table {
+        display: grid;
+        gap: 10px;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(217, 236, 248, 0.95);
+      }
+
+      .info-row span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .info-row strong {
+        color: #415a70;
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .spec-card {
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 8px 22px rgba(117, 155, 189, 0.08);
+      }
+
+      .spec-card h3 {
+        margin: 0 0 10px;
+        font-size: 22px;
+      }
+
+      .spec-card p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .spec-item {
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(234, 247, 255, 0.62);
+        border: 1px solid rgba(176, 221, 250, 0.4);
+      }
+
+      .spec-item strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .spec-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 1080px) {
+        .stage {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="preview-shell">
+        <div class="preview-head">
+          <h1>谷圈星社商品管理设计稿</h1>
+          <p>延续注册登录的浅蓝玻璃卡风格，先对齐商品管理页面层级、信息结构和小程序视觉语气，不接业务逻辑。</p>
+        </div>
+
+        <div class="preview-tabs">
+          <button class="tab active" data-tab="list">商品列表</button>
+          <button class="tab" data-tab="links">批量上架</button>
+          <button class="tab" data-tab="upload">单个上传</button>
+          <button class="tab" data-tab="batch">批量上传</button>
+          <button class="tab" data-tab="detail">商品详情</button>
+          <button class="tab" data-tab="edit">编辑商品</button>
+        </div>
+
+        <div class="stage">
+          <div class="phone">
+            <div class="phone-shell">
+              <article class="screen active" data-screen="list">
+                <div class="decor">
+                  <span class="star" style="left:28px;top:94px;"></span>
+                  <span class="dot" style="right:42px;top:90px;"></span>
+                  <span class="star" style="right:78px;top:262px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <div class="topbar">
+                    <h2>商品管理</h2>
+                    <span class="minor">多选</span>
+                  </div>
+                  <section class="brand-strip">
+                    <strong>谷圈星社 · 商品列表</strong>
+                    <span>列表页保留注册登录那种轻透卡片感，但信息更密集，优先看搜索、筛选、状态和批量操作。</span>
+                  </section>
+                  <div class="search-row">
+                    <div class="search-pill">搜索角色 / IP / 系列</div>
+                    <div class="ghost-pill">筛选</div>
+                  </div>
+                  <div class="chip-row">
+                    <span class="chip active">全部状态</span>
+                    <span class="chip">寄售用户：小星</span>
+                    <span class="chip">已上架 12</span>
+                  </div>
+                  <div class="summary-banner">
+                    <div class="summary-item"><strong>128</strong><span>全部商品</span></div>
+                    <div class="summary-item"><strong>36</strong><span>在售</span></div>
+                    <div class="summary-item"><strong>9</strong><span>待补链接</span></div>
+                  </div>
+                  <div class="product-list">
+                    <div class="product-item">
+                      <div class="media-col">
+                        <div class="thumb">✦</div>
+                        <span class="tag flaw">有瑕</span>
+                      </div>
+                      <div class="meta">
+                        <strong>泉此方 · 夏日应援</strong>
+                        <span class="subline">Lucky Star</span>
+                        <span class="owner"><b>寄售用户：</b>星社补货组</span>
+                      </div>
+                      <div class="rightbox">
+                        <div class="price">¥ 58</div>
+                        <div class="tag-row">
+                          <span class="tag status-up">已上架</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="product-item">
+                      <div class="media-col">
+                        <div class="thumb">♡</div>
+                        <span class="tag clean">无暇</span>
+                      </div>
+                      <div class="meta">
+                        <strong>宫村伊澄 · 冬季特典</strong>
+                        <span class="subline">堀与宫村</span>
+                        <span class="owner"><b>寄售用户：</b>月岛前线</span>
+                      </div>
+                      <div class="rightbox">
+                        <div class="price">¥ 32</div>
+                        <div class="tag-row">
+                          <span class="tag status-down">已下架</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="product-item">
+                      <div class="media-col">
+                        <div class="thumb">☁</div>
+                        <span class="tag clean">无暇</span>
+                      </div>
+                      <div class="meta">
+                        <strong>乙骨忧太 · 剧场版闪卡</strong>
+                        <span class="subline">咒术回战</span>
+                        <span class="owner"><b>寄售用户：</b>咒回中转站</span>
+                      </div>
+                      <div class="rightbox">
+                        <div class="price">¥ 76</div>
+                        <div class="tag-row">
+                          <span class="tag status-sold">已售出</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="floating-bar">
+                    <button class="bar-btn">批量删除</button>
+                    <button class="bar-btn">修改状态</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="links">
+                <div class="decor">
+                  <span class="dot" style="left:32px;top:92px;background:rgba(201,194,255,.55);"></span>
+                  <span class="star" style="right:36px;top:98px;"></span>
+                  <span class="dot" style="right:56px;top:280px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <div class="topbar">
+                    <h2>批量上架</h2>
+                    <span class="minor">共 8 件</span>
+                  </div>
+                  <section class="brand-strip">
+                    <strong>至少 1 条合法平台链接</strong>
+                    <span>页面重点不是“表格后台感”，而是保持柔和的整理感，让管理员像在给商品配上外链卡片。</span>
+                  </section>
+                  <div class="section-title">
+                    <strong>购物平台链接</strong>
+                    <button class="soft-btn">📥 导入链接表</button>
+                  </div>
+                  <div class="link-card">
+                    <div class="inline-title">#A00128 · 泉此方 · 夏日应援</div>
+                    <div class="link-row">
+                      <div class="field">拼多多</div>
+                      <div class="field">填写链接</div>
+                    </div>
+                    <div class="link-row">
+                      <div class="field">淘宝/天猫</div>
+                      <div class="field">填写链接</div>
+                    </div>
+                  </div>
+                  <div class="link-card">
+                    <div class="inline-title">#A00131 · 宫村伊澄 · 冬季特典</div>
+                    <div class="link-row">
+                      <div class="field">小红书</div>
+                      <div class="field">填写链接</div>
+                    </div>
+                    <span class="hint">支持继续新增平台链接，同一平台不重复。</span>
+                  </div>
+                  <div class="link-card">
+                    <div class="inline-title">#A00136 · 凪诚士郎 · 生日透卡</div>
+                    <div class="link-row">
+                      <div class="field">平台</div>
+                      <div class="field">请填写至少 1 条合法链接</div>
+                    </div>
+                  </div>
+                  <button class="primary-btn">提交批量上架</button>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="upload">
+                <div class="decor">
+                  <span class="star" style="left:48px;top:108px;"></span>
+                  <span class="dot" style="left:18px;top:286px;"></span>
+                  <span class="star" style="right:68px;top:250px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <div class="topbar">
+                    <h2>上传商品</h2>
+                    <span class="minor">单个上传</span>
+                  </div>
+                  <section class="glass-card">
+                    <div class="section-title">
+                      <strong>商品图片</strong>
+                      <span>最多 9 张</span>
+                    </div>
+                    <div class="image-grid">
+                      <div class="img-cell filled">图 1</div>
+                      <div class="img-cell filled">图 2</div>
+                      <div class="img-cell">＋</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">寄售用户</label>
+                      <div class="field">选择有寄售权限的用户</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">角色</label>
+                      <div class="field">请输入角色</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">系列</label>
+                      <div class="field">请输入系列</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">IP</label>
+                      <div class="field">请输入 IP</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">质量</label>
+                      <div class="select-grid">
+                        <div class="cell active">有瑕</div>
+                        <div class="cell">无暇</div>
+                      </div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">商品状态</label>
+                      <div class="select-grid">
+                        <div class="cell">已下架</div>
+                        <div class="cell active">已上架</div>
+                      </div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">购物平台链接</label>
+                      <div class="link-row">
+                        <div class="field">拼多多</div>
+                        <div class="field">填写链接</div>
+                      </div>
+                    </div>
+                    <button class="primary-btn">保存商品</button>
+                  </section>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="batch">
+                <div class="decor">
+                  <span class="dot" style="right:36px;top:86px;"></span>
+                  <span class="star" style="left:36px;top:118px;"></span>
+                  <span class="dot" style="left:26px;top:304px;background:rgba(201,194,255,.55);"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <div class="topbar">
+                    <h2>批量上传</h2>
+                    <span class="minor">Excel + 图片包</span>
+                  </div>
+                  <section class="glass-card">
+                    <div class="file-row">
+                      <div class="file-card">
+                        <strong>商品表格</strong>
+                        <span>上传 `.xlsx / .xls`，模板含角色、系列、IP、数量、价格、质量和购物平台链接列组。</span>
+                      </div>
+                      <div class="file-card">
+                        <strong>商品图片</strong>
+                        <span>支持多张图片或压缩包导入，后续按文件名规则自动匹配。</span>
+                      </div>
+                      <div class="file-card">
+                        <strong>寄售用户</strong>
+                        <span>本批次统一绑定到一个寄售用户，页面沿用登录注册那种整洁的单任务流程。</span>
+                      </div>
+                    </div>
+                    <div class="summary-banner" style="margin-top:12px;">
+                      <div class="summary-item"><strong>32</strong><span>表格行数</span></div>
+                      <div class="summary-item"><strong>29</strong><span>已匹配图片</span></div>
+                      <div class="summary-item"><strong>7</strong><span>待补链接</span></div>
+                    </div>
+                    <button class="primary-btn">提交批量上传</button>
+                  </section>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="detail">
+                <div class="decor">
+                  <span class="star" style="left:34px;top:102px;"></span>
+                  <span class="dot" style="right:32px;top:112px;"></span>
+                  <span class="star" style="right:84px;top:328px;"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <div class="topbar">
+                    <h2>商品详情</h2>
+                    <span class="minor">#A00128</span>
+                  </div>
+                  <div class="detail-hero">
+                    <div class="cover-card">✦</div>
+                    <div class="chip-row" style="margin-bottom:0;">
+                      <span class="chip active">已上架</span>
+                      <span class="chip">有瑕</span>
+                      <span class="chip">剩余可售 3</span>
+                    </div>
+                    <section class="info-table">
+                      <div class="info-row"><span>角色 · 系列</span><strong>泉此方 · 夏日应援</strong></div>
+                      <div class="info-row"><span>IP</span><strong>Lucky Star</strong></div>
+                      <div class="info-row"><span>寄售用户</span><strong>星社补货组</strong></div>
+                      <div class="info-row"><span>价格 / 数量</span><strong>¥ 58 / 共 5 件</strong></div>
+                      <div class="info-row"><span>购物平台链接</span><strong>拼多多 / 淘宝</strong></div>
+                      <div class="info-row"><span>备注</span><strong>边角有轻微压痕，已实拍说明。</strong></div>
+                    </section>
+                  </div>
+                  <div class="floating-bar">
+                    <button class="bar-btn">删除</button>
+                    <button class="bar-btn">编辑</button>
+                    <button class="bar-btn">修改状态</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="screen" data-screen="edit">
+                <div class="decor">
+                  <span class="dot" style="left:36px;top:96px;"></span>
+                  <span class="star" style="right:42px;top:116px;"></span>
+                  <span class="dot" style="right:54px;top:286px;background:rgba(201,194,255,.55);"></span>
+                </div>
+                <div class="statusbar"><span>9:41</span><span>微信 · 5G 100%</span></div>
+                <div class="screen-content">
+                  <div class="topbar">
+                    <h2>编辑商品</h2>
+                    <span class="minor">保存</span>
+                  </div>
+                  <section class="glass-card">
+                    <div class="field-block">
+                      <label class="label">寄售用户</label>
+                      <div class="field">星社补货组</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">角色 · 系列</label>
+                      <div class="field">泉此方 · 夏日应援</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">IP</label>
+                      <div class="field">Lucky Star</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">数量</label>
+                      <div class="field">5 → 支持补货后改为 8</div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">质量</label>
+                      <div class="select-grid">
+                        <div class="cell active">有瑕</div>
+                        <div class="cell">无暇</div>
+                      </div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">购物平台链接组</label>
+                      <div class="link-row">
+                        <div class="field">拼多多</div>
+                        <div class="field">https://mobile.yangkeduo.com/...</div>
+                      </div>
+                      <div class="link-row">
+                        <div class="field">淘宝/天猫</div>
+                        <div class="field">继续新增链接</div>
+                      </div>
+                    </div>
+                    <div class="field-block">
+                      <label class="label">备注</label>
+                      <div class="textarea">补货后保留原商品编号；已售出数量不受影响，剩余可售重新恢复为上架态。</div>
+                    </div>
+                    <button class="primary-btn">保存修改</button>
+                  </section>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <aside class="spec-card" id="spec-card">
+            <h3>商品列表</h3>
+            <p>列表页延续注册登录的柔和气质，但把品牌区压缩成短条幅，避免影响信息密度，重点突出搜索、状态和多选操作。</p>
+            <div class="spec-item"><strong>信息层级</strong><span>商品标题改为“角色 · 系列”，`IP` 单独做副信息，再显示寄售用户昵称，信息更容易扫读。</span></div>
+            <div class="spec-item"><strong>质量表现</strong><span>“有瑕”使用红色标签，“无暇”使用绿色标签，第一眼就能区分品相风险。</span></div>
+            <div class="spec-item"><strong>视觉继承</strong><span>仍然使用浅蓝玻璃卡、圆角容器和漂浮点缀，保证与注册登录页属于同一套产品语气。</span></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const specs = {
+        list: {
+          title: "商品列表",
+          desc: "列表页延续注册登录的柔和气质，但把品牌区压缩成短条幅，避免影响信息密度，重点突出搜索、状态和多选操作。",
+          items: [
+            ["信息层级", "商品标题改为“角色 · 系列”，IP 单独做副信息，再显示寄售用户昵称，信息更容易扫读。"],
+            ["质量表现", "“有瑕”使用红色标签，“无暇”使用绿色标签，第一眼就能区分品相风险。"],
+            ["视觉继承", "仍然使用浅蓝玻璃卡、圆角容器和漂浮点缀，保证与注册登录页属于同一套产品语气。"]
+          ]
+        },
+        links: {
+          title: "批量上架",
+          desc: "把“填链接”做成整理卡片，而不是后台表格。页面氛围保持轻盈，降低管理员逐条补链接时的枯燥感。",
+          items: [
+            ["交互重点", "每件商品是一张独立卡片，平台和链接成对出现，方便人工检查。"],
+            ["批量导入", "导入链接表按钮放在右上，仍然是弱操作，不盖过主任务。"],
+            ["状态感知", "页面顶部直接强调“至少 1 条合法链接”，避免校验条件藏得太深。"]
+          ]
+        },
+        upload: {
+          title: "单个上传",
+          desc: "单个上传页沿用注册页那种单任务表单节奏，但加入图片网格和状态切换，让页面更像在制作一张商品卡。",
+          items: [
+            ["表单气质", "字段分段清楚，依旧使用轻透白卡和细线边框。"],
+            ["状态切换", "“已下架 / 已上架”采用轻量分段按钮，贴近注册页的低压操作感。"],
+            ["重点字段", "上架时才展开购物平台链接，减少默认状态下的视觉负担。"]
+          ]
+        },
+        batch: {
+          title: "批量上传",
+          desc: "批量上传页不走传统表格管理后台风格，而是把表格、图片和寄售用户三件事压成清爽的三段式流程。",
+          items: [
+            ["流程梳理", "页面强调“表格 + 图片包 + 用户”三步，不堆满细节说明。"],
+            ["结果感", "通过顶部数字摘要表达批量导入结果，便于评审时看出后续状态。"],
+            ["风格统一", "仍然保留玻璃卡与浅蓝渐变，不跳出注册登录的品牌语言。"]
+          ]
+        },
+        detail: {
+          title: "商品详情",
+          desc: "详情页像一张收藏卡详情，封面图更大，信息表格更整洁，适合承接“编辑 / 删除 / 改状态”等单条操作。",
+          items: [
+            ["主视觉", "顶部大图延续注册页头像卡的展示感，让商品本身成为主角。"],
+            ["信息排布", "字段用双列行展示，减少长表单感，更适合小程序详情页。"],
+            ["操作区", "底部三按钮并排，延续卡片式按钮语言，不做强后台工具条。"]
+          ]
+        },
+        edit: {
+          title: "编辑商品",
+          desc: "编辑页基于上传页复用结构，但强调“补货、改链接、改寄售归属”这些管理端动作的可编辑感。",
+          items: [
+            ["复用策略", "与单个上传保持相同组件语言，降低设计和开发重复成本。"],
+            ["补货表达", "数量字段直接强调“可增加 / 可减少”，帮助团队记住这个关键业务点。"],
+            ["链接结构", "购物平台链接组保留卡片式成对输入，不回退成简单长文本。"]
+          ]
+        }
+      };
+
+      const tabs = document.querySelectorAll(".tab");
+      const screens = document.querySelectorAll(".screen");
+      const specCard = document.getElementById("spec-card");
+
+      function renderSpec(key) {
+        const spec = specs[key];
+        specCard.innerHTML =
+          `<h3>${spec.title}</h3><p>${spec.desc}</p>` +
+          spec.items
+            .map(([title, text]) => `<div class="spec-item"><strong>${title}</strong><span>${text}</span></div>`)
+            .join("");
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const key = tab.dataset.tab;
+          tabs.forEach((item) => item.classList.toggle("active", item === tab));
+          screens.forEach((screen) => screen.classList.toggle("active", screen.dataset.screen === key));
+          renderSpec(key);
+        });
+      });
+    </script>
+  </body>
+</html>

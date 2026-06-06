@@ -1,0 +1,222 @@
+@import "../../../../app.wxss";
+
+.detail-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 230, 0.5), transparent 22%),
+    radial-gradient(circle at right 25%, rgba(201, 194, 255, 0.5), transparent 20%),
+    linear-gradient(180deg, #fcfeff 0%, #eef8ff 100%);
+}
+
+.detail-page {
+  min-height: 100vh;
+  padding: 48rpx 32rpx 56rpx;
+  box-sizing: border-box;
+}
+
+.statusbar-spacer {
+  height: calc(120rpx + env(safe-area-inset-top));
+}
+
+.page-topbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28rpx;
+}
+
+.export-data-header {
+  position: relative;
+  justify-content: center;
+  padding-right: 0;
+  min-height: 72rpx;
+}
+
+.export-data-header .back-button {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #223650;
+  text-align: center;
+}
+
+.section-label {
+  margin-top: 22rpx;
+  margin-bottom: 14rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #5e6f86;
+}
+
+.section-label--spaced {
+  margin-top: 30rpx;
+}
+
+.export-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 20rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14rpx 30rpx rgba(127, 154, 190, 0.08);
+}
+
+.export-card--active {
+  background: linear-gradient(90deg, rgba(212, 228, 255, 0.95), rgba(223, 242, 236, 0.95));
+  border-color: rgba(164, 190, 245, 0.96);
+}
+
+.checkmark {
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #cad8e8;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.checkmark--active {
+  border-color: #7f85ea;
+  background: linear-gradient(180deg, #8d92f1 0%, #6d75dd 100%);
+  color: #ffffff;
+}
+
+.export-main {
+  flex: 1;
+}
+
+.export-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #2f415b;
+}
+
+.export-subtitle {
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #8797ab;
+}
+
+.range-row {
+  display: flex;
+  gap: 14rpx;
+  flex-wrap: nowrap;
+}
+
+.range-chip {
+  flex: 1;
+  min-width: 0;
+  height: 84rpx;
+  padding: 0 18rpx;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2rpx solid rgba(255, 255, 255, 0.92);
+  color: #7b8ca4;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.range-chip--active {
+  background: rgba(220, 229, 255, 0.96);
+  border-color: rgba(179, 194, 255, 0.98);
+  color: #5a64dc;
+  font-weight: 700;
+}
+
+.custom-card {
+  margin-top: 18rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2rpx solid rgba(255, 255, 255, 0.92);
+}
+
+.custom-row {
+  min-height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.custom-row + .custom-row {
+  border-top: 2rpx solid rgba(228, 234, 243, 0.92);
+}
+
+.custom-label {
+  font-size: 28rpx;
+  color: #667c98;
+}
+
+.custom-value {
+  font-size: 32rpx;
+  color: #2f415b;
+}
+
+.format-card {
+  margin-top: 32rpx;
+  padding: 30rpx 32rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.format-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2f415b;
+}
+
+.format-tag {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(84, 170, 141, 0.14);
+  color: #43937a;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.primary-btn {
+  margin-top: 36rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  border: 0;
+  border-radius: 28rpx;
+  background: linear-gradient(180deg, #afd8fc 0%, #9fcbf5 100%);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 700;
+  box-shadow: 0 18rpx 32rpx rgba(168, 207, 244, 0.26);
+}
+
+.primary-btn::after {
+  border: 0;
+}
+
+.footer-tip {
+  margin-top: 26rpx;
+  text-align: center;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: #a0acc0;
+}

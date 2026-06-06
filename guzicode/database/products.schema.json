@@ -1,0 +1,136 @@
+{
+  "collectionName": "products",
+  "description": "商品表，存储寄售信息、状态、价格、图片与平台链接",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "description": "业务商品编号，如 A00128"
+    },
+    {
+      "name": "owner",
+      "type": "string",
+      "required": true,
+      "description": "寄售用户昵称"
+    },
+    {
+      "name": "ownerUserId",
+      "type": "string",
+      "required": false,
+      "description": "寄售用户ID（users._id，强关联）"
+    },
+    {
+      "name": "ip",
+      "type": "string",
+      "required": true,
+      "description": "IP 名称"
+    },
+    {
+      "name": "role",
+      "type": "string",
+      "required": true,
+      "description": "角色名称"
+    },
+    {
+      "name": "series",
+      "type": "string",
+      "required": true,
+      "description": "系列名称"
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "required": true,
+      "description": "商品类型，如 小卡/吧唧/镭射票/自定义"
+    },
+    {
+      "name": "customType",
+      "type": "string",
+      "required": false,
+      "description": "自定义类型名称"
+    },
+    {
+      "name": "price",
+      "type": "number",
+      "required": true,
+      "description": "商品价格"
+    },
+    {
+      "name": "quality",
+      "type": "string",
+      "required": true,
+      "enum": ["clean", "flaw"],
+      "description": "质量：无暇(clean)/有瑕(flaw)"
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "required": true,
+      "enum": ["up", "down", "sold", "settled"],
+      "description": "商品状态：上架/下架/售出/结算"
+    },
+    {
+      "name": "totalQuantity",
+      "type": "number",
+      "required": true,
+      "description": "总数量"
+    },
+    {
+      "name": "soldCount",
+      "type": "number",
+      "required": true,
+      "description": "已售出数量"
+    },
+    {
+      "name": "settledCount",
+      "type": "number",
+      "required": true,
+      "description": "已结算数量"
+    },
+    {
+      "name": "listedDays",
+      "type": "number",
+      "required": false,
+      "description": "上架天数（用于展示）"
+    },
+    {
+      "name": "purchaseRecord",
+      "type": "string",
+      "required": true,
+      "enum": ["有", "无"],
+      "description": "购买记录标记"
+    },
+    {
+      "name": "images",
+      "type": "array",
+      "required": false,
+      "description": "商品图片地址数组（首图为封面）"
+    },
+    {
+      "name": "links",
+      "type": "array",
+      "required": false,
+      "description": "平台链接数组，元素包含 platform/url"
+    },
+    {
+      "name": "remark",
+      "type": "string",
+      "required": false,
+      "description": "备注信息"
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "required": true,
+      "description": "创建时间"
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "required": true,
+      "description": "更新时间"
+    }
+  ]
+}

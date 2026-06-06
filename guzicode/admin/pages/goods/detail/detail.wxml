@@ -1,0 +1,176 @@
+<view class="detail-shell">
+  <view class="detail-page {{showStatusSheet ? 'detail-page--with-sheet' : ''}}">
+    <view class="statusbar-spacer"></view>
+
+    <!-- 顶部导航 -->
+    <view class="topbar">
+      <view class="back-button" bindtap="goBack"></view>
+      <view class="page-title">商品详情</view>
+    </view>
+
+    <view wx:if="{{productView}}">
+      <!-- 图片轮播 -->
+      <view class="form-card" style="padding: 16rpx;">
+        <swiper class="image-swiper" indicator-dots indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#ffffff" circular autoplay>
+          <block wx:for="{{product.images}}" wx:key="index">
+            <swiper-item>
+              <image class="swiper-image" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-index="{{index}}" />
+            </swiper-item>
+          </block>
+          <swiper-item wx:if="{{!product.images || product.images.length === 0}}">
+            <view class="swiper-placeholder">暂无图片</view>
+          </swiper-item>
+        </swiper>
+      </view>
+
+      <!-- 商品摘要 -->
+      <view class="form-card">
+        <view class="summary-header">
+          <view class="summary-title">{{productView.title}}</view>
+          <view class="summary-price">{{productView.priceText}}</view>
+        </view>
+        <view class="summary-sub">{{productView.ip}} · {{typeLabel}}</view>
+        <view class="summary-tags">
+          <view class="status-pill {{productView.statusClassName}}">{{productView.statusLabel}}</view>
+          <view class="quality-badge {{productView.qualityClassName}}">{{productView.qualityLabel}}</view>
+          <view class="quality-badge quality-badge--record">{{purchaseRecordLabel}}</view>
+        </view>
+        <view class="summary-stats">
+          <view class="stat-item">
+            <view class="stat-value">{{product.totalQuantity}}</view>
+            <view class="stat-label">总数量</view>
+          </view>
+          <view class="stat-item">
+            <view class="stat-value">{{productView.remainingCount}}</view>
+            <view class="stat-label">剩余可售</view>
+          </view>
+          <view class="stat-item">
+            <view class="stat-value">{{product.soldCount}}</view>
+            <view class="stat-label">已售出</view>
+          </view>
+          <view class="stat-item">
+            <view class="stat-value">{{product.settledCount || 0}}</view>
+            <view class="stat-label">已结算</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 寄售用户 -->
+      <view class="form-card">
+        <view class="owner-row">
+          <view class="owner-row-label">寄售用户</view>
+          <view class="owner-row-name">{{product.owner}}</view>
+        </view>
+        <view class="owner-row owner-row--sub">
+          <view class="owner-row-label">抽成比例</view>
+          <view class="owner-row-name">{{ownerCommissionRateText}}</view>
+        </view>
+      </view>
+
+      <!-- 备注 -->
+      <view class="form-card">
+        <view class="card-label">备注</view>
+        <view class="remark-content">{{product.remark || '暂无备注'}}</view>
+      </view>
+
+      <!-- 操作记录 -->
+      <view class="form-card" wx:if="{{logs && logs.length > 0}}">
+        <view class="card-label">操作记录</view>
+        <view class="log-item" wx:for="{{logs}}" wx:key="index">
+          <view class="log-dot"></view>
+          <view class="log-content">
+            <view class="log-text">{{item.text}}</view>
+            <view class="log-time">{{item.time}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 底部占位（防止被操作栏遮挡） -->
+      <view style="height: 200rpx;" wx:if="{{productView.displayStatus !== 'settled'}}"></view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏（已结算时隐藏） -->
+  <view wx:if="{{productView && productView.displayStatus !== 'settled'}}" class="detail-action-bar">
+    <button wx:if="{{productView.displayStatus !== 'sold'}}" class="action-btn action-btn--danger" bindtap="handleDelete">删除</button>
+    <button class="action-btn action-btn--light" bindtap="goEdit">编辑</button>
+    <button class="action-btn action-btn--primary" bindtap="openStatusSheet">{{productView.displayStatus === 'sold' ? '退款恢复上架' : '修改状态'}}</button>
+  </view>
+
+  <!-- 状态修改弹窗 -->
+  <view wx:if="{{showStatusSheet}}">
+    <view class="sheet-mask" bindtap="closeStatusSheet"></view>
+    <view class="sheet-panel">
+      <view class="sheet-handle"></view>
+      <view class="sheet-head">
+        <view class="sheet-title">修改状态</view>
+        <view class="sheet-close" bindtap="closeStatusSheet">×</view>
+      </view>
+
+      <view class="sheet-card">
+        <view class="sheet-thumb">
+          <image wx:if="{{product.images && product.images.length > 0}}" class="sheet-thumb-img" src="{{product.images[0]}}" mode="aspectFill" />
+          <view wx:else class="sheet-thumb-placeholder"></view>
+        </view>
+        <view class="sheet-card-main">
+          <view class="sheet-card-title">{{productView.title}}</view>
+          <view class="sheet-card-sub">总数量 {{product.totalQuantity}} · 剩余可售 {{productView.remainingCount}}</view>
+        </view>
+      </view>
+
+      <view class="sheet-section">
+        <view class="sheet-section-title">目标状态</view>
+        <view class="status-choice-row">
+          <view class="status-choice {{statusTarget === 'down' ? 'status-choice--active' : ''}}" data-status="down" bindtap="chooseStatus">已下架</view>
+          <view class="status-choice {{statusTarget === 'up' ? 'status-choice--active' : ''}}" data-status="up" bindtap="chooseStatus">已上架</view>
+          <view class="status-choice {{statusTarget === 'sold' ? 'status-choice--active' : ''}}" data-status="sold" bindtap="chooseStatus">已售出</view>
+        </view>
+      </view>
+
+      <view class="sheet-section" wx:if="{{statusTarget === 'sold'}}">
+        <view class="sheet-section-title">本次修改数量</view>
+        <view class="stepper-row">
+          <view class="stepper-btn" bindtap="decreaseStatusQuantity">－</view>
+          <view class="stepper-value">{{statusQuantity}}</view>
+          <view class="stepper-btn" bindtap="increaseStatusQuantity">＋</view>
+        </view>
+        <view class="stepper-hint">最多 {{maxStatusQuantity}}</view>
+      </view>
+
+      <view class="sheet-note">{{statusNote}}</view>
+
+      <view class="sheet-submit">
+        <button class="submit-btn" bindtap="submitStatusChange">确认修改</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showImageViewer}}" class="image-viewer" bindtap="closeImageViewer">
+    <view class="image-viewer-mask"></view>
+    <view class="image-viewer-panel">
+      <view class="image-viewer-top">
+        <view class="image-viewer-close" bindtap="closeImageViewer">×</view>
+      </view>
+      <swiper
+        class="image-viewer-swiper"
+        current="{{imageViewerIndex}}"
+        indicator-dots="{{product.images && product.images.length > 1}}"
+        indicator-color="rgba(255,255,255,0.35)"
+        indicator-active-color="#ffffff"
+        circular
+        bindchange="onViewerChange"
+      >
+        <block wx:for="{{product.images}}" wx:key="index">
+          <swiper-item>
+            <view class="image-viewer-slide">
+              <image class="image-viewer-image" src="{{item}}" mode="aspectFit" catchtap="noop" />
+            </view>
+          </swiper-item>
+        </block>
+      </swiper>
+      <view class="image-viewer-footer" catchtap="noop">
+        <button class="image-download-btn" loading="{{isDownloadingImage}}" bindtap="downloadCurrentImage">下载图片</button>
+      </view>
+    </view>
+  </view>
+</view>

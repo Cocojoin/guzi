@@ -1,0 +1,43 @@
+{
+  "collectionName": "products",
+  "indexes": [
+    {
+      "name": "idx_product_id_unique",
+      "fields": [
+        {
+          "field": "id",
+          "order": "asc"
+        }
+      ],
+      "unique": true,
+      "description": "商品业务编号唯一索引"
+    },
+    {
+      "name": "idx_status_owner",
+      "fields": [
+        {
+          "field": "status",
+          "order": "asc"
+        },
+        {
+          "field": "owner",
+          "order": "asc"
+        }
+      ],
+      "unique": false,
+      "description": "状态和寄售用户联合索引"
+    },
+    {
+      "name": "idx_created_at_desc",
+      "fields": [
+        {
+          "field": "createdAt",
+          "order": "desc"
+        }
+      ],
+      "unique": false,
+      "description": "创建时间倒序索引，便于列表按最新展示"
+    }
+  ]
+}
+

@@ -1,0 +1,62 @@
+@import "../../../user.wxss";
+
+.u-topbar {
+  align-items: center;
+  padding-right: env(safe-area-inset-right);
+  gap: 16rpx;
+}
+
+.title-wrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.sold-card {
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.sold-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 22rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 2rpx solid rgba(211, 220, 235, 0.68);
+}
+
+.small-thumb {
+  width: 104rpx;
+  height: 104rpx;
+  flex-basis: 104rpx;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.sold-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.single-line {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sold-line {
+  display: flex;
+  justify-content: space-between;
+  color: #6c7b93;
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-top: 20rpx;
+}
+
+.sold-line text:last-child {
+  color: #52617a;
+}
+
+.sold-price {
+  color: #f05e83 !important;
+  font-size: 32rpx;
+  font-weight: 900;
+}

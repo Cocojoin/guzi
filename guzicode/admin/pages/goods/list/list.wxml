@@ -1,0 +1,173 @@
+<view class="management-shell">
+  <view class="management-page {{multiSelect ? 'management-page--with-bar' : ''}}">
+    <view class="statusbar-spacer"></view>
+
+    <view class="management-header">
+      <view class="header-title">商品管理</view>
+      <view class="header-actions">
+        <view class="header-search">
+          <input
+            class="header-search-input"
+            placeholder="搜索"
+            placeholder-class="header-search-placeholder"
+            value="{{inputText}}"
+            bindinput="onSearchInput"
+            bindconfirm="doSearch"
+          />
+          <view wx:if="{{inputText}}" class="header-search-clear" bindtap="clearSearch">×</view>
+          <view class="header-search-btn" bindtap="doSearch">
+            <view class="header-search-icon"></view>
+          </view>
+        </view>
+        <view class="icon-button add-btn" bindtap="handleOpenCreate">
+          <view class="add-icon-small"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="filter-panel">
+      <view class="filter-row">
+        <view class="filter-dropdown {{activeDropdown === 'owner' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="owner">
+          <text class="filter-dropdown-text">{{ownerOptions[ownerIndex]}}</text>
+          <text class="filter-arrow {{activeDropdown === 'owner' ? 'filter-arrow--up' : ''}}">▼</text>
+        </view>
+        <view class="filter-dropdown {{activeDropdown === 'status' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="status">
+          <text class="filter-dropdown-text">{{statusLabels[statusIndex]}}</text>
+          <text class="filter-arrow {{activeDropdown === 'status' ? 'filter-arrow--up' : ''}}">▼</text>
+        </view>
+        <view class="filter-dropdown {{activeDropdown === 'role' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="role">
+          <text class="filter-dropdown-text">{{roleOptions[roleIndex]}}</text>
+          <text class="filter-arrow {{activeDropdown === 'role' ? 'filter-arrow--up' : ''}}">▼</text>
+        </view>
+        <view class="batch-btn" bindtap="toggleMultiSelect">{{multiSelect ? '取消批量' : '批量'}}</view>
+      </view>
+
+      <!-- 下拉面板 -->
+      <view wx:if="{{activeDropdown === 'owner'}}" class="dropdown-panel">
+        <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+        <view class="dropdown-panel-content">
+          <view class="dropdown-option {{ownerIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{ownerOptions}}" wx:key="index" data-key="owner" data-index="{{index}}" bindtap="onDropdownSelect">
+            <text>{{item}}</text>
+            <text wx:if="{{ownerIndex === index}}" class="dropdown-check">✓</text>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{activeDropdown === 'status'}}" class="dropdown-panel">
+        <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+        <view class="dropdown-panel-content">
+          <view class="dropdown-option {{statusIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{statusLabels}}" wx:key="index" data-key="status" data-index="{{index}}" bindtap="onDropdownSelect">
+            <text>{{item}}</text>
+            <text wx:if="{{statusIndex === index}}" class="dropdown-check">✓</text>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{activeDropdown === 'role'}}" class="dropdown-panel">
+        <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
+        <view class="dropdown-panel-content">
+          <view class="dropdown-option {{roleIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{roleOptions}}" wx:key="index" data-key="role" data-index="{{index}}" bindtap="onDropdownSelect">
+            <text>{{item}}</text>
+            <text wx:if="{{roleIndex === index}}" class="dropdown-check">✓</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="goods-list">
+      <view wx:if="{{loading && !hasLoaded}}" class="empty-card">
+        <view class="empty-title">商品加载中</view>
+        <view class="empty-hint">正在准备商品数据，请稍等一下</view>
+      </view>
+
+      <block wx:elif="{{filteredProducts.length}}">
+        <view
+          class="goods-card {{multiSelect ? 'goods-card--batch' : ''}} {{item.selected ? 'goods-card--selected' : ''}} {{item.selectable ? '' : 'goods-card--disabled'}}"
+          wx:for="{{filteredProducts}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="handleCardTap"
+        >
+          <view wx:if="{{multiSelect}}" class="select-col">
+            <view class="select-circle {{item.selected ? 'select-circle--checked' : ''}} {{!item.selectable ? 'select-circle--disabled' : ''}}"></view>
+          </view>
+
+          <view class="goods-main">
+            <view class="goods-media">
+              <view class="quality-tag quality-tag--{{item.quality}}">{{item.qualityLabel}}</view>
+              <view class="goods-thumb">
+                <image
+                  wx:if="{{item.coverImage}}"
+                  class="goods-image"
+                  src="{{item.coverImage}}"
+                  mode="aspectFill"
+                />
+                <view wx:else class="goods-star"></view>
+              </view>
+            </view>
+
+            <view class="goods-body">
+              <view class="goods-header">
+                <view class="goods-title">{{item.title}}</view>
+                <view class="status-pill {{item.statusClassName}}">{{item.statusLabel}}</view>
+              </view>
+              <view class="goods-price-row">
+                <view class="goods-meta-item">IP：{{item.ip}}</view>
+                <view class="goods-price">{{item.priceText}}</view>
+              </view>
+              <view class="goods-meta-item">数量：{{item.remainingCount}}</view>
+              <view class="goods-type-row">
+                <text class="goods-meta-item">类型：{{item.typeLabel}}</text>
+                <text class="goods-owner">{{item.owner}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="empty-card">
+        <view class="empty-title">暂无匹配商品</view>
+        <view class="empty-hint">试试切换筛选条件或搜索关键词</view>
+      </view>
+      <view wx:if="{{loading && hasLoaded}}" class="list-refresh-tip">刷新中…</view>
+    </view>
+  </view>
+
+  <view wx:if="{{multiSelect}}" class="selection-bar">
+    <view class="selection-meta" bindtap="toggleSelectAll">
+      <view class="select-circle select-circle--bar {{allSelectableChecked ? 'select-circle--checked' : ''}}"></view>
+      <view class="selection-copy">
+        <view class="selection-title">全选</view>
+        <view class="selection-count">已选 <text>{{selectedIds.length}}</text> 件商品</view>
+      </view>
+    </view>
+    <view class="selection-actions">
+      <button class="ghost-btn" bindtap="handleBatchStatus">修改状态</button>
+      <button class="danger-btn" bindtap="handleBatchDelete">批量删除</button>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goStats">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/stat.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">统计</view>
+    </view>
+    <view class="nav-item nav-item--active" bindtap="goGoods">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/product-active.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">商品</view>
+    </view>
+    <view class="nav-item" bindtap="goUsers">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/user.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">用户</view>
+    </view>
+    <view class="nav-item" bindtap="goSettings">
+      <view class="nav-icon">
+        <image class="nav-icon-image" src="/assets/nav-icons/setting.svg" mode="aspectFit" />
+      </view>
+      <view class="nav-label">设置</view>
+    </view>
+  </view>
+</view>

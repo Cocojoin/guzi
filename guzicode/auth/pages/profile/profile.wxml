@@ -1,0 +1,50 @@
+<view class="auth-shell profile-shell">
+  <view class="auth-status"></view>
+
+  <view class="page-back" bindtap="goBack"></view>
+
+  <view class="auth-content">
+    <!-- 装饰元素 -->
+    <view class="decor">
+      <view class="decor-dot decor-dot--purple" style="left: 56rpx; top: 168rpx;"></view>
+      <view class="decor-star" style="right: 76rpx; top: 200rpx;"></view>
+      <view class="decor-dot" style="right: 108rpx; top: 488rpx;"></view>
+    </view>
+
+    <view class="brand-block">
+      <view class="brand-mark">☁</view>
+      <view class="brand-title">填写资料</view>
+      <view class="brand-subtitle">还差一步，就可以开始逛啦</view>
+    </view>
+
+    <view class="form-card">
+      <view class="avatar-card">
+        <view class="avatar-box" bindtap="chooseAvatar">
+          <image wx:if="{{avatarUrl}}" class="avatar-image" src="{{avatarUrl}}" mode="aspectFill" />
+          <view wx:else class="avatar-icon">{{avatarText}}</view>
+        </view>
+        <view class="avatar-tip">点击上传头像</view>
+        <view wx:if="{{errors.avatar}}" class="error-text">{{errors.avatar}}</view>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">昵称</text>
+        <view class="form-field {{errors.nickname ? 'form-field--error' : ''}}">
+          <input
+            class="field-input"
+            placeholder="请输入昵称"
+            placeholder-class="field-placeholder"
+            value="{{nickname}}"
+            bindinput="onNicknameInput"
+            bindblur="onNicknameBlur"
+          />
+        </view>
+        <view wx:if="{{errors.nickname}}" class="error-text">{{errors.nickname}}</view>
+      </view>
+
+      <button class="submit-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="handleSubmit">
+        完成
+      </button>
+    </view>
+  </view>
+</view>

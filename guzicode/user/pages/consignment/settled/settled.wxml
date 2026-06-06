@@ -1,0 +1,36 @@
+<view class="u-page">
+  <view class="u-content">
+    <view class="u-topbar">
+      <view class="u-back" bindtap="goBack"></view>
+      <view class="title-wrap">
+        <view class="u-top-title">已结算</view>
+      </view>
+    </view>
+
+    <view class="settled-total">
+      <text>累计已结算货款</text>
+      <text>{{totalText}}</text>
+    </view>
+
+    <view wx:if="{{loading && !hasLoaded}}" class="empty-note">加载中…</view>
+    <view wx:elif="{{records.length === 0}}" class="u-card empty-card empty-card--search">
+      <view class="empty-emoji">💰</view>
+      <view class="empty-title">暂无已结算记录</view>
+      <view class="empty-desc">结算完成后会出现在这里</view>
+    </view>
+
+    <block wx:else>
+      <view class="u-card settle-row" wx:for="{{records}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+        <view class="settle-icon">▧</view>
+        <view class="settle-text">
+          <view class="settle-title">{{item.title}}</view>
+          <view class="goods-meta">{{item.count}} 件</view>
+        </view>
+        <view class="settle-amount">{{item.amountText}}</view>
+        <view class="manage-arrow">›</view>
+      </view>
+      <view class="end-line">—— 没有更多了 ——</view>
+      <view wx:if="{{loading && hasLoaded}}" class="list-refresh-tip">刷新中…</view>
+    </block>
+  </view>
+</view>

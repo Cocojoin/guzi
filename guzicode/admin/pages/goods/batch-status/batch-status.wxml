@@ -1,0 +1,50 @@
+<view class="subpage-shell">
+  <view class="subpage">
+    <view class="statusbar-spacer"></view>
+
+    <view class="sub-header">
+      <view class="back-chip" bindtap="goBack">‹</view>
+      <view class="sub-title-group">
+        <view class="sub-title">批量修改状态</view>
+        <view class="sub-caption">已选择 {{items.length}} 个商品</view>
+      </view>
+    </view>
+
+    <view class="sub-scroll">
+      <view class="mini-card batch-status-summary">
+        <view class="batch-status-item" wx:for="{{items}}" wx:key="id">
+          <view class="batch-status-thumb">✦</view>
+          <view class="batch-status-name">{{item.title}}</view>
+          <view class="status-pill {{item.statusClassName}}">{{item.statusLabel}}</view>
+        </view>
+      </view>
+
+      <view class="form-section">
+        <view class="mini-title required">修改为</view>
+        <view class="status-choice-grid">
+          <view class="status-choice {{targetStatus === 'up' ? 'active' : ''}}" data-value="up" bindtap="chooseTarget">
+            <view class="choice-title">已上架</view>
+            <view class="choice-desc">确认后直接批量上架</view>
+          </view>
+          <view class="status-choice {{targetStatus === 'down' ? 'active' : ''}}" data-value="down" bindtap="chooseTarget">
+            <view class="choice-title">已下架</view>
+            <view class="choice-desc">无需补充其他信息，确认后直接修改</view>
+          </view>
+          <view class="status-choice {{targetStatus === 'sold' ? 'active' : ''}}" data-value="sold" bindtap="chooseTarget">
+            <view class="choice-title">已售出</view>
+            <view class="choice-desc">需要填写每个商品的售出数量</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-section">
+        <view class="mini-title">备注</view>
+        <view class="input-box">
+          <input class="input" placeholder="可填写本次批量修改说明" placeholder-class="placeholder" value="{{remark}}" bindinput="onRemarkInput" />
+        </view>
+      </view>
+
+      <button class="button primary" bindtap="handleNext">{{buttonText}}</button>
+    </view>
+  </view>
+</view>

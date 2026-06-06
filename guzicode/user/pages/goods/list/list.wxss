@@ -1,0 +1,201 @@
+@import "../../../user.wxss";
+
+.goods-list-page {
+  padding-top: 126rpx;
+  box-sizing: border-box;
+}
+
+.u-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 28rpx;
+}
+
+.search-shell {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.u-search {
+  flex: 1;
+}
+
+.u-search--focus {
+  margin-bottom: 20rpx;
+}
+
+.search-cancel,
+.search-clear,
+.search-btn {
+  color: #6f7f99;
+  font-size: 28rpx;
+  font-weight: 800;
+  position: relative;
+  z-index: 10;
+}
+
+.search-clear {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  line-height: 1;
+}
+
+.search-btn {
+  height: 72rpx;
+  padding: 0 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  color: #293a50;
+  font-weight: 800;
+}
+
+.filter-panel {
+  margin-bottom: 28rpx;
+  position: relative;
+  z-index: 40;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.filter-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.75);
+  color: #60708a;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.filter-dropdown--active {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6rpx 20rpx rgba(104, 130, 158, 0.16);
+}
+
+.filter-arrow {
+  font-size: 18rpx;
+  line-height: 1;
+  margin-top: -2rpx;
+  transition: transform 0.2s;
+}
+
+.filter-arrow--up {
+  transform: rotate(180deg);
+}
+
+.dropdown-panel {
+  position: absolute;
+  top: 76rpx;
+  left: 0;
+  right: 0;
+  z-index: 60;
+}
+
+.dropdown-panel-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+}
+
+.dropdown-panel-content {
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 10rpx 40rpx rgba(104, 130, 158, 0.28);
+  padding: 12rpx 0;
+  max-height: 440rpx;
+  overflow-y: auto;
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 28rpx;
+  font-size: 28rpx;
+  color: #48576e;
+}
+
+.dropdown-option--active {
+  color: #293a50;
+  font-weight: 700;
+}
+
+.dropdown-check {
+  color: #377ba9;
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.search-info {
+  margin-bottom: 20rpx;
+}
+
+.history-section,
+.hot-section {
+  margin-bottom: 32rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #48576e;
+}
+
+.clear-history {
+  font-size: 24rpx;
+  color: #a0aebf;
+}
+
+.history-tags,
+.hot-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.65);
+  color: #60708a;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.tag-pill--hot {
+  background: rgba(247, 182, 207, 0.15);
+  color: #c34e6c;
+}
+
+.goods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}

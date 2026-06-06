@@ -1,0 +1,74 @@
+<view class="auth-shell">
+  <view class="auth-status"></view>
+
+  <view class="auth-content">
+    <!-- 装饰元素 -->
+    <view class="decor">
+      <view class="decor-star" style="left: 60rpx; top: 192rpx;"></view>
+      <view class="decor-dot" style="right: 76rpx; top: 176rpx;"></view>
+      <view class="decor-star" style="right: 168rpx; top: 456rpx;"></view>
+    </view>
+
+    <view class="brand-block">
+      <view class="brand-mark">✦</view>
+      <view class="brand-title">谷圈星社</view>
+      <view class="brand-subtitle">收集热爱，也让喜欢流转起来</view>
+    </view>
+
+    <view class="form-card">
+      <form bindsubmit="handleLogin">
+        <view class="card-title">欢迎回来</view>
+        <view class="card-subtitle">登录后查看你的寄售与收藏</view>
+
+        <view class="form-item">
+          <text class="form-label">账号</text>
+          <view class="form-field {{errors.account ? 'form-field--error' : ''}}">
+            <input
+              class="field-input"
+              name="account"
+              placeholder="请输入账号"
+              placeholder-class="field-placeholder"
+              value="{{form.account}}"
+              bindinput="onAccountInput"
+              bindblur="onAccountBlur"
+            />
+          </view>
+          <view wx:if="{{errors.account}}" class="error-text">{{errors.account}}</view>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">密码</text>
+          <view class="form-field {{errors.password ? 'form-field--error' : ''}}">
+            <input
+              class="field-input"
+              name="password"
+              placeholder="请输入密码"
+              placeholder-class="field-placeholder"
+              password="{{!passwordVisible}}"
+              value="{{form.password}}"
+              bindinput="onPasswordInput"
+              bindblur="onPasswordBlur"
+            />
+            <view class="field-action" bindtap="togglePassword">
+              <image
+                class="field-action-icon"
+                src="/assets/customer-icons/{{passwordVisible ? 'password-show' : 'password-hide'}}.svg"
+                mode="aspectFit"
+              />
+            </view>
+          </view>
+          <view wx:if="{{errors.password}}" class="error-text">{{errors.password}}</view>
+        </view>
+
+        <button class="submit-btn" style="width: 100%; margin: 0; padding: 0; box-sizing: border-box;" formType="submit" loading="{{submitting}}" disabled="{{submitting}}">
+          登录
+        </button>
+
+        <view class="link-line">
+          <text class="link-muted">没有账号？</text>
+          <text class="link-text" bindtap="goRegister">去注册</text>
+        </view>
+      </form>
+    </view>
+  </view>
+</view>

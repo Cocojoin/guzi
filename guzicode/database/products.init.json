@@ -1,0 +1,133 @@
+[
+  {
+    "id": "A00128",
+    "role": "泉此方",
+    "series": "夏日应援",
+    "ip": "Lucky Star",
+    "owner": "星社补货组",
+    "type": "小卡",
+    "customType": "",
+    "price": 58,
+    "quality": "flaw",
+    "status": "up",
+    "totalQuantity": 5,
+    "soldCount": 2,
+    "settledCount": 0,
+    "listedDays": 12,
+    "purchaseRecord": "有",
+    "images": [],
+    "links": [
+      {
+        "platform": "拼多多",
+        "url": "https://mobile.yangkeduo.com/mock/a00128"
+      }
+    ],
+    "remark": "边角有轻微压痕，已实拍说明。",
+    "createdAt": "2026-05-28T09:00:00+08:00",
+    "updatedAt": "2026-05-28T09:00:00+08:00"
+  },
+  {
+    "id": "A00131",
+    "role": "宫村伊澄",
+    "series": "冬季特典立牌闪卡套组",
+    "ip": "堀与宫村",
+    "owner": "月岛前线",
+    "type": "小卡",
+    "customType": "",
+    "price": 32,
+    "quality": "clean",
+    "status": "down",
+    "totalQuantity": 1,
+    "soldCount": 0,
+    "settledCount": 0,
+    "listedDays": 5,
+    "purchaseRecord": "无",
+    "images": [],
+    "links": [],
+    "remark": "待补平台链接后上架。",
+    "createdAt": "2026-05-27T10:20:00+08:00",
+    "updatedAt": "2026-05-27T10:20:00+08:00"
+  },
+  {
+    "id": "A00136",
+    "role": "乙骨忧太",
+    "series": "剧场版闪卡未拆原盒",
+    "ip": "咒术回战",
+    "owner": "咒回中转站",
+    "type": "小卡",
+    "customType": "",
+    "price": 76,
+    "quality": "clean",
+    "status": "up",
+    "totalQuantity": 1,
+    "soldCount": 0,
+    "settledCount": 0,
+    "listedDays": 2,
+    "purchaseRecord": "有",
+    "images": [],
+    "links": [
+      {
+        "platform": "淘宝/天猫",
+        "url": "https://detail.tmall.com/mock/a00136"
+      }
+    ],
+    "remark": "",
+    "createdAt": "2026-05-26T13:30:00+08:00",
+    "updatedAt": "2026-05-26T13:30:00+08:00"
+  },
+  {
+    "id": "A00142",
+    "role": "凪诚士郎",
+    "series": "BLUE LOCK 蓝色监狱生日透卡 PET 镭射",
+    "ip": "BLUE LOCK",
+    "owner": "蓝锁补货点",
+    "type": "镭射票",
+    "customType": "",
+    "price": 128,
+    "quality": "clean",
+    "status": "up",
+    "totalQuantity": 2,
+    "soldCount": 1,
+    "settledCount": 0,
+    "listedDays": 8,
+    "purchaseRecord": "无",
+    "images": [],
+    "links": [
+      {
+        "platform": "小红书",
+        "url": "https://www.xiaohongshu.com/mock/a00142"
+      }
+    ],
+    "remark": "",
+    "createdAt": "2026-05-25T18:00:00+08:00",
+    "updatedAt": "2026-05-25T18:00:00+08:00"
+  },
+  {
+    "id": "A00088",
+    "role": "夏目贵志",
+    "series": "夏目友人帐周边小卡限定一番赏",
+    "ip": "夏目友人帐",
+    "owner": "友人帐寄售屋",
+    "type": "小卡",
+    "customType": "",
+    "price": 46,
+    "quality": "flaw",
+    "status": "sold",
+    "totalQuantity": 4,
+    "soldCount": 4,
+    "settledCount": 0,
+    "listedDays": 21,
+    "purchaseRecord": "有",
+    "images": [],
+    "links": [
+      {
+        "platform": "拼多多",
+        "url": "https://mobile.yangkeduo.com/mock/a00088"
+      }
+    ],
+    "remark": "售后退款时可在详情页恢复为已上架。",
+    "createdAt": "2026-05-20T08:30:00+08:00",
+    "updatedAt": "2026-05-20T08:30:00+08:00"
+  }
+]
+
