@@ -2,7 +2,10 @@
 
 .auth-shell {
   min-height: 100vh;
-  padding: 24rpx 32rpx 48rpx;
+  padding-top: calc(200rpx + env(safe-area-inset-top));
+  padding-right: 32rpx;
+  padding-bottom: 48rpx;
+  padding-left: 32rpx;
   box-sizing: border-box;
   overflow: hidden;
   background:
@@ -12,8 +15,7 @@
 }
 
 .auth-status {
-  position: relative;
-  height: calc(172rpx + env(safe-area-inset-top));
+  display: none;
 }
 
 .auth-content {

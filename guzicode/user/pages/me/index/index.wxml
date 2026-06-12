@@ -1,7 +1,5 @@
 <view class="u-page">
   <view class="u-content">
-    <view class="u-title">我的</view>
-
     <view class="u-card profile-card">
       <view class="avatar">
         <text>{{avatarText}}</text>

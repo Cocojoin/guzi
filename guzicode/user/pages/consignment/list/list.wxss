@@ -2,81 +2,120 @@
 
 .u-page {
   overflow: visible;
+  padding-top: calc(env(safe-area-inset-top) + 30rpx);
+  position: relative;
 }
 
-.u-topbar {
-  align-items: center;
-  padding-right: env(safe-area-inset-right);
-  gap: 16rpx;
+.banner-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 360rpx;
+  background: linear-gradient(135deg, rgba(255, 228, 236, 0.9) 0%, rgba(232, 244, 255, 0.7) 50%, rgba(245, 245, 255, 0.7) 100%);
+  z-index: 0;
 }
 
-.title-wrap {
-  min-width: 0;
-  flex: 1;
+.u-content {
+  position: relative;
+  z-index: 1;
 }
 
-.add-btn {
-  font-size: 40rpx;
-  flex: 0 0 66rpx;
-}
-
-.search-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
-}
-
-.search-box {
-  flex: 1;
-  margin: 0;
-}
-
-.filter-panel {
+.search-section {
   margin-bottom: 24rpx;
   position: relative;
-  z-index: 40;
+  z-index: 10;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 18rpx 18rpx 18rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(120, 140, 180, 0.08);
+}
+
+.search-icon {
+  font-size: 32rpx;
+  color: #8fa0b8;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #293a50;
+  background: transparent;
+}
+
+.search-placeholder {
+  color: #a8b6cb;
+}
+
+.search-icon-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #f0f5ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.magnifier {
+  font-size: 36rpx;
+  color: #293a50;
+  font-weight: 600;
 }
 
 .filter-row {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: 14rpx;
 }
 
-.filter-dropdown {
+.filter-chip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6rpx;
-  padding: 10rpx 12rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.75);
-  color: #60708a;
-  font-size: 24rpx;
-  font-weight: 600;
+  gap: 8rpx;
+  padding: 16rpx 28rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  color: #48576e;
+  font-size: 28rpx;
+  font-weight: 500;
+  border: 2rpx solid rgba(200, 210, 230, 0.6);
   flex: 1;
+  box-shadow: 0 4rpx 16rpx rgba(120, 140, 180, 0.06);
 }
 
-.filter-dropdown--active {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 6rpx 20rpx rgba(104, 130, 158, 0.16);
+.filter-chip--active {
+  background: #ffffff;
+  border: 2rpx solid #7ba5d6;
+  box-shadow: 0 6rpx 20rpx rgba(123, 165, 214, 0.18);
 }
 
-.filter-arrow {
-  font-size: 16rpx;
+.filter-chip-text {
+  font-weight: 600;
+  color: #293a50;
+}
+
+.filter-chip-arrow {
+  font-size: 14rpx;
+  color: #293a50;
   line-height: 1;
-  margin-top: -2rpx;
-  transition: transform 0.2s;
-}
-
-.filter-arrow--up {
-  transform: rotate(180deg);
+  margin-left: 4rpx;
 }
 
 .dropdown-panel {
   position: absolute;
-  top: 76rpx;
+  top: 200rpx;
   left: 0;
   right: 0;
   z-index: 60;
@@ -89,13 +128,14 @@
   right: 0;
   bottom: 0;
   background: transparent;
+  z-index: 59;
 }
 
-.dropdown-panel-content {
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 10rpx 40rpx rgba(104, 130, 158, 0.28);
-  padding: 12rpx 0;
+.dropdown-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 48rpx rgba(100, 120, 160, 0.18);
+  padding: 16rpx 0;
   max-height: 440rpx;
   overflow-y: auto;
 }
@@ -104,8 +144,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 28rpx;
-  font-size: 28rpx;
+  padding: 24rpx 32rpx;
+  font-size: 30rpx;
   color: #48576e;
 }
 
@@ -118,28 +158,30 @@
   color: #377ba9;
   font-size: 32rpx;
   line-height: 1;
+  font-weight: 700;
 }
 
 .goods-thumb {
-  width: 132rpx;
-  height: 132rpx;
-  flex: 0 0 132rpx;
+  width: 160rpx;
+  height: 160rpx;
+  flex: 0 0 160rpx;
   border-radius: 24rpx;
   background: rgba(255, 255, 255, 0.92);
 }
 
 .goods-card {
   align-items: center;
+  margin-bottom: 18rpx;
+}
+
+.goods-body {
+  margin-left: 20rpx;
 }
 
 .goods-side {
   min-width: 140rpx;
   gap: 12rpx;
   flex-shrink: 0;
-}
-
-.goods-quality-badge {
-  margin-top: 0;
 }
 
 .goods-side .badge {
@@ -150,8 +192,31 @@
   text-align: center;
 }
 
+.float-add-btn {
+  position: fixed;
+  right: 44rpx;
+  bottom: calc(env(safe-area-inset-bottom) + 60rpx);
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffb8d1 0%, #a8d5ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 40rpx rgba(180, 160, 220, 0.4);
+  z-index: 100;
+}
+
+.float-add-btn text {
+  font-size: 64rpx;
+  color: #ffffff;
+  font-weight: 300;
+  line-height: 1;
+  margin-top: -6rpx;
+}
+
 .empty-card--consignment {
-  margin-top: 120rpx;
+  margin-top: 160rpx;
   background: transparent;
   border-color: transparent;
   box-shadow: none;

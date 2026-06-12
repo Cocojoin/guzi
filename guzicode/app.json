@@ -1,5 +1,6 @@
 {
   "pages": [
+    "admin/pages/goods/list/list",
     "auth/pages/login/login",
     "auth/pages/register/register",
     "auth/pages/profile/profile",
@@ -14,7 +15,6 @@
     "user/pages/consignment/sold/sold",
     "user/pages/consignment/settled/settled",
     "user/pages/consignment/settlement-detail/settlement-detail",
-    "admin/pages/goods/list/list",
     "admin/pages/goods/detail/detail",
     "admin/pages/goods/upload/upload",
     "admin/pages/goods/edit/edit",
@@ -22,7 +22,6 @@
     "admin/pages/goods/batch-sold/batch-sold",
     "admin/pages/goods/batch-links/batch-links",
     "admin/pages/goods/batch-upload/batch-upload",
-    "pages/webview/webview",
     "admin/pages/stats/stats",
     "admin/pages/users/users",
     "admin/pages/settings/settings",
@@ -34,7 +33,7 @@
     "navigationBarTitleText": "谷圈星社",
     "navigationBarBackgroundColor": "#F7FCFF",
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom",
+    "navigationStyle": "default",
     "backgroundColor": "#F7FCFF",
     "backgroundTextStyle": "light"
   },

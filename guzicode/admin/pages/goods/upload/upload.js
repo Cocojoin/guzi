@@ -2,6 +2,7 @@ const productsRepository = require("../../../../utils/productsRepository");
 const usersRepository = require("../../../../utils/usersRepository");
 const { ensureCloudImages } = require("../../../../utils/cloudFile");
 const { addOperationLog, formatFailureContext } = require("../../../../utils/adminSettings");
+const { debounce } = require("../../../../utils/debounce");
 
 const TYPE_OPTIONS = ["小卡", "吧唧", "镭射票", "自定义"];
 
@@ -34,7 +35,13 @@ Page({
     submitting: false
   },
 
-  async onLoad() {
+  onLoad() {
+    this.handleSubmit = debounce(this.handleSubmit.bind(this), 800);
+    this.goBack = debounce(this.goBack.bind(this), 500);
+    this.choosePhoto = debounce(this.choosePhoto.bind(this), 500);
+  },
+
+  async onShow() {
     try {
       const consignmentUsers = await usersRepository.listConsignmentUsers();
       const ownerOptions = Array.from(new Set(consignmentUsers.map((item) => item.nickname.trim()).filter(Boolean)));
@@ -264,8 +271,8 @@ Page({
     // 系列
     if (!form.series) {
       errors.series = "请填写系列";
-    } else if (form.series.length > 12) {
-      errors.series = "系列字数不能超过 12 个";
+    } else if (form.series.length > 30) {
+      errors.series = "系列字数不能超过 30 个";
     }
 
     // 角色

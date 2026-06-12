@@ -1,12 +1,5 @@
 <view class="u-page" wx:if="{{record}}">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="title-wrap">
-        <view class="u-top-title">结算详情</view>
-      </view>
-    </view>
-
     <view class="settle-hero">
       <view>本次结算货款</view>
       <view class="settle-big">{{netText}}</view>

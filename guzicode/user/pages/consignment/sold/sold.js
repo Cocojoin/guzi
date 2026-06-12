@@ -2,6 +2,7 @@ const session = require("../../../../utils/session");
 const usersRepository = require("../../../../utils/usersRepository");
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
+const { debounce } = require("../../../../utils/debounce");
 
 function belongsToUser(product, user) {
   return product.ownerUserId === user._id || product.owner === user.nickname || product.owner === user.account;
@@ -17,7 +18,12 @@ Page({
   data: {
     products: [],
     loading: true,
+    submitting: false,
     hasLoaded: false
+  },
+
+  onLoad() {
+    this.goBack = debounce(this.goBack.bind(this), 800);
   },
 
   async onShow() {

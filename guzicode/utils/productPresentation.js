@@ -10,19 +10,20 @@ function getRemainingCount(product) {
 function getDisplayStatus(product) {
   const totalQuantity = Number(product.totalQuantity || 0);
   const soldCount = Number(product.soldCount || 0);
+  const settledCount = Number(product.settledCount || 0);
   const remainingCount = getRemainingCount(product);
-  
-  // 只有当剩余数量为0时才返回已售出
+
   if (remainingCount <= 0 && totalQuantity > 0) {
+    if (settledCount > 0 && soldCount <= 0) {
+      return "settled";
+    }
     return "sold";
   }
 
-  // 如果还有可销售数量，返回产品原始状态（优先使用up，如果没有则使用down）
   if (product.status === "up" || product.status === "down") {
     return product.status;
   }
-  
-  // 如果商品状态是sold但还有剩余数量，说明状态需要更新，这里默认返回up
+
   return "up";
 }
 
@@ -30,7 +31,8 @@ function getStatusMeta(status) {
   const statusMap = {
     down: { label: "已下架", className: "status-pill--down" },
     up: { label: "已上架", className: "status-pill--up" },
-    sold: { label: "已售出", className: "status-pill--sold" }
+    sold: { label: "已售出", className: "status-pill--sold" },
+    settled: { label: "已结算", className: "status-pill--settled" }
   };
 
   return statusMap[status] || statusMap.down;
@@ -97,8 +99,6 @@ function hasDuplicatePlatforms(links) {
 }
 
 function buildProductCard(product) {
-  console.log("buildProductCard 接收到的 product:", product);
-  
   const displayStatus = getDisplayStatus(product);
   const statusMeta = getStatusMeta(displayStatus);
   const qualityMeta = getQualityMeta(product.quality);
@@ -108,7 +108,7 @@ function buildProductCard(product) {
     ? (product.images[0] || "")
     : (typeof product.images === "string" ? product.images : "");
 
-  const result = {
+  return {
     ...product,
     picture: coverImage,
     displayStatus,
@@ -122,9 +122,6 @@ function buildProductCard(product) {
     remainingCount,
     coverImage
   };
-  
-  console.log("buildProductCard 返回的结果:", result);
-  return result;
 }
 
 module.exports = {

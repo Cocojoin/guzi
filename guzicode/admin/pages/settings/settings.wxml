@@ -1,10 +1,11 @@
 <view class="management-shell">
-  <view class="management-page">
-    <view class="statusbar-spacer"></view>
-    <view class="management-header settings-header">
-      <view class="management-title">设置</view>
+  <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
+      <view class="custom-nav-title">系统设置</view>
     </view>
-
+  </view>
+  <view class="management-page" style="padding-top: {{contentPaddingTop + 12}}px;">
     <view class="settings-stack">
       <view class="profile-card">
         <view class="profile-avatar">{{profile.initial}}</view>

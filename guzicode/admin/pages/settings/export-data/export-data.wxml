@@ -1,11 +1,5 @@
 <view class="detail-shell">
   <view class="detail-page">
-    <view class="statusbar-spacer"></view>
-
-    <view class="page-topbar export-data-header">
-      <view class="back-button" bindtap="handleBack"></view>
-      <view class="page-title">导出数据</view>
-    </view>
 
     <view class="section-label">导出范围 *</view>
     <view

@@ -1,6 +1,7 @@
 const session = require("../../../../utils/session");
 const productsRepository = require("../../../../utils/productsRepository");
 const { ensureCloudImages } = require("../../../../utils/cloudFile");
+const { debounce } = require("../../../../utils/debounce");
 
 const TYPE_OPTIONS = ["小卡", "吧唧", "镭射票", "自定义"];
 
@@ -8,6 +9,7 @@ Page({
   data: {
     id: "",
     mode: "create",
+    submitting: false,
     form: {
       id: "",
       role: "",
@@ -29,13 +31,22 @@ Page({
     submitting: false
   },
 
-  async onLoad(options = {}) {
+  onLoad(options = {}) {
+    this.handleSubmit = debounce(this.handleSubmit.bind(this), 800);
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.choosePhoto = debounce(this.choosePhoto.bind(this), 800);
+    
     const id = options.id || "";
     this.setData({ id, mode: id ? "edit" : "create" });
-    if (id) {
-      await this.loadProduct(id);
+  },
+
+  async onShow() {
+    if (this.data.id && !this.data.form.role) {
+      await this.loadProduct(this.data.id);
     }
-    this.markInitialSnapshot();
+    if (!this.initialSnapshot) {
+      this.markInitialSnapshot();
+    }
   },
 
   async loadProduct(id) {
@@ -251,8 +262,8 @@ Page({
     // 系列
     if (!form.series) {
       errors.series = "请填写系列";
-    } else if (form.series.length > 12) {
-      errors.series = "系列字数不能超过 12 个";
+    } else if (form.series.length > 30) {
+      errors.series = "系列字数不能超过 30 个";
     }
 
     // 角色

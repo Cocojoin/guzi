@@ -1,15 +1,5 @@
 <view class="subpage-shell">
   <view class="subpage">
-    <view class="statusbar-spacer"></view>
-
-    <view class="sub-header">
-      <view class="back-chip" bindtap="goBack">‹</view>
-      <view class="sub-title-group">
-        <view class="sub-title">批量上架</view>
-        <view class="sub-caption">共 {{items.length}} 件，需补充平台链接</view>
-      </view>
-    </view>
-
     <view class="sub-scroll">
       <view class="link-editor-list">
         <view class="link-editor-card" wx:for="{{items}}" wx:for-item="product" wx:key="id">

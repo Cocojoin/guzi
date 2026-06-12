@@ -3,6 +3,7 @@ const usersRepository = require("../../../../utils/usersRepository");
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
 const { formatRatePercent, getUserRateFraction } = require("../../../../utils/consignmentRate");
+const { debounce } = require("../../../../utils/debounce");
 
 function db() {
   return wx.cloud.database();
@@ -35,12 +36,20 @@ Page({
   data: {
     user: null,
     enabled: false,
+    submitting: false,
     rateText: "0%",
     counts: {
       all: 0,
       sold: 0,
       settled: 0
     }
+  },
+
+  onLoad() {
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.goList = debounce(this.goList.bind(this), 800);
+    this.goSold = debounce(this.goSold.bind(this), 800);
+    this.goSettled = debounce(this.goSettled.bind(this), 800);
   },
 
   async onShow() {

@@ -1,5 +1,6 @@
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
+const { debounce } = require("../../../../utils/debounce");
 
 const SEARCH_HISTORY_KEY = "userGoodsSearchHistory";
 const SEARCH_COUNT_KEY = "userSearchCount";
@@ -7,10 +8,6 @@ const SEARCH_COUNT_KEY = "userSearchCount";
 function uniqueOptions(products, key, label) {
   const values = Array.from(new Set(products.map((item) => String(item[key] || "").trim()).filter(Boolean)));
   return [label].concat(values);
-}
-
-function isConsignmentProduct(product) {
-  return !!String(product.ownerUserId || "").trim() || !!String(product.owner || "").trim();
 }
 
 function getHotIPs(allProducts) {
@@ -31,6 +28,7 @@ Page({
     products: [],
     keyword: "",
     searchMode: false,
+    submitting: false,
     showResult: true,
     searchHistory: [],
     hotTerms: [],
@@ -43,6 +41,12 @@ Page({
     hasLoaded: false
   },
 
+  onLoad() {
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.onSearchConfirm = debounce(this.onSearchConfirm.bind(this), 500);
+    this.goDetail = debounce(this.goDetail.bind(this), 800);
+  },
+
   syncTabBarVisibility(hidden) {
     const method = hidden ? "hideTabBar" : "showTabBar";
     if (typeof wx[method] === "function") {
@@ -51,14 +55,10 @@ Page({
   },
 
   goBack() {
-    // 如果在搜索模式且显示搜索结果，先回到搜索输入页面
     if (this.data.searchMode && this.data.showResult) {
-      this.setData({
-        showResult: false
-      });
+      this.setData({ showResult: false });
       return;
     }
-    // 如果在搜索模式但不在搜索结果页面（显示搜索历史），退出搜索模式
     if (this.data.searchMode) {
       this.syncTabBarVisibility(false);
       this.setData({
@@ -70,14 +70,11 @@ Page({
       });
       return;
     }
-    // 非搜索模式，按正常逻辑返回
     const pages = getCurrentPages();
     if (pages.length > 1) {
       wx.navigateBack();
     } else {
-      wx.switchTab({
-        url: "/user/pages/index/index"
-      });
+      wx.switchTab({ url: "/user/pages/index/index" });
     }
   },
 
@@ -110,26 +107,10 @@ Page({
     }
     try {
       const rawProducts = await productsRepository.getAllProducts();
-      console.log("原始商品数据:", rawProducts);
-      
       const processedProducts = rawProducts.map(buildProductCard);
-      console.log("buildProductCard 处理后:", processedProducts);
-      
-      const consignmentProducts = processedProducts.filter(item => {
-        const isConsignment = isConsignmentProduct(item);
-        console.log(`商品 ${item.id} 是否寄售商品:`, isConsignment, "ownerUserId:", item.ownerUserId, "owner:", item.owner);
-        return isConsignment;
-      });
-      
-      const allProducts = consignmentProducts
-        .filter(item => {
-          const isUp = item.displayStatus === "up";
-          console.log(`商品 ${item.id} 状态:`, item.displayStatus, "是否上架:", isUp);
-          return isUp;
-        })
+      const allProducts = processedProducts
+        .filter((item) => item.displayStatus === "up")
         .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
-      
-      console.log("最终过滤后的商品数据:", allProducts);
 
       const hotTerms = getHotIPs(allProducts);
 
@@ -160,8 +141,6 @@ Page({
       if (!keyword) return true;
       return [item.ip, item.role, item.series].join("|").toLowerCase().includes(keyword);
     });
-    
-    console.log("过滤后的商品:", products);
 
     this.setData({ products });
   },
@@ -214,17 +193,6 @@ Page({
     this.setData({ hotTerms });
   },
 
-  clearSearch() {
-    this.syncTabBarVisibility(false);
-    this.setData({
-      keyword: "",
-      searchMode: false,
-      showResult: false,
-      activeDropdown: ""
-    });
-    this.applyFilters();
-  },
-
   clearKeyword() {
     this.setData({
       keyword: "",
@@ -246,12 +214,6 @@ Page({
   clearHistory() {
     wx.removeStorageSync(SEARCH_HISTORY_KEY);
     this.setData({ searchHistory: [] });
-  },
-
-  onFilterChange(event) {
-    const { key } = event.currentTarget.dataset;
-    this.setData({ [`${key}Index`]: Number(event.detail.value) });
-    this.applyFilters();
   },
 
   toggleDropdown(event) {

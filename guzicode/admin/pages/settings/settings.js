@@ -1,9 +1,13 @@
 const session = require("../../../utils/session");
 const { addOperationLog } = require("../../../utils/adminSettings");
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
+const { debounce } = require("../../../utils/debounce");
 
 Page({
   data: {
+    statusBarHeight: 20,
+    navBarHeight: 44,
+    contentPaddingTop: 64,
     profile: {
       name: "谷圈星社 · 管理员",
       account: "admin@guquan",
@@ -46,6 +50,15 @@ Page({
     ]
   },
 
+  onLoad() {
+    this.goStats = debounce(this.goStats.bind(this), 500);
+    this.goGoods = debounce(this.goGoods.bind(this), 500);
+    this.goUsers = debounce(this.goUsers.bind(this), 500);
+    this.goSettings = debounce(this.goSettings.bind(this), 500);
+    this.openSettingDetail = debounce(this.openSettingDetail.bind(this), 500);
+    this.handleLogout = debounce(this.handleLogout.bind(this), 800);
+  },
+
   onShow() {
     const currentSession = session.getSession();
     if (!currentSession || currentSession.role !== "admin") {
@@ -55,7 +68,17 @@ Page({
       return;
     }
 
+    const sysInfo = wx.getSystemInfoSync();
+    const menuBtn = wx.getMenuButtonBoundingClientRect();
+    const statusBarHeight = sysInfo.statusBarHeight || 20;
+    const capGap = menuBtn ? (menuBtn.top - statusBarHeight) * 2 : 8;
+    const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
+    const contentPaddingTop = statusBarHeight + navBarHeight;
+
     this.setData({
+      statusBarHeight,
+      navBarHeight,
+      contentPaddingTop,
       profile: {
         name: "谷圈星社 · 管理员",
         account: `${currentSession.account}@guquan`,

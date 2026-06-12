@@ -2,10 +2,12 @@ const PRODUCTS_COLLECTION = "products";
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const { addOperationLog, formatFailureContext } = require("../../../utils/adminSettings");
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
+const { debounce } = require("../../../utils/debounce");
 const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, settleSpecificSoldBatch } = require("../../../utils/consignmentRate");
 const { ensureCloudImages } = require("../../../utils/cloudFile");
 const usersRepository = require("../../../utils/usersRepository");
 const authService = require("../../../utils/authService");
+const session = require("../../../utils/session");
 
 function db() {
   return wx.cloud.database();
@@ -87,6 +89,10 @@ function buildPendingSettlementItems(product, fallbackRateFraction) {
 
 Page({
   data: {
+    statusBarHeight: 20,
+    navBarHeight: 44,
+    contentPaddingTop: 64,
+    submitting: false,
     viewTabs: [
       { id: "userList", label: "用户列表" },
       { id: "userDetail", label: "用户详情" },
@@ -102,7 +108,7 @@ Page({
     ],
     currentView: "userList",
     // 用户商品筛选
-    userGoodsStatusOptions: ["全部状态", "已上架", "已下架", "已售出"],
+    userGoodsStatusOptions: ["全部状态", "已上架", "已下架", "已售出", "已结算"],
     userGoodsStatusIndex: 0,
     activeDropdown: null,
     filteredUserGoodsItems: [],
@@ -159,7 +165,24 @@ Page({
   },
 
   async onLoad(options = {}) {
-    this.setData({ _pageAlive: true });
+    this.handleBack = debounce(this.handleBack.bind(this), 500);
+    this.switchView = debounce(this.switchView.bind(this), 500);
+    this.saveEdit = debounce(this.saveEdit.bind(this), 800);
+    this.submitSettlement = debounce(this.submitSettlement.bind(this), 800);
+    this.handleBatchDeleteUsers = debounce(this.handleBatchDeleteUsers.bind(this), 800);
+    
+    const currentSession = session.getSession();
+    if (!currentSession || currentSession.role !== "admin") {
+      wx.reLaunch({ url: "/auth/pages/login/login" });
+      return;
+    }
+    const sysInfo = wx.getSystemInfoSync();
+    const menuBtn = wx.getMenuButtonBoundingClientRect();
+    const statusBarHeight = sysInfo.statusBarHeight || 20;
+    const capGap = menuBtn ? (menuBtn.top - statusBarHeight) * 2 : 8;
+    const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
+    const contentPaddingTop = statusBarHeight + navBarHeight;
+    this.setData({ statusBarHeight, navBarHeight, contentPaddingTop, _pageAlive: true });
     this.bindNetworkStatus();
     await this.migrateProductOwnerLinks();
     await this.loadUsersFromDb();
@@ -185,7 +208,18 @@ Page({
   },
 
   onShow() {
-    this.setData({ _pageAlive: true });
+    const currentSession = session.getSession();
+    if (!currentSession || currentSession.role !== "admin") {
+      wx.reLaunch({ url: "/auth/pages/login/login" });
+      return;
+    }
+    const sysInfo = wx.getSystemInfoSync();
+    const menuBtn = wx.getMenuButtonBoundingClientRect();
+    const statusBarHeight = sysInfo.statusBarHeight || 20;
+    const capGap = menuBtn ? (menuBtn.top - statusBarHeight) * 2 : 8;
+    const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
+    const contentPaddingTop = statusBarHeight + navBarHeight;
+    this.setData({ statusBarHeight, navBarHeight, contentPaddingTop, _pageAlive: true });
     // 只有在 onLoad 完成后才刷新数据，避免首次加载时重复调用
     if (this.data._onLoadCompleted) {
       this.refreshData();
@@ -459,19 +493,20 @@ Page({
   getGoodsStatusMeta(product) {
     const total = Number(product.totalQuantity || 0);
     const sold = Number(product.soldCount || 0);
+    const settled = Number(product.settledCount || 0);
     const remaining = total - sold;
-    // 只有当剩余数量为0时才显示已售出
     if (remaining <= 0 && total > 0) {
-      return { label: "已售出", className: "goods-status-pill--sold" };
+      if (settled > 0 && sold <= 0) {
+        return { key: "settled", label: "已结算", className: "goods-status-pill--settled" };
+      }
+      return { key: "sold", label: "已售出", className: "goods-status-pill--sold" };
     }
-    // 如果还有可销售数量，返回产品原始状态
     if (product.status === "up" || product.status === "down") {
-      return product.status === "up" 
-        ? { label: "已上架", className: "goods-status-pill--up" }
-        : { label: "已下架", className: "goods-status-pill--down" };
+      return product.status === "up"
+        ? { key: "up", label: "已上架", className: "goods-status-pill--up" }
+        : { key: "down", label: "已下架", className: "goods-status-pill--down" };
     }
-    // 如果商品状态是sold但还有剩余数量，默认返回已上架
-    return { label: "已上架", className: "goods-status-pill--up" };
+    return { key: "up", label: "已上架", className: "goods-status-pill--up" };
   },
 
   async loadUserGoodsForCurrentUser() {
@@ -508,14 +543,14 @@ Page({
         quality: p.quality || "clean",
         statusLabel: statusMeta.label,
         statusClass: statusMeta.className,
+        statusKey: statusMeta.key || p.status,
         coverImage,
         status: p.status
       };
     });
-    const upCount = userGoodsItems.filter((item) => item.status === "up").length;
     this.setData({
       userGoodsItems,
-      viewSubtitle: `${upCount} 件`
+      viewSubtitle: `${userGoodsItems.length} 件`
     });
     this.applyUserGoodsFilter();
   },
@@ -933,6 +968,10 @@ Page({
       showRoleDropdown: false,
       showInactiveDropdown: false
     });
+    if (this.data.currentView === "userGoods" || this.data.currentView === "userGoodsFilters") {
+      this.applyUserGoodsFilter();
+      return;
+    }
     this.applyRoleFilter();
   },
 
@@ -942,6 +981,10 @@ Page({
       showRoleDropdown: false,
       showInactiveDropdown: false
     });
+    if (this.data.currentView === "userGoods" || this.data.currentView === "userGoodsFilters") {
+      this.applyUserGoodsFilter();
+      return;
+    }
     this.applyRoleFilter();
   },
 
@@ -1413,15 +1456,26 @@ Page({
   },
 
   applyUserGoodsFilter() {
-    const { userGoodsItems, userGoodsStatusIndex } = this.data;
+    const { userGoodsItems, userGoodsStatusIndex, keyword } = this.data;
     let filteredUserGoodsItems = userGoodsItems;
     
-    if (userGoodsStatusIndex === 1) { // 已上架
-      filteredUserGoodsItems = userGoodsItems.filter(item => item.status === "up");
-    } else if (userGoodsStatusIndex === 2) { // 已下架
-      filteredUserGoodsItems = userGoodsItems.filter(item => item.status === "down");
-    } else if (userGoodsStatusIndex === 3) { // 已售出
-      filteredUserGoodsItems = userGoodsItems.filter(item => item.status === "sold");
+    if (userGoodsStatusIndex === 1) {
+      filteredUserGoodsItems = userGoodsItems.filter((item) => item.statusKey === "up");
+    } else if (userGoodsStatusIndex === 2) {
+      filteredUserGoodsItems = userGoodsItems.filter((item) => item.statusKey === "down");
+    } else if (userGoodsStatusIndex === 3) {
+      filteredUserGoodsItems = userGoodsItems.filter((item) => item.statusKey === "sold");
+    } else if (userGoodsStatusIndex === 4) {
+      filteredUserGoodsItems = userGoodsItems.filter((item) => item.statusKey === "settled");
+    }
+
+    const q = String(keyword || "").trim().toLowerCase();
+    if (q) {
+      filteredUserGoodsItems = filteredUserGoodsItems.filter((item) =>
+        [item.title, item.ip, item.type, item.series, item.owner]
+          .map((value) => String(value || "").toLowerCase())
+          .some((value) => value.includes(q))
+      );
     }
     
     this.setData({ filteredUserGoodsItems });

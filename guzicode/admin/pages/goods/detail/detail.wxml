@@ -1,12 +1,5 @@
 <view class="detail-shell">
   <view class="detail-page {{showStatusSheet ? 'detail-page--with-sheet' : ''}}">
-    <view class="statusbar-spacer"></view>
-
-    <!-- 顶部导航 -->
-    <view class="topbar">
-      <view class="back-button" bindtap="goBack"></view>
-      <view class="page-title">商品详情</view>
-    </view>
 
     <view wx:if="{{productView}}">
       <!-- 图片轮播 -->

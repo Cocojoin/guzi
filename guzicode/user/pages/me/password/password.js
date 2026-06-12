@@ -1,5 +1,6 @@
 const session = require("../../../../utils/session");
 const authService = require("../../../../utils/authService");
+const { debounce } = require("../../../../utils/debounce");
 
 Page({
   data: {
@@ -8,6 +9,7 @@ Page({
       newPassword: "",
       confirmPassword: ""
     },
+    submitting: false,
     errors: {
       oldPassword: "",
       newPassword: "",

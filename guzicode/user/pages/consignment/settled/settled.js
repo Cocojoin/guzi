@@ -1,5 +1,6 @@
 const session = require("../../../../utils/session");
 const usersRepository = require("../../../../utils/usersRepository");
+const { debounce } = require("../../../../utils/debounce");
 
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 
@@ -36,8 +37,14 @@ Page({
   data: {
     records: [],
     totalText: "¥0.00",
+    submitting: false,
     loading: true,
     hasLoaded: false
+  },
+
+  onLoad() {
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.goDetail = debounce(this.goDetail.bind(this), 800);
   },
 
   async onShow() {

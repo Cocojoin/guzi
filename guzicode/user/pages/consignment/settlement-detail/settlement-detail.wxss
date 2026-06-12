@@ -1,5 +1,9 @@
 @import "../../../user.wxss";
 
+.u-page {
+  padding-top: calc(env(safe-area-inset-top) + 30rpx);
+}
+
 .u-topbar {
   align-items: center;
   padding-right: env(safe-area-inset-right);

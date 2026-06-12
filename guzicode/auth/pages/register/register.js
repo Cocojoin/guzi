@@ -159,6 +159,7 @@ Page({
   },
 
   goLogin() {
+    session.clearSession();
     wx.navigateBack({
       delta: 1
     });

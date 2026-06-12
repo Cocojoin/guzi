@@ -1,15 +1,5 @@
 <view class="subpage-shell">
   <view class="subpage">
-    <view class="statusbar-spacer"></view>
-
-    <view class="sub-header">
-      <view class="back-chip" bindtap="goBack">‹</view>
-      <view class="sub-title-group">
-        <view class="sub-title">批量售出</view>
-        <view class="sub-caption">填写已选商品售出数量</view>
-      </view>
-    </view>
-
     <view class="sub-scroll">
       <view class="form-section">
         <view class="section-title required">售出数量</view>

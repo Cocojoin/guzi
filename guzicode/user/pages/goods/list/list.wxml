@@ -1,34 +1,31 @@
 <view class="u-page goods-list-page">
+  <view class="banner-mask"></view>
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="u-top-title">{{searchMode ? '搜索' : '谷子集市'}}</view>
-    </view>
-
-    <view class="search-shell">
-      <view class="u-search {{searchMode ? 'u-search--focus' : ''}}">
-        <text class="u-search-icon">⌕</text>
-        <input class="u-search-input" placeholder="搜索 IP / 角色 / 系列名" placeholder-class="u-placeholder" value="{{keyword}}" bindfocus="onSearchFocus" bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search" adjust-position="{{false}}" />
-        <view wx:if="{{searchMode && keyword}}" class="search-clear" catchtap="clearKeyword">×</view>
-      </view>
-      <view wx:if="{{searchMode}}" class="search-btn" catchtap="onSearchConfirm">搜索</view>
-    </view>
-
-    <view wx:if="{{!searchMode}}" class="filter-panel">
-      <view class="filter-row">
-        <view class="filter-dropdown {{activeDropdown === 'role' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="role">
-          <text class="filter-dropdown-text">{{roleOptions[roleIndex]}}</text>
-          <text class="filter-arrow {{activeDropdown === 'role' ? 'filter-arrow--up' : ''}}">▼</text>
+    <view class="search-section">
+      <view class="search-shell">
+        <view wx:if="{{searchMode}}" class="search-back" bindtap="goBack">‹</view>
+        <view class="search-bar">
+          <view class="search-icon">🔍</view>
+          <input class="search-input" placeholder="搜索 IP / 角色 / 系列名" placeholder-class="search-placeholder" value="{{keyword}}" bindfocus="onSearchFocus" bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search" adjust-position="{{false}}" />
+          <view wx:if="{{searchMode && keyword}}" class="search-clear" catchtap="clearKeyword">×</view>
         </view>
-        <view class="filter-dropdown {{activeDropdown === 'ip' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="ip">
-          <text class="filter-dropdown-text">{{ipOptions[ipIndex]}}</text>
-          <text class="filter-arrow {{activeDropdown === 'ip' ? 'filter-arrow--up' : ''}}">▼</text>
+        <view wx:if="{{searchMode}}" class="search-btn" catchtap="onSearchConfirm">搜索</view>
+      </view>
+
+      <view wx:if="{{!searchMode}}" class="filter-row">
+        <view class="filter-chip {{activeDropdown === 'role' ? 'filter-chip--active' : ''}}" bindtap="toggleDropdown" data-key="role">
+          <text class="filter-chip-text">{{roleOptions[roleIndex]}}</text>
+          <text class="filter-chip-arrow">{{activeDropdown === 'role' ? '▲' : '▼'}}</text>
+        </view>
+        <view class="filter-chip {{activeDropdown === 'ip' ? 'filter-chip--active' : ''}}" bindtap="toggleDropdown" data-key="ip">
+          <text class="filter-chip-text">{{ipOptions[ipIndex]}}</text>
+          <text class="filter-chip-arrow">{{activeDropdown === 'ip' ? '▲' : '▼'}}</text>
         </view>
       </view>
 
       <view wx:if="{{activeDropdown === 'role'}}" class="dropdown-panel">
         <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
-        <view class="dropdown-panel-content">
+        <view class="dropdown-card">
           <view class="dropdown-option {{roleIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{roleOptions}}" wx:key="index" data-key="role" data-index="{{index}}" bindtap="onDropdownSelect">
             <text>{{item}}</text>
             <text wx:if="{{roleIndex === index}}" class="dropdown-check">✓</text>
@@ -38,7 +35,7 @@
 
       <view wx:if="{{activeDropdown === 'ip'}}" class="dropdown-panel">
         <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
-        <view class="dropdown-panel-content">
+        <view class="dropdown-card">
           <view class="dropdown-option {{ipIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{ipOptions}}" wx:key="index" data-key="ip" data-index="{{index}}" bindtap="onDropdownSelect">
             <text>{{item}}</text>
             <text wx:if="{{ipIndex === index}}" class="dropdown-check">✓</text>
@@ -85,12 +82,10 @@
             </view>
             <view class="goods-body">
               <view class="goods-title">{{item.title}}</view>
-              <view class="goods-meta">{{item.ip}} · {{item.role}}</view>
+              <view class="goods-meta">{{item.role}} · {{item.ip}}</view>
               <view class="goods-price">{{item.priceText}}</view>
             </view>
-            <view class="goods-side">
-              <view class="status-pill {{item.statusClassName}}">{{item.statusLabel}}</view>
-            </view>
+            <view wx:if="{{item.displayStatus === 'up'}}" class="badge badge-up">已上架</view>
           </view>
         </block>
       </block>

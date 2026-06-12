@@ -1,12 +1,5 @@
 <view class="u-page">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="title-wrap">
-        <view class="u-top-title">已结算</view>
-      </view>
-    </view>
-
     <view class="settled-total">
       <text>累计已结算货款</text>
       <text>{{totalText}}</text>

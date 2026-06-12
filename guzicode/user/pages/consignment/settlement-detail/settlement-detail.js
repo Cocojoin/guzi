@@ -1,5 +1,6 @@
 const session = require("../../../../utils/session");
 const { formatRatePercent } = require("../../../../utils/consignmentRate");
+const { debounce } = require("../../../../utils/debounce");
 
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 
@@ -17,6 +18,7 @@ Page({
   data: {
     record: null,
     items: [],
+    submitting: false,
     vouchers: [],
     amountText: "¥0.00",
     feeText: "¥0.00",
@@ -27,6 +29,9 @@ Page({
   },
 
   onLoad(options = {}) {
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.previewVoucher = debounce(this.previewVoucher.bind(this), 500);
+    
     this.id = options.id || "";
     this.loadDetail();
   },

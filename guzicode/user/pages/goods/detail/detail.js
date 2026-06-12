@@ -1,17 +1,24 @@
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
+const { debounce } = require("../../../../utils/debounce");
 
 Page({
   data: {
     id: "",
     product: null,
     editable: false,
+    submitting: false,
     invalid: false,
     invalidText: "商品已下架或不存在",
     invalidDesc: "该商品当前不可见，去看看其它好物吧"
   },
 
   onLoad(options) {
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.goEdit = debounce(this.goEdit.bind(this), 800);
+    this.deleteProduct = debounce(this.deleteProduct.bind(this), 800);
+    this.backToList = debounce(this.backToList.bind(this), 800);
+    
     this.setData({ id: options.id || "", editable: options.editable === "1" });
   },
 

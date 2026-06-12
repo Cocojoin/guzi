@@ -2,6 +2,7 @@ const session = require("../../../../utils/session");
 const usersRepository = require("../../../../utils/usersRepository");
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
+const { debounce } = require("../../../../utils/debounce");
 
 function belongsToUser(product, user) {
   return product.ownerUserId === user._id || product.owner === user.nickname || product.owner === user.account;
@@ -19,6 +20,7 @@ Page({
     allProducts: [],
     products: [],
     keyword: "",
+    submitting: false,
     activeDropdown: "",
     roleOptions: ["角色"],
     ipOptions: ["IP"],
@@ -28,6 +30,12 @@ Page({
     statusIndex: 0,
     loading: true,
     hasLoaded: false
+  },
+
+  onLoad() {
+    this.goBack = debounce(this.goBack.bind(this), 800);
+    this.goAdd = debounce(this.goAdd.bind(this), 800);
+    this.goDetail = debounce(this.goDetail.bind(this), 800);
   },
 
   async onShow() {

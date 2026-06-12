@@ -19,12 +19,9 @@
 
     <view class="form-card">
       <view class="avatar-card">
-        <view class="avatar-box" bindtap="chooseAvatar">
-          <image wx:if="{{avatarUrl}}" class="avatar-image" src="{{avatarUrl}}" mode="aspectFill" />
-          <view wx:else class="avatar-icon">{{avatarText}}</view>
+        <view class="avatar-box">
+          <view class="avatar-icon">{{avatarText}}</view>
         </view>
-        <view class="avatar-tip">点击上传头像</view>
-        <view wx:if="{{errors.avatar}}" class="error-text">{{errors.avatar}}</view>
       </view>
 
       <view class="form-item">

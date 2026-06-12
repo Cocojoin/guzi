@@ -1,11 +1,5 @@
 <view class="detail-shell">
   <view class="detail-page">
-    <view class="statusbar-spacer"></view>
-
-    <view class="page-topbar operation-log-header">
-      <view class="back-button" bindtap="handleBack"></view>
-      <view class="page-title">操作日志</view>
-    </view>
 
     <view wx:if="{{loading && !loaded && !loadFailed}}" class="state-card">
       <view class="state-emoji">🗂️</view>

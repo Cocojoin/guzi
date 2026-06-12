@@ -7,7 +7,7 @@ function getProductsCollection() {
 
 async function getAllProducts() {
   const collection = getProductsCollection();
-  const pageSize = 100;
+  const pageSize = 20;
   let skip = 0;
   const all = [];
 
@@ -37,7 +37,10 @@ async function getProductById(id) {
 }
 
 function getRemainingCount(product) {
-  return Math.max(0, Number(product.totalQuantity || 0) - Number(product.soldCount || 0));
+  return Math.max(
+    0,
+    Number(product.totalQuantity || 0) - Number(product.soldCount || 0)
+  );
 }
 
 async function createProduct(payload) {
@@ -84,16 +87,14 @@ async function recordProductSale(id, quantity, rateFraction, overrides = {}) {
     const soldCount = Number(current.soldCount || 0) + qty;
     const totalQuantity = Number(current.totalQuantity || 0);
     const remainingCount = Math.max(0, totalQuantity - soldCount);
-    
-    // 计算新状态：只有当剩余数量为0时才设置为已售出
+
     let nextStatus = current.status;
     if (remainingCount <= 0 && totalQuantity > 0) {
       nextStatus = "sold";
-    } else if (nextStatus === "sold" && remainingCount > 0) {
-      // 如果状态是sold但还有剩余数量，恢复为up
+    } else if (["sold", "settled"].includes(nextStatus) && remainingCount > 0) {
       nextStatus = "up";
     }
-    
+
     return {
       ...current,
       ...overrides,
@@ -115,17 +116,15 @@ async function applySettlementToProduct(id, quantity, fallbackRateFraction) {
     const soldCount = Number(current.soldCount || 0);
     const nextSold = Math.max(0, soldCount - qty);
     const nextSettled = Number(current.settledCount || 0) + qty;
-    const remainingCount = Math.max(0, totalQuantity - soldCount);
-    
-    // 计算新状态：只要剩余数量为0就设置为已售出
+    const remainingCount = Math.max(0, totalQuantity - nextSold);
+
     let nextStatus = current.status;
     if (remainingCount <= 0 && totalQuantity > 0) {
-      nextStatus = "sold";
-    } else if (nextStatus === "sold" && remainingCount > 0) {
-      // 如果状态是sold但还有剩余数量，恢复为up
+      nextStatus = nextSold > 0 ? "sold" : "settled";
+    } else if (["sold", "settled"].includes(nextStatus) && remainingCount > 0) {
       nextStatus = "up";
     }
-    
+
     return {
       ...current,
       soldCount: nextSold,

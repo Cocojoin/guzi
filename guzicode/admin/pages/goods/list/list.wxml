@@ -1,9 +1,12 @@
 <view class="management-shell">
-  <view class="management-page {{multiSelect ? 'management-page--with-bar' : ''}}">
-    <view class="statusbar-spacer"></view>
-
-    <view class="management-header">
-      <view class="header-title">商品管理</view>
+  <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
+      <view class="custom-nav-title">商品管理</view>
+    </view>
+  </view>
+  <view class="management-page {{multiSelect ? 'management-page--with-bar' : ''}}" style="padding-top: {{contentPaddingTop + 8}}px;">
+    <view class="management-header management-header--compact">
       <view class="header-actions">
         <view class="header-search">
           <input

@@ -3,6 +3,8 @@ const usersRepository = require("../../../../utils/usersRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
 const { navigateAdminRoot } = require("../../../../utils/adminNavigation");
 const { addOperationLog, formatFailureContext } = require("../../../../utils/adminSettings");
+const session = require("../../../../utils/session");
+const { debounce } = require("../../../../utils/debounce");
 
 const STATUS_OPTIONS = [
   { label: "全部状态", value: "all" },
@@ -17,6 +19,9 @@ function sortProducts(products) {
 
 Page({
   data: {
+    statusBarHeight: 20,
+    navBarHeight: 44,
+    contentPaddingTop: 64,
     allProducts: [],
     filteredProducts: [],
     loading: true,
@@ -36,14 +41,41 @@ Page({
   },
 
   onLoad(options = {}) {
+    this.handleCardTap = debounce(this.handleCardTap.bind(this), 500);
+    this.handleBatchDelete = debounce(this.handleBatchDelete.bind(this), 800);
+    this.handleBatchUp = debounce(this.handleBatchUp.bind(this), 800);
+    this.handleBatchDown = debounce(this.handleBatchDown.bind(this), 800);
+    this.handleOpenCreate = debounce(this.handleOpenCreate.bind(this), 500);
+    this.goStats = debounce(this.goStats.bind(this), 500);
+    this.goGoods = debounce(this.goGoods.bind(this), 500);
+    this.goUsers = debounce(this.goUsers.bind(this), 500);
+    this.goSettings = debounce(this.goSettings.bind(this), 500);
+    
+    const currentSession = session.getSession();
+    if (!currentSession || currentSession.role !== "admin") {
+      wx.reLaunch({ url: "/auth/pages/login/login" });
+      return;
+    }
     const status = String(options.status || "all");
     const idx = STATUS_OPTIONS.findIndex((item) => item.value === status);
     if (idx >= 0) {
       this.setData({ statusIndex: idx });
     }
+    const sysInfo = wx.getSystemInfoSync();
+    const menuBtn = wx.getMenuButtonBoundingClientRect();
+    const statusBarHeight = sysInfo.statusBarHeight || 20;
+    const capGap = menuBtn ? (menuBtn.top - statusBarHeight) * 2 : 8;
+    const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
+    const contentPaddingTop = statusBarHeight + navBarHeight;
+    this.setData({ statusBarHeight, navBarHeight, contentPaddingTop });
   },
 
   async onShow() {
+    const currentSession = session.getSession();
+    if (!currentSession || currentSession.role !== "admin") {
+      wx.reLaunch({ url: "/auth/pages/login/login" });
+      return;
+    }
     await this.loadProducts();
   },
 
@@ -186,10 +218,6 @@ Page({
       this.setData({ roleIndex: idx, activeDropdown: "" });
     }
     this.applyFilters();
-  },
-
-  handleSearch() {
-    this.doSearch();
   },
 
   toggleMultiSelect() {

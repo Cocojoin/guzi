@@ -1,7 +1,7 @@
 @import "../../../user.wxss";
 
 .profile-card {
-  margin-top: 54rpx;
+  margin-top: 30rpx;
   height: 188rpx;
   display: flex;
   align-items: center;
@@ -35,7 +35,7 @@
 }
 
 .menu-card {
-  margin-top: 30rpx;
+  margin-top: 20rpx;
   padding: 18rpx 34rpx;
 }
 

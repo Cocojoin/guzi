@@ -1,13 +1,5 @@
 <view class="batch-shell">
   <view class="batch-page">
-    <view class="statusbar-spacer"></view>
-
-    <!-- 顶部导航 -->
-    <view class="topbar">
-      <view class="back-button" bindtap="goBack"></view>
-      <view class="page-title">批量上传</view>
-    </view>
-
     <!-- 批量上传图片 -->
     <view class="form-card">
       <view class="card-label-row">

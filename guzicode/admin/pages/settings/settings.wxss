@@ -1,5 +1,32 @@
 @import "../../../app.wxss";
 
+/* ===== 自定义导航栏 ===== */
+.custom-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #F7FCFF;
+  z-index: 999;
+}
+
+.custom-nav-status {
+  width: 100%;
+}
+
+.custom-nav-title-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.custom-nav-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
 .settings-header {
   justify-content: center;
   padding-right: 0;

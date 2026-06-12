@@ -1,6 +1,11 @@
 <view class="stats-shell">
-  <view class="stats-page">
-    <view class="statusbar-spacer"></view>
+  <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
+      <view class="custom-nav-title">数据统计</view>
+    </view>
+  </view>
+  <view class="stats-page" style="padding-top: {{contentPaddingTop + 12}}px;">
     <view wx:if="{{statsLoading && !statsLoaded}}" class="stats-loading-card">
       <view class="stats-loading-title">统计加载中</view>
       <view class="stats-loading-subtitle">正在同步商品、结算和支出数据</view>
@@ -163,7 +168,7 @@
         <view class="back-chip" bindtap="goBackHome">‹</view>
         <view>
           <view class="sub-title">费用支出</view>
-          <view class="sub-caption">材料 + 物流 · {{selectedMonth}}</view>
+          <view class="sub-caption">材料 + 物流 + 技术服务 · {{selectedMonth}}</view>
         </view>
       </view>
       <view class="expense-hero expense-hero--main">
@@ -175,31 +180,32 @@
         <view class="sum-label">{{statMode === 'all' ? '累计总支出' : '本月总支出'}}</view>
         <view class="expense-amount">{{totalExpense}}</view>
       </view>
-      <view class="entry-card" bindtap="goView" data-view="material"><view><view class="entry-title">材料费用支出</view><view class="entry-note">本月 5 笔 · 包装 / 耗材</view></view><view class="entry-amount">{{materialTotal}}</view></view>
-      <view class="entry-card" bindtap="goView" data-view="logistics"><view><view class="entry-title">物流费用支出</view><view class="entry-note">本月 4 笔 · 寄件 / 退件</view></view><view class="entry-amount">{{logisticsTotal}}</view></view>
+      <view class="entry-card" bindtap="goView" data-view="material"><view><view class="entry-title">材料费用支出</view><view class="entry-note">{{materialEntryNote}}</view></view><view class="entry-amount">{{materialTotal}}</view></view>
+      <view class="entry-card" bindtap="goView" data-view="logistics"><view><view class="entry-title">物流费用支出</view><view class="entry-note">{{logisticsEntryNote}}</view></view><view class="entry-amount">{{logisticsTotal}}</view></view>
+      <view class="entry-card" bindtap="goView" data-view="techService"><view><view class="entry-title">技术服务支出</view><view class="entry-note">{{techServiceEntryNote}}</view></view><view class="entry-amount">{{techServiceTotal}}</view></view>
     </block>
 
-    <block wx:if="{{statsLoaded && (view === 'material' || view === 'logistics')}}">
+    <block wx:if="{{statsLoaded && (view === 'material' || view === 'logistics' || view === 'techService')}}">
       <view class="sub-head sub-head--material">
         <view class="sub-head-left">
           <view class="back-chip" bindtap="goView" data-view="expense">‹</view>
-          <view class="sub-title">{{view === 'material' ? '材料费用支出' : '物流费用支出'}}</view>
+          <view class="sub-title">{{view === 'material' ? '材料费用支出' : (view === 'logistics' ? '物流费用支出' : '技术服务支出')}}</view>
         </view>
         <view class="back-chip" bindtap="openExpenseCreateForm" data-type="{{view}}">＋</view>
       </view>
       <view class="expense-hero compact">
         <view class="switch-pill switch-pill--top-right">
-          <view class="switch-thumb {{view === 'material' ? (materialStatMode === 'all' ? 'switch-thumb--right' : '') : (logisticsStatMode === 'all' ? 'switch-thumb--right' : '')}}"></view>
-          <view class="switch-item {{view === 'material' ? (materialStatMode === 'month' ? 'active' : '') : (logisticsStatMode === 'month' ? 'active' : '')}}" data-mode="month" bindtap="{{view === 'material' ? 'switchMaterialStatMode' : 'switchLogisticsStatMode'}}">本月</view>
-          <view class="switch-item {{view === 'material' ? (materialStatMode === 'all' ? 'active' : '') : (logisticsStatMode === 'all' ? 'active' : '')}}" data-mode="all" bindtap="{{view === 'material' ? 'switchMaterialStatMode' : 'switchLogisticsStatMode'}}">累计</view>
+          <view class="switch-thumb {{view === 'material' ? (materialStatMode === 'all' ? 'switch-thumb--right' : '') : (view === 'logistics' ? (logisticsStatMode === 'all' ? 'switch-thumb--right' : '') : (techServiceStatMode === 'all' ? 'switch-thumb--right' : ''))}}"></view>
+          <view class="switch-item {{view === 'material' ? (materialStatMode === 'month' ? 'active' : '') : (view === 'logistics' ? (logisticsStatMode === 'month' ? 'active' : '') : (techServiceStatMode === 'month' ? 'active' : ''))}}" data-mode="month" bindtap="{{view === 'material' ? 'switchMaterialStatMode' : (view === 'logistics' ? 'switchLogisticsStatMode' : 'switchTechServiceStatMode')}}">本月</view>
+          <view class="switch-item {{view === 'material' ? (materialStatMode === 'all' ? 'active' : '') : (view === 'logistics' ? (logisticsStatMode === 'all' ? 'active' : '') : (techServiceStatMode === 'all' ? 'active' : ''))}}" data-mode="all" bindtap="{{view === 'material' ? 'switchMaterialStatMode' : (view === 'logistics' ? 'switchLogisticsStatMode' : 'switchTechServiceStatMode')}}">累计</view>
         </view>
-        <view class="sum-label">{{view === 'material' ? (materialStatMode === 'all' ? '累计材料总支出' : '本月材料总支出') : (logisticsStatMode === 'all' ? '累计物流总支出' : '本月物流总支出')}}</view>
+        <view class="sum-label">{{view === 'material' ? (materialStatMode === 'all' ? '累计材料总支出' : '本月材料总支出') : (view === 'logistics' ? (logisticsStatMode === 'all' ? '累计物流总支出' : '本月物流总支出') : (techServiceStatMode === 'all' ? '累计技术服务总支出' : '本月技术服务总支出'))}}</view>
         <view class="hero-amount-row">
-          <view class="expense-amount">{{view === 'material' ? (materialStatMode === 'all' ? materialTotalAll : materialTotal) : (logisticsStatMode === 'all' ? logisticsTotalAll : logisticsTotal)}}</view>
+          <view class="expense-amount">{{view === 'material' ? (materialStatMode === 'all' ? materialTotalAll : materialTotal) : (view === 'logistics' ? (logisticsStatMode === 'all' ? logisticsTotalAll : logisticsTotal) : (techServiceStatMode === 'all' ? techServiceTotalAll : techServiceTotal))}}</view>
           <view class="hero-count" wx:if="{{view === 'material'}}">{{materialStatMode === 'all' ? materialCountAll : materialCountMonth}} 笔</view>
         </view>
       </view>
-      <block wx:for="{{view === 'material' ? materialItems : logisticsItems}}" wx:key="meta">
+      <block wx:for="{{view === 'material' ? materialItems : (view === 'logistics' ? logisticsItems : techServiceItems)}}" wx:key="meta">
         <view class="entry-card">
           <view class="entry-left">
             <view class="entry-icon">{{view === 'material' ? '◈' : '▭'}}</view>
@@ -210,10 +216,10 @@
       </block>
     </block>
 
-    <block wx:if="{{statsLoaded && (view === 'materialForm' || view === 'logisticsForm')}}">
+    <block wx:if="{{statsLoaded && (view === 'materialForm' || view === 'logisticsForm' || view === 'techServiceForm')}}">
       <view class="sub-head sub-head--material-form">
-        <view class="back-chip" bindtap="goView" data-view="{{view === 'materialForm' ? 'material' : 'logistics'}}">‹</view>
-        <view class="sub-title">{{view === 'materialForm' ? (expenseFormMode === 'edit' ? '编辑材料支出' : '新增材料支出') : (expenseFormMode === 'edit' ? '编辑物流支出' : '新增物流支出')}}</view>
+        <view class="back-chip" bindtap="goView" data-view="{{view === 'materialForm' ? 'material' : (view === 'logisticsForm' ? 'logistics' : 'techService')}}">‹</view>
+        <view class="sub-title">{{view === 'materialForm' ? (expenseFormMode === 'edit' ? '编辑材料支出' : '新增材料支出') : (view === 'logisticsForm' ? (expenseFormMode === 'edit' ? '编辑物流支出' : '新增物流支出') : (expenseFormMode === 'edit' ? '编辑技术服务支出' : '新增技术服务支出'))}}</view>
       </view>
       <view class="form-card">
         <view class="field" wx:if="{{view === 'materialForm'}}">

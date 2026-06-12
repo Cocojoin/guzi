@@ -1,5 +1,32 @@
 @import "../../../app.wxss";
 
+/* ===== 自定义导航栏 ===== */
+.custom-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #F7FCFF;
+  z-index: 999;
+}
+
+.custom-nav-status {
+  width: 100%;
+}
+
+.custom-nav-title-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.custom-nav-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
 .stats-shell {
   min-height: 100vh;
   background:
@@ -10,12 +37,10 @@
 
 .stats-page {
   min-height: 100vh;
-  padding: 48rpx 24rpx 196rpx;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  padding-bottom: 196rpx;
   box-sizing: border-box;
-}
-
-.statusbar-spacer {
-  height: calc(130rpx + env(safe-area-inset-top));
 }
 
 .stats-loading-card {
@@ -318,8 +343,7 @@
   line-height: 1.5;
 }
 
-.back-chip,
-.save-chip {
+.back-chip {
   width: 68rpx;
   height: 84rpx;
   border-radius: 24rpx;
@@ -332,14 +356,6 @@
   font-size: 40rpx;
 }
 
-.save-chip {
-  margin-left: auto;
-  width: 128rpx;
-  font-size: 32rpx;
-  color: #fff;
-  background: linear-gradient(180deg, #acd1f1 0%, #92bde6 100%);
-}
-
 .sum-hero,
 .expense-hero {
   background: linear-gradient(140deg, #c7d9ef 0%, #aac6e8 100%);
@@ -350,17 +366,6 @@
 
 .expense-hero--main {
   position: relative;
-}
-
-.hero-mini-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.switch-pill--inner {
-  transform: scale(0.9);
-  transform-origin: right center;
 }
 
 .switch-pill--top-right {

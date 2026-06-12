@@ -1,11 +1,18 @@
 const session = require("../../../../utils/session");
 const usersRepository = require("../../../../utils/usersRepository");
+const { debounce } = require("../../../../utils/debounce");
 
 Page({
   data: {
     user: null,
     avatarText: "柚",
     consignmentDesc: "查看寄售说明与开通方式"
+  },
+
+  onLoad() {
+    this.goPassword = debounce(this.goPassword.bind(this), 800);
+    this.goConsignment = debounce(this.goConsignment.bind(this), 800);
+    this.logout = debounce(this.logout.bind(this), 800);
   },
 
   async onShow() {

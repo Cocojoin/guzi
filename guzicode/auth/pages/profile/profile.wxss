@@ -2,7 +2,10 @@
 
 .auth-shell {
   min-height: 100vh;
-  padding: 24rpx 32rpx 48rpx;
+  padding-top: calc(200rpx + env(safe-area-inset-top));
+  padding-right: 32rpx;
+  padding-bottom: 48rpx;
+  padding-left: 32rpx;
   box-sizing: border-box;
   overflow: hidden;
   background:
@@ -12,8 +15,7 @@
 }
 
 .auth-status {
-  position: relative;
-  height: calc(172rpx + env(safe-area-inset-top));
+  display: none;
 }
 
 .auth-content {
@@ -52,7 +54,7 @@
 .page-back {
   position: absolute;
   left: 32rpx;
-  top: calc(96rpx + env(safe-area-inset-top));
+  top: calc(120rpx + env(safe-area-inset-top));
   z-index: 4;
   width: 72rpx;
   height: 72rpx;
@@ -60,6 +62,9 @@
   background: rgba(255, 255, 255, 0.86);
   border: 2rpx solid rgba(217, 236, 248, 0.9);
   box-shadow: 0 12rpx 24rpx rgba(45, 76, 120, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .page-back::before {

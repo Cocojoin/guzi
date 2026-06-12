@@ -1,15 +1,5 @@
 <view class="subpage-shell">
   <view class="subpage">
-    <view class="statusbar-spacer"></view>
-
-    <view class="sub-header">
-      <view class="back-chip" bindtap="goBack">‹</view>
-      <view class="sub-title-group">
-        <view class="sub-title">批量修改状态</view>
-        <view class="sub-caption">已选择 {{items.length}} 个商品</view>
-      </view>
-    </view>
-
     <view class="sub-scroll">
       <view class="mini-card batch-status-summary">
         <view class="batch-status-item" wx:for="{{items}}" wx:key="id">

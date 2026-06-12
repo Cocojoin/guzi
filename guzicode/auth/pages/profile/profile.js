@@ -1,11 +1,6 @@
 const authService = require("../../../utils/authService");
 const session = require("../../../utils/session");
 
-function getFileExtension(filePath) {
-  const match = filePath.match(/\.([A-Za-z0-9]+)(?:\?|$)/);
-  return match ? match[1] : "jpg";
-}
-
 function getAvatarText(nickname, account) {
   const preferred = String(nickname || "").trim() || String(account || "").trim();
   return preferred ? preferred.slice(0, 1) : "☺";
@@ -29,11 +24,9 @@ function validateNickname(value) {
 
 Page({
   data: {
-    avatarUrl: "",
     avatarText: "☺",
     nickname: "",
     errors: {
-      avatar: "",
       nickname: ""
     },
     submitting: false
@@ -42,6 +35,9 @@ Page({
   onShow() {
     const current = session.getSession();
     if (!current) {
+      wx.reLaunch({
+        url: "/auth/pages/login/login"
+      });
       return;
     }
 
@@ -54,45 +50,28 @@ Page({
     }
   },
 
-  chooseAvatar() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ["image"],
-      sizeType: ["compressed"],
-      success: (result) => {
-        const file = result.tempFiles[0];
-        if (file.size > 5 * 1024 * 1024) {
-          this.setData({
-            "errors.avatar": "头像图片不能超过5M"
-          });
-          return;
-        }
-
-        this.setData({
-          avatarUrl: file.tempFilePath,
-          "errors.avatar": ""
-        });
-      },
-      fail: (error) => {
-        if (error.errMsg && error.errMsg.includes("cancel")) {
-          return;
-        }
-
-        this.setData({
-          "errors.avatar": "头像上传失败，请重新选择"
-        });
-      }
-    });
-  },
-
   goBack() {
-    wx.navigateBack({
-      delta: 1,
-      fail: () => {
-        wx.reLaunch({
-          url: "/auth/pages/login/login"
-        });
-      }
+    const pages = getCurrentPages();
+    const previousPage = pages.length > 1 ? pages[pages.length - 2] : null;
+    const previousRoute = previousPage && previousPage.route ? previousPage.route : "";
+
+    if (previousRoute === "auth/pages/register/register") {
+      session.clearSession();
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          session.clearSession();
+          wx.reLaunch({
+            url: "/auth/pages/login/login"
+          });
+        }
+      });
+      return;
+    }
+
+    session.clearSession();
+    wx.reLaunch({
+      url: "/auth/pages/login/login"
     });
   },
 
@@ -112,20 +91,6 @@ Page({
     });
   },
 
-  async uploadAvatarIfNeeded(userId) {
-    if (!this.data.avatarUrl || this.data.avatarUrl.startsWith("cloud://")) {
-      return this.data.avatarUrl;
-    }
-
-    const extension = getFileExtension(this.data.avatarUrl);
-    const uploadResult = await wx.cloud.uploadFile({
-      cloudPath: `avatars/${userId}-${Date.now()}.${extension}`,
-      filePath: this.data.avatarUrl
-    });
-
-    return uploadResult.fileID;
-  },
-
   async handleSubmit() {
     const nicknameError = validateNickname(this.data.nickname);
     const current = session.getSession();
@@ -135,7 +100,7 @@ Page({
       "errors.nickname": nicknameError
     });
 
-    if (nicknameError || this.data.errors.avatar) {
+    if (nicknameError) {
       return;
     }
 
@@ -150,12 +115,9 @@ Page({
     this.setData({ submitting: true });
 
     try {
-      const avatarUrl = await this.uploadAvatarIfNeeded(userId);
-
-      await authService.updateProfile(userId, this.data.nickname, avatarUrl);
+      await authService.updateProfile(userId, this.data.nickname, "");
 
       this.setData({
-        avatarUrl,
         submitting: false
       });
       wx.showToast({
@@ -164,7 +126,7 @@ Page({
       });
       setTimeout(() => {
         wx.reLaunch({
-          url: "/user/pages/goods/list/list"
+          url: session.getHomePathByRole(current.role)
         });
       }, 400);
     } catch (error) {

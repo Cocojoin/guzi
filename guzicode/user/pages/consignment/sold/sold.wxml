@@ -1,12 +1,5 @@
 <view class="u-page">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="title-wrap">
-        <view class="u-top-title">已出售</view>
-      </view>
-    </view>
-
     <view wx:if="{{loading && !hasLoaded}}" class="empty-note">加载中…</view>
     <view wx:elif="{{products.length === 0}}" class="u-card empty-card empty-card--search">
       <view class="empty-emoji">🧾</view>

@@ -1,10 +1,13 @@
 const productsRepository = require("../../../utils/productsRepository");
 const { addOperationLog, formatFailureContext } = require("../../../utils/adminSettings");
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
+const session = require("../../../utils/session");
+const { debounce } = require("../../../utils/debounce");
 
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const MATERIAL_EXPENSES_COLLECTION = "material_expenses";
 const LOGISTICS_EXPENSES_COLLECTION = "logistics_expenses";
+const TECH_SERVICE_EXPENSES_COLLECTION = "tech_service_expenses";
 
 function db() {
   return wx.cloud.database();
@@ -67,8 +70,68 @@ function getPresetFromName(name) {
   return map[String(name || "").trim()] || "custom";
 }
 
+function topLabels(items = [], maxCount = 2) {
+  const counts = new Map();
+  items.forEach((item) => {
+    const label = String(item || "").trim();
+    if (!label) return;
+    counts.set(label, (counts.get(label) || 0) + 1);
+  });
+  return Array.from(counts.entries())
+    .sort((left, right) => right[1] - left[1] || String(left[0]).localeCompare(String(right[0])))
+    .slice(0, maxCount)
+    .map((entry) => entry[0]);
+}
+
+function classifyLogisticsNote(note) {
+  const text = String(note || "").trim();
+  if (!text) return "物流";
+  if (/(退件|退回|退货)/.test(text)) return "退件";
+  if (/(寄件|发货|寄出|快递|运费|邮费)/.test(text)) return "寄件";
+  return "物流";
+}
+
+function getExpenseTypeByView(view) {
+  if (view === "material" || view === "materialForm") return "material";
+  if (view === "logistics" || view === "logisticsForm") return "logistics";
+  if (view === "techService" || view === "techServiceForm") return "techService";
+  return "";
+}
+
+function getExpenseConfig(type) {
+  if (type === "material") {
+    return {
+      collection: MATERIAL_EXPENSES_COLLECTION,
+      listView: "material",
+      formView: "materialForm",
+      title: "材料支出",
+      itemName: "材料支出"
+    };
+  }
+  if (type === "techService") {
+    return {
+      collection: TECH_SERVICE_EXPENSES_COLLECTION,
+      listView: "techService",
+      formView: "techServiceForm",
+      title: "技术服务支出",
+      itemName: "技术服务支出"
+    };
+  }
+  return {
+    collection: LOGISTICS_EXPENSES_COLLECTION,
+    listView: "logistics",
+    formView: "logisticsForm",
+    title: "物流支出",
+    itemName: "物流支出"
+  };
+}
+
 Page({
   data: {
+    statusBarHeight: 20,
+    navBarHeight: 44,
+    contentPaddingTop: 64,
+    submitting: false,
     view: "home",
     statsLoading: true,
     statsLoaded: false,
@@ -129,13 +192,24 @@ Page({
     materialTotalAll: "-¥0.00",
     materialCountMonth: 0,
     materialCountAll: 0,
+    materialEntryNote: "本月 0 笔 · 暂无记录",
     materialStatMode: "month",
     logisticsTotal: "-¥0.00",
     logisticsTotalAll: "-¥0.00",
+    logisticsCountMonth: 0,
+    logisticsCountAll: 0,
+    logisticsEntryNote: "本月 0 笔 · 暂无记录",
     logisticsStatMode: "month",
+    techServiceTotal: "-¥0.00",
+    techServiceTotalAll: "-¥0.00",
+    techServiceCountMonth: 0,
+    techServiceCountAll: 0,
+    techServiceEntryNote: "本月 0 笔 · 暂无记录",
+    techServiceStatMode: "month",
 
     materialItems: [],
     logisticsItems: [],
+    techServiceItems: [],
 
     showDeleteDialog: false,
     pendingDeleteType: "",
@@ -150,7 +224,26 @@ Page({
     settledDetailActualIncome: "0.00"
   },
 
+  onLoad() {
+    this.submitExpenseForm = debounce(this.submitExpenseForm.bind(this), 800);
+    this.confirmDeleteExpense = debounce(this.confirmDeleteExpense.bind(this), 800);
+    this.goView = debounce(this.goView.bind(this), 500);
+    this.goGoodsByStatus = debounce(this.goGoodsByStatus.bind(this), 500);
+  },
+
   async onShow() {
+    const currentSession = session.getSession();
+    if (!currentSession || currentSession.role !== "admin") {
+      wx.reLaunch({ url: "/auth/pages/login/login" });
+      return;
+    }
+    const sysInfo = wx.getSystemInfoSync();
+    const menuBtn = wx.getMenuButtonBoundingClientRect();
+    const statusBarHeight = sysInfo.statusBarHeight || 20;
+    const capGap = menuBtn ? (menuBtn.top - statusBarHeight) * 2 : 8;
+    const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
+    const contentPaddingTop = statusBarHeight + navBarHeight;
+    this.setData({ statusBarHeight, navBarHeight, contentPaddingTop });
     await this.loadAllStatsData();
   },
 
@@ -190,11 +283,12 @@ Page({
   async loadAllStatsData() {
     this.setData({ statsLoading: true });
     try {
-      const [products, settlementRecords, materialRecords, logisticsRecords] = await Promise.all([
+      const [products, settlementRecords, materialRecords, logisticsRecords, techServiceRecords] = await Promise.all([
         productsRepository.getAllProducts(),
         this.fetchAll(SETTLEMENT_RECORDS_COLLECTION),
         this.fetchAll(MATERIAL_EXPENSES_COLLECTION),
-        this.fetchAll(LOGISTICS_EXPENSES_COLLECTION)
+        this.fetchAll(LOGISTICS_EXPENSES_COLLECTION),
+        this.fetchAll(TECH_SERVICE_EXPENSES_COLLECTION)
       ]);
 
       const now = new Date();
@@ -206,13 +300,14 @@ Page({
       }
 
       const statsCount = this.computeProductCounts(products || []);
-      const monthStatsRaw = this.computeStatsByMonth(settlementRecords, materialRecords, logisticsRecords, selectedMonth);
-      const allStatsRaw = this.computeStatsAll(settlementRecords, materialRecords, logisticsRecords);
+      const monthStatsRaw = this.computeStatsByMonth(settlementRecords, materialRecords, logisticsRecords, techServiceRecords, selectedMonth);
+      const allStatsRaw = this.computeStatsAll(settlementRecords, materialRecords, logisticsRecords, techServiceRecords);
       const summaryRows = this.buildSummaryRows(allStatsRaw);
 
       const incomeItems = this.buildIncomeItems(settlementRecords || []);
       const materialItems = this.buildMaterialItems(materialRecords || []);
       const logisticsItems = this.buildLogisticsItems(logisticsRecords || []);
+      const techServiceItems = this.buildTechServiceItems(techServiceRecords || []);
 
       this.setData({
         ...statsCount,
@@ -225,14 +320,36 @@ Page({
         incomeItems,
         materialItems,
         logisticsItems,
+        techServiceItems,
         incomeDateStart: `${selectedMonth}-01`,
         incomeDateEnd: `${selectedMonth}-31`,
         materialCountAll: materialItems.length,
         materialCountMonth: materialItems.filter((item) => getMonthKey(item.date) === selectedMonth).length,
+        materialEntryNote: this.buildExpenseEntryNote(materialItems, selectedMonth, {
+          scopeLabel: "本月",
+          emptyLabel: "暂无记录",
+          labelGetter: (item) => item.name || "材料"
+        }),
         materialTotalAll: fmtMoney(-allStatsRaw.materialTotal),
         materialTotal: fmtMoney(-monthStatsRaw.materialTotal),
         logisticsTotal: fmtMoney(-monthStatsRaw.logisticsTotal),
         logisticsTotalAll: fmtMoney(-allStatsRaw.logisticsTotal),
+        logisticsCountMonth: logisticsItems.filter((item) => getMonthKey(item.date) === selectedMonth).length,
+        logisticsCountAll: logisticsItems.length,
+        logisticsEntryNote: this.buildExpenseEntryNote(logisticsItems, selectedMonth, {
+          scopeLabel: "本月",
+          emptyLabel: "暂无记录",
+          labelGetter: (item) => classifyLogisticsNote(item.note)
+        }),
+        techServiceTotal: fmtMoney(-monthStatsRaw.techServiceTotal),
+        techServiceTotalAll: fmtMoney(-allStatsRaw.techServiceTotal),
+        techServiceCountMonth: techServiceItems.filter((item) => getMonthKey(item.date) === selectedMonth).length,
+        techServiceCountAll: techServiceItems.length,
+        techServiceEntryNote: this.buildExpenseEntryNote(techServiceItems, selectedMonth, {
+          scopeLabel: "本月",
+          emptyLabel: "暂无记录",
+          labelGetter: () => "技术服务"
+        }),
         statsLoading: false,
         statsLoaded: true
       }, () => {
@@ -257,18 +374,19 @@ Page({
     };
   },
 
-  computeStatsByMonth(settlementRecords = [], materialRecords = [], logisticsRecords = [], monthKey) {
+  computeStatsByMonth(settlementRecords = [], materialRecords = [], logisticsRecords = [], techServiceRecords = [], monthKey) {
     const settled = settlementRecords.filter((item) => getMonthKey(item.date) === monthKey);
     const material = materialRecords.filter((item) => getMonthKey(item.date) === monthKey);
     const logistics = logisticsRecords.filter((item) => getMonthKey(item.date) === monthKey);
-    return this.computeStatsCore(settled, material, logistics);
+    const techService = techServiceRecords.filter((item) => getMonthKey(item.date) === monthKey);
+    return this.computeStatsCore(settled, material, logistics, techService);
   },
 
-  computeStatsAll(settlementRecords = [], materialRecords = [], logisticsRecords = []) {
-    return this.computeStatsCore(settlementRecords, materialRecords, logisticsRecords);
+  computeStatsAll(settlementRecords = [], materialRecords = [], logisticsRecords = [], techServiceRecords = []) {
+    return this.computeStatsCore(settlementRecords, materialRecords, logisticsRecords, techServiceRecords);
   },
 
-  computeStatsCore(settlementRecords = [], materialRecords = [], logisticsRecords = []) {
+  computeStatsCore(settlementRecords = [], materialRecords = [], logisticsRecords = [], techServiceRecords = []) {
     const settledPriceTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.gross), 0);
     const actualIncomeTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.actualIncome), 0);
     const commissionTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.commission), 0);
@@ -277,7 +395,8 @@ Page({
 
     const materialTotal = materialRecords.reduce((sum, item) => sum + toNumber(item.amount), 0);
     const logisticsTotal = logisticsRecords.reduce((sum, item) => sum + toNumber(item.amount), 0);
-    const totalExpense = materialTotal + logisticsTotal;
+    const techServiceTotal = techServiceRecords.reduce((sum, item) => sum + toNumber(item.amount), 0);
+    const totalExpense = materialTotal + logisticsTotal + techServiceTotal;
     const netIncome = commissionTotal + spreadTotal - totalExpense;
 
     return {
@@ -288,6 +407,7 @@ Page({
       spreadTotal,
       materialTotal,
       logisticsTotal,
+      techServiceTotal,
       totalExpense,
       netIncome
     };
@@ -307,7 +427,8 @@ Page({
         negative: allStats.spreadTotal < 0
       },
       { label: "材料费用总支出", note: "Σ 材料支出", value: fmtMoney(-allStats.materialTotal), negative: true },
-      { label: "物流费用总支出", note: "Σ 物流支出", value: fmtMoney(-allStats.logisticsTotal), negative: true }
+      { label: "物流费用总支出", note: "Σ 物流支出", value: fmtMoney(-allStats.logisticsTotal), negative: true },
+      { label: "技术服务费用总支出", note: "Σ 技术服务支出", value: fmtMoney(-allStats.techServiceTotal), negative: true }
     ];
   },
 
@@ -378,6 +499,30 @@ Page({
         meta: `${item.date || ""} · ${item.note || ""}`.trim()
       }))
       .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  },
+
+  buildTechServiceItems(records = []) {
+    return records
+      .map((item) => ({
+        id: item._id,
+        name: "技术服务支出",
+        date: item.date || "",
+        note: item.note || "",
+        amountRaw: toNumber(item.amount),
+        amount: fmtMoney(-toNumber(item.amount)),
+        meta: `${item.date || ""} · ${item.note || ""}`.trim()
+      }))
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  },
+
+  buildExpenseEntryNote(items = [], monthKey, options = {}) {
+    const scopeLabel = options.scopeLabel || "本月";
+    const emptyLabel = options.emptyLabel || "暂无记录";
+    const monthItems = monthKey ? items.filter((item) => getMonthKey(item.date) === monthKey) : items.slice();
+    const count = monthItems.length;
+    const labelGetter = typeof options.labelGetter === "function" ? options.labelGetter : (() => "");
+    const labels = topLabels(monthItems.map(labelGetter), 2);
+    return `${scopeLabel} ${count} 笔 · ${labels.length ? labels.join(" / ") : emptyLabel}`;
   },
 
   rebuildMonths() {
@@ -657,13 +802,15 @@ Page({
   },
 
   async submitExpenseForm() {
-    const isMaterial = this.data.view === "materialForm";
+    const expenseType = getExpenseTypeByView(this.data.view);
+    const isMaterial = expenseType === "material";
+    const expenseConfig = getExpenseConfig(expenseType);
     const amount = Number(this.data.expenseFormAmount);
     const date = this.data.expenseFormDate;
     const note = (this.data.expenseFormNote || "").trim();
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      wx.showToast({ title: isMaterial ? "请填写材料支出金额" : "请填写物流支出金额", icon: "none" });
+      wx.showToast({ title: isMaterial ? "请填写材料支出金额" : `请填写${expenseConfig.title}金额`, icon: "none" });
       return;
     }
     if (!date) {
@@ -687,14 +834,14 @@ Page({
       ? (this.data.expenseMaterialPreset === "custom"
         ? (this.data.expenseMaterialItemName || "").trim()
         : ({ box: "包装盒", protect: "防撞材料", bag: "透明袋", label: "标签纸" }[this.data.expenseMaterialPreset] || "其他耗材"))
-      : "物流支出";
+      : expenseConfig.itemName;
 
     if (isMaterial && this.data.expenseMaterialPreset === "custom" && !itemName) {
       wx.showToast({ title: "请填写自定义项目名称", icon: "none" });
       return;
     }
 
-    const collection = isMaterial ? MATERIAL_EXPENSES_COLLECTION : LOGISTICS_EXPENSES_COLLECTION;
+    const collection = expenseConfig.collection;
     const payload = {
       amount: Number(amount.toFixed(2)),
       date,
@@ -716,13 +863,13 @@ Page({
       }
       await addOperationLog({
         title: this.data.expenseFormMode === "edit" ? "编辑支出" : "新增支出",
-        target: isMaterial ? "材料支出" : "物流支出",
+        target: expenseConfig.title,
         type: "财务",
         note: `${itemName} · ¥${payload.amount.toFixed(2)} · ${date}`
       });
       wx.showToast({ title: "保存成功", icon: "success" });
 
-      const nextView = isMaterial ? "material" : "logistics";
+      const nextView = expenseConfig.listView;
       this.setData({
         view: nextView,
         expenseFormMode: "create",
@@ -740,7 +887,7 @@ Page({
     } catch (error) {
       await addOperationLog({
         title: this.data.expenseFormMode === "edit" ? "编辑支出" : "新增支出",
-        target: isMaterial ? "材料支出" : "物流支出",
+        target: expenseConfig.title,
         type: "财务",
         note: formatFailureContext(error, `${itemName} · ${date || "未选日期"}`),
         success: false
@@ -786,6 +933,12 @@ Page({
     this.setData({ logisticsStatMode: mode });
   },
 
+  switchTechServiceStatMode(e) {
+    const mode = e.currentTarget.dataset.mode;
+    if (!mode) return;
+    this.setData({ techServiceStatMode: mode });
+  },
+
   goView(e) {
     const next = e.currentTarget.dataset.view;
     if (!next) return;
@@ -795,10 +948,6 @@ Page({
   goGoodsByStatus(e) {
     const status = e.currentTarget.dataset.status || "all";
     navigateAdminRoot("/admin/pages/goods/list/list", { status });
-  },
-
-  goBackHome() {
-    this.setData({ view: "home" });
   },
 
   switchMode(e) {
@@ -811,6 +960,30 @@ Page({
   applyModeStats() {
     const source = this.data.statMode === "all" ? this.data.allStatsRaw : this.data.monthStatsRaw;
     if (!source) return;
+    const materialItems = this.data.materialItems || [];
+    const logisticsItems = this.data.logisticsItems || [];
+    const techServiceItems = this.data.techServiceItems || [];
+    const materialEntryNote = this.data.statMode === "all"
+      ? `累计 ${this.data.materialCountAll} 笔 · ${topLabels(materialItems.map((item) => item.name || "材料"), 2).join(" / ") || "暂无记录"}`
+      : this.buildExpenseEntryNote(materialItems, this.data.selectedMonth, {
+          scopeLabel: "本月",
+          emptyLabel: "暂无记录",
+          labelGetter: (item) => item.name || "材料"
+        });
+    const logisticsEntryNote = this.data.statMode === "all"
+      ? `累计 ${this.data.logisticsCountAll} 笔 · ${topLabels(logisticsItems.map((item) => classifyLogisticsNote(item.note)), 2).join(" / ") || "暂无记录"}`
+      : this.buildExpenseEntryNote(logisticsItems, this.data.selectedMonth, {
+          scopeLabel: "本月",
+          emptyLabel: "暂无记录",
+          labelGetter: (item) => classifyLogisticsNote(item.note)
+        });
+    const techServiceEntryNote = this.data.statMode === "all"
+      ? `累计 ${this.data.techServiceCountAll} 笔 · ${topLabels(techServiceItems.map(() => "技术服务"), 2).join(" / ") || "暂无记录"}`
+      : this.buildExpenseEntryNote(techServiceItems, this.data.selectedMonth, {
+          scopeLabel: "本月",
+          emptyLabel: "暂无记录",
+          labelGetter: () => "技术服务"
+        });
     this.setData({
       heroTitle: this.data.statMode === "all" ? "累计实际收益" : "本月实际收益",
       heroAmountRaw: source.netIncome,
@@ -822,7 +995,11 @@ Page({
       netIncomeRaw: source.netIncome,
       summaryNetIncomeRaw: this.data.allStatsRaw ? this.data.allStatsRaw.netIncome : source.netIncome,
       materialTotal: fmtMoney(-source.materialTotal),
-      logisticsTotal: fmtMoney(-source.logisticsTotal)
+      logisticsTotal: fmtMoney(-source.logisticsTotal),
+      techServiceTotal: fmtMoney(-source.techServiceTotal),
+      materialEntryNote,
+      logisticsEntryNote,
+      techServiceEntryNote
     });
   },
 
@@ -868,23 +1045,24 @@ Page({
       return;
     }
 
-    const collection = type === "material" ? MATERIAL_EXPENSES_COLLECTION : LOGISTICS_EXPENSES_COLLECTION;
+    const expenseConfig = getExpenseConfig(type);
+    const collection = expenseConfig.collection;
     try {
       await db().collection(collection).doc(id).remove();
       await addOperationLog({
         title: "删除支出",
-        target: type === "material" ? "材料支出" : "物流支出",
+        target: expenseConfig.title,
         type: "财务",
         note: id
       });
       wx.showToast({ title: "删除成功", icon: "success" });
       this.setData({ showDeleteDialog: false, pendingDeleteType: "", pendingDeleteId: "" });
       await this.loadAllStatsData();
-      this.setData({ view: type === "material" ? "material" : "logistics" });
+      this.setData({ view: expenseConfig.listView });
     } catch (error) {
       await addOperationLog({
         title: "删除支出",
-        target: type === "material" ? "材料支出" : "物流支出",
+        target: expenseConfig.title,
         type: "财务",
         note: formatFailureContext(error, id),
         success: false
@@ -897,12 +1075,17 @@ Page({
   onExpenseEditTap(e) {
     const id = e.currentTarget.dataset.id;
     const type = e.currentTarget.dataset.type;
-    const sourceList = type === "material" ? (this.data.materialItems || []) : (this.data.logisticsItems || []);
+    const sourceList = type === "material"
+      ? (this.data.materialItems || [])
+      : type === "techService"
+        ? (this.data.techServiceItems || [])
+        : (this.data.logisticsItems || []);
     const item = sourceList.find((row) => row.id === id);
     if (!item) return;
+    const expenseConfig = getExpenseConfig(type);
 
     this.setData({
-      view: type === "material" ? "materialForm" : "logisticsForm",
+      view: expenseConfig.formView,
       expenseFormMode: "edit",
       editingExpenseId: item.id,
       expenseFormAmount: String(item.amountRaw || ""),
@@ -916,8 +1099,9 @@ Page({
 
   openExpenseCreateForm(e) {
     const type = e.currentTarget.dataset.type || "material";
+    const expenseConfig = getExpenseConfig(type);
     this.setData({
-      view: type === "material" ? "materialForm" : "logisticsForm",
+      view: expenseConfig.formView,
       expenseFormMode: "create",
       editingExpenseId: "",
       expenseFormAmount: "",

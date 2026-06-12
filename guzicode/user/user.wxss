@@ -12,7 +12,7 @@ page {
 .u-page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: calc(110rpx + env(safe-area-inset-top)) 34rpx calc(150rpx + env(safe-area-inset-bottom));
+  padding: calc(env(safe-area-inset-top) + 20rpx) 34rpx calc(150rpx + env(safe-area-inset-bottom));
   background: transparent;
   position: relative;
   overflow: auto;
@@ -157,12 +157,13 @@ page {
 }
 
 .goods-card {
-  min-height: 156rpx;
+  min-height: 160rpx;
   margin-bottom: 20rpx;
   padding: 28rpx;
   display: flex;
   gap: 24rpx;
   box-sizing: border-box;
+  align-items: flex-start;
 }
 
 .goods-thumb {

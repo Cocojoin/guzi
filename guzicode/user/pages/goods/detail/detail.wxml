@@ -1,10 +1,5 @@
 <view class="u-page detail-page" wx:if="{{product}}">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="u-top-title">商品详情</view>
-    </view>
-
     <view class="hero-photo" bindtap="previewImage">
       <image wx:if="{{product.coverImage}}" class="hero-img" src="{{product.coverImage}}" mode="widthFix" show-menu-by-longpress="{{false}}" />
     </view>
@@ -16,7 +11,7 @@
         <view class="detail-badges">
           <text class="badge {{product.qualityClassName === 'quality-badge--flaw' ? 'badge-flaw' : 'badge-clean'}}">{{product.qualityLabel}}</text>
           <text class="badge status-pill--up">剩余 {{product.remainingCount}} 件</text>
-          <text class="badge {{product.statusClassName}}">{{product.statusLabel}}</text>
+          
         </view>
       </view>
       <view class="detail-price">{{product.priceText}}</view>
@@ -45,11 +40,6 @@
 
 <view class="u-page detail-page" wx:elif="{{invalid}}">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="u-top-title">商品详情</view>
-    </view>
-
     <view class="u-card empty-card empty-card--market">
       <view class="empty-emoji">🚫</view>
       <view class="empty-title">{{invalidText}}</view>

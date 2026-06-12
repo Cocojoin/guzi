@@ -31,7 +31,7 @@ function navigateAdminRoot(path, query = {}) {
   if (isSamePage(currentRoute, path, query)) {
     return;
   }
-  wx.redirectTo({
+  wx.reLaunch({
     url: buildUrl(path, query)
   });
 }

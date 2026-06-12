@@ -1,11 +1,5 @@
 <view class="detail-shell">
   <view class="detail-page">
-    <view class="statusbar-spacer"></view>
-
-    <view class="page-topbar data-backup-header">
-      <view class="back-button" bindtap="handleBack"></view>
-      <view class="page-title">数据备份</view>
-    </view>
 
     <view class="hero-card">
       <view class="hero-head">

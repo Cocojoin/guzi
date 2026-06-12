@@ -1,10 +1,5 @@
 <view class="u-page consignment-home-page">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="u-top-title">寄售说明</view>
-    </view>
-
     <view class="intro-hero">
       <view class="hero-icon">🪧</view>
       <view class="hero-title">开通寄售，闲置谷子轻松变现</view>

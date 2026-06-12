@@ -12,7 +12,7 @@
 }
 
 .consignment-home-page {
-  padding-top: 126rpx;
+  padding-top: 30rpx;
   box-sizing: border-box;
 }
 

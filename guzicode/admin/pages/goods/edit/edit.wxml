@@ -1,13 +1,5 @@
 <view class="upload-shell">
   <view class="upload-page">
-    <view class="statusbar-spacer"></view>
-
-    <!-- 顶部导航 -->
-    <view class="topbar">
-      <view class="back-button" bindtap="goBack"></view>
-      <view class="page-title">编辑商品</view>
-    </view>
-
     <!-- 照片上传 -->
     <view class="form-card">
       <view class="card-label">商品照片 <text class="required">*</text></view>
@@ -62,7 +54,7 @@
       <view class="form-field">
         <view class="card-label">系列 <text class="required">*</text></view>
         <view class="field-input">
-          <input class="field-input-text" placeholder="输入系列名称" placeholder-class="placeholder" maxlength="12" value="{{form.series}}" bindinput="onFieldInput" data-field="series" />
+          <input class="field-input-text" placeholder="输入系列名称" placeholder-class="placeholder" maxlength="30" value="{{form.series}}" bindinput="onFieldInput" data-field="series" />
         </view>
         <view wx:if="{{errors.series}}" class="error-inline">{{errors.series}}</view>
       </view>

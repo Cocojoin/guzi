@@ -1,8 +1,12 @@
 <view class="management-shell {{currentView === 'userDetail' ? 'management-shell--detail' : ''}}">
-  <view class="management-page {{currentView === 'userList' ? 'management-page--list-offset' : ''}} {{multiSelect ? 'management-page--with-bar' : ''}}">
-    <view class="statusbar-spacer"></view>
-    <view wx:if="{{currentView === 'userList' || currentView === 'emptyUser'}}" class="management-header">
-      <view class="header-title">用户管理</view>
+  <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
+      <view class="custom-nav-title">用户管理</view>
+    </view>
+  </view>
+  <view class="management-page {{currentView === 'userList' ? 'management-page--list-offset' : ''}} {{multiSelect ? 'management-page--with-bar' : ''}}" style="padding-top: {{contentPaddingTop + 12}}px;">
+    <view wx:if="{{currentView === 'userList' || currentView === 'emptyUser'}}" class="management-header management-header--compact">
       <view class="header-actions">
         <view class="header-search">
           <input
@@ -19,13 +23,6 @@
         <view class="header-search-btn" bindtap="handleSearch">
           <view class="header-search-icon"></view>
         </view>
-      </view>
-    </view>
-    <view class="page-topbar" wx:else>
-      <view class="back-button" bindtap="handleBack"></view>
-      <view class="page-title-group">
-        <view class="page-title">{{viewTitle}}</view>
-        <view class="page-subtitle" wx:if="{{viewSubtitle}}">{{viewSubtitle}}</view>
       </view>
     </view>
     <view wx:if="{{pageError}}" class="error-banner">
@@ -232,6 +229,26 @@
       <button wx:if="{{currentView === 'userDetail'}}" class="ghost-btn" bindtap="resetPassword">🔒 重置密码</button>
 
       <!-- 其他视图... -->
+      <view wx:if="{{currentView === 'userGoods' || currentView === 'userGoodsFilters'}}" class="management-header management-header--compact subview-search-block">
+        <view class="header-actions">
+          <view class="header-search">
+            <input
+              class="header-search-input"
+              placeholder="搜索商品"
+              placeholder-class="header-search-placeholder"
+              value="{{keyword}}"
+              bindinput="onKeywordInput"
+              bindconfirm="handleSearch"
+              confirm-type="search"
+            />
+            <view wx:if="{{keyword}}" class="header-search-clear header-search-clear--text" bindtap="clearKeyword">×</view>
+            <view class="header-search-btn" bindtap="handleSearch">
+              <view class="header-search-icon"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
       <view wx:if="{{currentView === 'userGoods' || currentView === 'userGoodsFilters'}}" class="filter-panel">
         <view class="filter-row">
           <view class="filter-dropdown {{activeDropdown === 'status' ? 'filter-dropdown--active' : ''}}" bindtap="toggleDropdown" data-key="status">

@@ -2,6 +2,7 @@
 
 .detail-page {
   overflow: auto;
+  padding-top: calc(env(safe-area-inset-top) + 30rpx);
   padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
   min-height: 100vh;
   background:

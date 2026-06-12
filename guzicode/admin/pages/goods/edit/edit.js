@@ -288,8 +288,8 @@ Page({
     // 系列
     if (!form.series) {
       errors.series = "请填写系列";
-    } else if (form.series.length > 12) {
-      errors.series = "系列字数不能超过 12 个";
+    } else if (form.series.length > 30) {
+      errors.series = "系列字数不能超过 30 个";
     }
 
     // 角色

@@ -1,12 +1,5 @@
 <view class="u-page consignment-home-page">
   <view class="u-content">
-    <view class="u-topbar">
-      <view class="u-back" bindtap="goBack"></view>
-      <view class="title-wrap">
-        <view class="u-top-title">我的寄售</view>
-      </view>
-    </view>
-
     <view class="rate-card">
       <view class="rate-label">我的寄售抽成比例</view>
       <view class="rate-value">{{rateText}}</view>
