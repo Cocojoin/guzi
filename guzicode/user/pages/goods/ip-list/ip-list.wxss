@@ -1,0 +1,253 @@
+@import "../../../user.wxss";
+
+.goods-page {
+  overflow: visible;
+}
+
+.search-bar {
+  height: 84rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.search-icon {
+  font-size: 34rpx;
+  color: #97a4ba;
+  margin-right: 14rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  font-size: 30rpx;
+  color: #2b3d55;
+}
+
+.search-placeholder {
+  color: #a5afc2;
+}
+
+.search-clear {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #edf2fa;
+  color: #7d8ca3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.search-icon-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #f0f5ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.magnifier {
+  font-size: 36rpx;
+  color: #293a50;
+  font-weight: 600;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 24rpx;
+  padding: 0 22rpx;
+  position: relative;
+  z-index: 80;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 66rpx;
+  padding: 0 26rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(255, 255, 255, 0.86);
+  color: #53657d;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.filter-chip--active {
+  border-color: rgba(146, 153, 243, 0.42);
+  box-shadow: 0 10rpx 24rpx rgba(139, 148, 215, 0.12);
+}
+
+.filter-chip-arrow {
+  font-size: 18rpx;
+  color: #7a88a1;
+}
+
+.filter-reset {
+  margin-left: auto;
+  color: #8d7ce6;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.dropdown-panel {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 230rpx);
+  left: 34rpx;
+  right: 34rpx;
+  z-index: 120;
+}
+
+.dropdown-panel-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(244, 247, 252, 0.01);
+  z-index: 0;
+}
+
+.dropdown-card {
+  position: relative;
+  z-index: 1;
+  max-height: 520rpx;
+  overflow-y: auto;
+  padding: 12rpx 0;
+  box-shadow: 0 18rpx 42rpx rgba(116, 148, 181, 0.18);
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 30rpx;
+  color: #4f6078;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.dropdown-option--active {
+  color: #2f4159;
+  font-weight: 800;
+}
+
+.dropdown-check {
+  color: #8d7ce6;
+  font-size: 28rpx;
+}
+
+.state-card {
+  padding: 52rpx 36rpx;
+  text-align: center;
+}
+
+.state-title {
+  color: #304158;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.state-desc {
+  margin-top: 14rpx;
+  color: #8b97ad;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.retry-btn {
+  width: 240rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  margin-top: 28rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #8d7ce6, #7191e6);
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.retry-btn::after {
+  border: 0;
+}
+
+.goods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.goods-card {
+  display: flex;
+  gap: 24rpx;
+  padding: 24rpx;
+  align-items: center;
+}
+
+.goods-thumb {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  flex: 0 0 140rpx;
+  background: linear-gradient(135deg, #eef3fb, #dde7f5);
+}
+
+.goods-img,
+.goods-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.goods-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #92a0b6;
+  font-size: 48rpx;
+  font-weight: 900;
+}
+
+.goods-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.goods-title {
+  color: #2a3c54;
+  font-size: 32rpx;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.goods-meta {
+  margin-top: 12rpx;
+  color: #8b97ad;
+  font-size: 26rpx;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.goods-price {
+  margin-top: 12rpx;
+  color: #ef4a6f;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.end-line {
+  text-align: center;
+  color: #9aa6bb;
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 28rpx 0 16rpx;
+}

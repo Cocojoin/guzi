@@ -1,0 +1,23 @@
+{
+  "collectionName": "admin_operation_logs",
+  "indexes": [
+    {
+      "name": "id_asc",
+      "fields": [
+        {
+          "field": "id",
+          "order": "asc"
+        }
+      ]
+    },
+    {
+      "name": "createdAt_desc",
+      "fields": [
+        {
+          "field": "createdAt",
+          "order": "desc"
+        }
+      ]
+    }
+  ]
+}

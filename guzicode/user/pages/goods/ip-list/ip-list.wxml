@@ -1,0 +1,85 @@
+<view class="u-page goods-page">
+  <view class="u-content">
+    <view class="search-bar u-card">
+      <text class="search-icon">⌕</text>
+      <input
+        class="search-input"
+        placeholder="{{searchPlaceholder}}"
+        placeholder-class="search-placeholder"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+        confirm-type="search"
+      />
+      <view wx:if="{{keyword}}" class="search-clear" catchtap="clearKeyword">×</view>
+      <view class="search-icon-btn" catchtap="onSearchConfirm">
+        <text class="magnifier">⌕</text>
+      </view>
+    </view>
+
+    <view class="filter-row">
+      <view class="filter-chip {{activeDropdown === 'role' ? 'filter-chip--active' : ''}}" catchtap="toggleDropdown" data-key="role">
+        <text class="filter-chip-text">{{roleOptions[roleIndex]}}</text>
+        <text class="filter-chip-arrow">{{activeDropdown === 'role' ? '▲' : '▼'}}</text>
+      </view>
+      <view class="filter-chip {{activeDropdown === 'series' ? 'filter-chip--active' : ''}}" catchtap="toggleDropdown" data-key="series">
+        <text class="filter-chip-text">{{seriesOptions[seriesIndex]}}</text>
+        <text class="filter-chip-arrow">{{activeDropdown === 'series' ? '▲' : '▼'}}</text>
+      </view>
+      <view class="filter-reset" catchtap="resetFilters">重置</view>
+    </view>
+
+    <view wx:if="{{activeDropdown === 'role'}}" class="dropdown-panel">
+      <view class="dropdown-panel-mask" catchtap="closeDropdown"></view>
+      <view class="dropdown-card u-card">
+        <view class="dropdown-option {{roleIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{roleOptions}}" wx:key="index" data-key="role" data-index="{{index}}" catchtap="onDropdownSelect">
+          <text>{{item}}</text>
+          <text wx:if="{{roleIndex === index}}" class="dropdown-check">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{activeDropdown === 'series'}}" class="dropdown-panel">
+      <view class="dropdown-panel-mask" catchtap="closeDropdown"></view>
+      <view class="dropdown-card u-card">
+        <view class="dropdown-option {{seriesIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{seriesOptions}}" wx:key="index" data-key="series" data-index="{{index}}" catchtap="onDropdownSelect">
+          <text>{{item}}</text>
+          <text wx:if="{{seriesIndex === index}}" class="dropdown-check">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card u-card">
+      <view class="state-title">正在加载商品…</view>
+    </view>
+
+    <view wx:elif="{{error}}" class="state-card u-card">
+      <view class="state-title">加载失败</view>
+      <view class="state-desc">下拉刷新或点击下方按钮重试</view>
+      <button class="retry-btn" bindtap="retryLoad">重新加载</button>
+    </view>
+
+    <view wx:elif="{{!products.length}}" class="state-card u-card">
+      <view class="state-title">{{emptyTitle}}</view>
+      <view wx:if="{{emptyDesc}}" class="state-desc">{{emptyDesc}}</view>
+    </view>
+
+    <block wx:else>
+      <view class="goods-list">
+        <view class="goods-card u-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+          <view class="goods-thumb">
+            <image wx:if="{{item.picture}}" class="goods-img" src="{{item.picture}}" mode="aspectFill" />
+            <view wx:else class="goods-fallback">{{item.roleInitial || item.ipInitial}}</view>
+          </view>
+          <view class="goods-body">
+            <view class="goods-title">{{item.role || '-'}} · {{item.series || '-'}}</view>
+            <view class="goods-meta">{{item.displayType}} · {{item.totalQuantity || 0}} 件</view>
+            <view class="goods-price">{{item.priceText}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="end-line">没有更多了</view>
+    </block>
+  </view>
+</view>

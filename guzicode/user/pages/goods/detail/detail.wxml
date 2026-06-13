@@ -22,7 +22,6 @@
       <view class="spec-row"><text>角色</text><text>{{product.role}}</text></view>
       <view class="spec-row"><text>系列</text><text>{{product.series}}</text></view>
       <view class="spec-row"><text>类型</text><text>{{product.typeLabel}}</text></view>
-      <view class="spec-row"><text>状态</text><text>{{product.statusLabel}}</text></view>
     </view>
 
     <view class="u-card desc-card">

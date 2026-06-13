@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "谷子集市",
-  "navigationStyle": "default"
+  "navigationStyle": "default",
+  "enablePullDownRefresh": true
 }

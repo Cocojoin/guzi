@@ -6,6 +6,7 @@ App({
     }
 
     wx.cloud.init({
+      env: "guzi-8gt2kfqe58854187",
       traceUser: true
     });
   }

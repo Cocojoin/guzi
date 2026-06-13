@@ -1,39 +1,18 @@
 const PRODUCTS_COLLECTION = "products";
 const { appendSoldBatch, settleSoldBatches } = require("./consignmentRate");
-
-function getProductsCollection() {
-  return wx.cloud.database().collection(PRODUCTS_COLLECTION);
-}
+const { retainIpGroupNames, normalizeIpName } = require("./ipGroupsRepository");
+const dataAccessService = require("./dataAccessService");
 
 async function getAllProducts() {
-  const collection = getProductsCollection();
-  const pageSize = 20;
-  let skip = 0;
-  const all = [];
-
-  while (true) {
-    const res = await collection
-      .orderBy("updatedAt", "desc")
-      .skip(skip)
-      .limit(pageSize)
-      .get({ latest: true });
-    const rows = res.data || [];
-    all.push(...rows);
-    if (rows.length < pageSize) {
-      break;
-    }
-    skip += pageSize;
-  }
-
-  return all;
+  return dataAccessService.fetchAll(PRODUCTS_COLLECTION, {
+    orderByField: "updatedAt",
+    orderByDirection: "desc"
+  });
 }
 
 async function getProductById(id) {
-  const res = await getProductsCollection()
-    .where({ id })
-    .limit(1)
-    .get({ latest: true });
-  return res.data[0] || null;
+  const all = await getAllProducts();
+  return all.find((item) => item.id === id) || null;
 }
 
 function getRemainingCount(product) {
@@ -70,10 +49,11 @@ async function createProduct(payload) {
     updatedAt: now
   };
 
-  const result = await getProductsCollection().add({ data: record });
+  const result = await dataAccessService.addDoc(PRODUCTS_COLLECTION, record);
+  await retainIpGroupNames([record.ip]);
   return {
     ...record,
-    _id: result._id
+    _id: result && result._id
   };
 }
 
@@ -149,9 +129,13 @@ async function updateProduct(id, updater) {
     updatedAt: new Date()
   };
 
-  await getProductsCollection()
-    .doc(current._id)
-    .update({ data: payload });
+  await dataAccessService.updateDocById(PRODUCTS_COLLECTION, current._id, payload);
+
+  const previousIp = normalizeIpName(current.ip);
+  const nextIp = normalizeIpName(payload.ip);
+  if (previousIp || nextIp) {
+    await retainIpGroupNames([previousIp, nextIp]);
+  }
 
   return {
     ...current,
@@ -165,15 +149,9 @@ async function deleteProducts(ids) {
     return 0;
   }
 
-  const command = wx.cloud.database().command;
-  const records = await getProductsCollection()
-    .where({
-      id: command.in(list)
-    })
-    .get();
-
-  await Promise.all((records.data || []).map((item) => getProductsCollection().doc(item._id).remove()));
-  return (records.data || []).length;
+  const records = (await getAllProducts()).filter((item) => list.includes(item.id));
+  await Promise.all(records.map((item) => dataAccessService.removeDocById(PRODUCTS_COLLECTION, item._id)));
+  return records.length;
 }
 
 async function bulkUpdateStatus(ids, status) {

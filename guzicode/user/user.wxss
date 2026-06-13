@@ -10,12 +10,15 @@ page {
 }
 
 .u-page {
-  min-height: 100vh;
   box-sizing: border-box;
   padding: calc(env(safe-area-inset-top) + 20rpx) 34rpx calc(150rpx + env(safe-area-inset-bottom));
   background: transparent;
   position: relative;
   overflow: auto;
+}
+
+.u-page--tabbar {
+  padding-bottom: 24rpx;
 }
 
 .u-page::after {

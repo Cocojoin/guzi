@@ -3,15 +3,12 @@ const { addOperationLog, formatFailureContext } = require("../../../utils/adminS
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
 const session = require("../../../utils/session");
 const { debounce } = require("../../../utils/debounce");
+const dataAccessService = require("../../../utils/dataAccessService");
 
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const MATERIAL_EXPENSES_COLLECTION = "material_expenses";
 const LOGISTICS_EXPENSES_COLLECTION = "logistics_expenses";
 const TECH_SERVICE_EXPENSES_COLLECTION = "tech_service_expenses";
-
-function db() {
-  return wx.cloud.database();
-}
 
 function fmtMoney(value) {
   const n = Number(value || 0);
@@ -248,18 +245,8 @@ Page({
   },
 
   async fetchAll(collectionName, where = {}) {
-    const pageSize = 100;
-    let skip = 0;
-    const result = [];
     try {
-      while (true) {
-        const res = await db().collection(collectionName).where(where).skip(skip).limit(pageSize).get();
-        const rows = res.data || [];
-        result.push(...rows);
-        if (rows.length < pageSize) break;
-        skip += pageSize;
-      }
-      return result;
+      return await dataAccessService.fetchAll(collectionName, { where });
     } catch (error) {
       const msg = String((error && (error.errMsg || error.message)) || "");
       const errCode = Number(error && error.errCode);
@@ -857,9 +844,9 @@ Page({
     try {
       wx.showLoading({ title: "保存中", mask: true });
       if (this.data.expenseFormMode === "edit" && this.data.editingExpenseId) {
-        await db().collection(collection).doc(this.data.editingExpenseId).update({ data: payload });
+        await dataAccessService.updateDocById(collection, this.data.editingExpenseId, payload);
       } else {
-        await db().collection(collection).add({ data: { ...payload, createdAt: new Date() } });
+        await dataAccessService.addDoc(collection, { ...payload, createdAt: new Date() });
       }
       await addOperationLog({
         title: this.data.expenseFormMode === "edit" ? "编辑支出" : "新增支出",
@@ -909,7 +896,7 @@ Page({
       ) {
         wx.showModal({
           title: "需要初始化数据库",
-          content: `请在微信开发者工具的云开发控制台中创建「${collection}」集合后再试。`,
+          content: `请在微信开发者工具的云开发控制台中创建「${collection}」集合后再试。可参考 database/${collection}.schema.json 和 database/${collection}.indexes.json。`,
           showCancel: false,
           confirmText: "知道了"
         });
@@ -1048,7 +1035,7 @@ Page({
     const expenseConfig = getExpenseConfig(type);
     const collection = expenseConfig.collection;
     try {
-      await db().collection(collection).doc(id).remove();
+      await dataAccessService.removeDocById(collection, id);
       await addOperationLog({
         title: "删除支出",
         target: expenseConfig.title,

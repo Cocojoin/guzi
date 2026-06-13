@@ -5,6 +5,8 @@
     "auth/pages/register/register",
     "auth/pages/profile/profile",
     "user/pages/goods/list/list",
+    "user/pages/goods/search/search",
+    "user/pages/goods/ip-list/ip-list",
     "user/pages/goods/detail/detail",
     "user/pages/me/index/index",
     "user/pages/me/password/password",
@@ -25,6 +27,9 @@
     "admin/pages/stats/stats",
     "admin/pages/users/users",
     "admin/pages/settings/settings",
+    "admin/pages/settings/ip-groups/ip-groups",
+    "admin/pages/settings/ip-groups/detail/detail",
+    "admin/pages/settings/ip-groups/assign/assign",
     "admin/pages/settings/operation-log/operation-log",
     "admin/pages/settings/data-backup/data-backup",
     "admin/pages/settings/export-data/export-data"

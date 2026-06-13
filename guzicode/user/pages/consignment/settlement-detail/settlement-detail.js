@@ -1,17 +1,12 @@
 const session = require("../../../../utils/session");
 const { formatRatePercent } = require("../../../../utils/consignmentRate");
 const { debounce } = require("../../../../utils/debounce");
-
-const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
+const dataAccessService = require("../../../../utils/dataAccessService");
 
 function formatDate(dateLike) {
   const date = new Date(dateLike || Date.now());
   const pad = (value) => String(value).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-function db() {
-  return wx.cloud.database();
 }
 
 Page({
@@ -49,8 +44,7 @@ Page({
       if (!current || !this.id) {
         throw new Error("结算记录不存在");
       }
-      const detail = await db().collection(SETTLEMENT_RECORDS_COLLECTION).doc(this.id).get();
-      const record = detail.data;
+      const record = await dataAccessService.getDocById("settlement_records", this.id);
       if (!record || record.userId !== current.userId) {
         throw new Error("结算记录不存在");
       }

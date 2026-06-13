@@ -1,0 +1,76 @@
+<view class="management-shell">
+  <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
+      <view class="nav-back" bindtap="goBack"></view>
+      <view class="custom-nav-title">IP 管理</view>
+    </view>
+  </view>
+
+  <view class="management-page ip-page" style="padding-top: {{contentPaddingTop + 18}}px;">
+    <view class="summary-card">
+      <view class="summary-icon">◫</view>
+      <view class="summary-metric">
+        <view class="metric-value">{{stats.groupCount}}</view>
+        <view class="metric-label">IP 总数</view>
+      </view>
+      <view class="summary-metric">
+        <view class="metric-value">{{stats.goodsCount}}</view>
+        <view class="metric-label">商品总数</view>
+      </view>
+      <view class="summary-metric">
+        <view class="metric-value metric-value--accent">{{stats.onSaleCount}}</view>
+        <view class="metric-label">在售</view>
+      </view>
+    </view>
+
+    <view class="section-row">
+      <view class="section-title">全部 IP（{{stats.groupCount}}）</view>
+      <view class="add-btn" bindtap="openCreateModal">＋ 添加 IP</view>
+    </view>
+
+    <view wx:if="{{loading && !hasLoaded}}" class="panel-card empty-card">
+      <view class="empty-title">正在加载 IP 列表…</view>
+    </view>
+
+    <view wx:elif="{{!groups.length}}" class="panel-card empty-card">
+      <view class="empty-title">暂无 IP</view>
+      <view class="empty-desc">先新增一个空 IP，或从商品中自动同步</view>
+    </view>
+
+    <view wx:else class="group-list">
+      <view class="group-card" wx:for="{{groups}}" wx:key="name" data-name="{{item.name}}" bindtap="goDetail">
+        <view class="group-cover group-cover--{{item.tone}}">
+          <text class="group-cover-text">{{item.initials}}</text>
+        </view>
+        <view class="group-main">
+          <view class="group-name-row">
+            <view class="group-name">{{item.name}}</view>
+            <text wx:if="{{item.empty}}" class="empty-badge">空</text>
+          </view>
+          <view class="group-meta">{{item.goodsCount}} 件商品<text wx:if="{{item.onSaleCount}}"> · {{item.onSaleCount}} 在售</text></view>
+        </view>
+        <view class="group-arrow">›</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showCreateModal}}" class="modal-mask" bindtap="closeCreateModal"></view>
+  <view wx:if="{{showCreateModal}}" class="modal-card">
+    <view class="modal-title">新增 IP</view>
+    <view class="modal-desc">输入 IP 名称（如「咒术回战」「BLUE LOCK」）</view>
+    <view class="modal-field">
+      <input
+        class="modal-input"
+        placeholder="IP 名称"
+        placeholder-class="modal-placeholder"
+        value="{{newIpName}}"
+        bindinput="onNameInput"
+      />
+    </view>
+    <view class="modal-actions">
+      <button class="modal-btn modal-btn--ghost" bindtap="closeCreateModal">取消</button>
+      <button class="modal-btn modal-btn--primary" loading="{{submitting}}" bindtap="submitCreate">新增</button>
+    </view>
+  </view>
+</view>

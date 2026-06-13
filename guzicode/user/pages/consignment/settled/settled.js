@@ -1,8 +1,7 @@
 const session = require("../../../../utils/session");
 const usersRepository = require("../../../../utils/usersRepository");
 const { debounce } = require("../../../../utils/debounce");
-
-const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
+const dataAccessService = require("../../../../utils/dataAccessService");
 
 function formatDate(dateLike) {
   const date = new Date(dateLike || Date.now());
@@ -10,27 +9,12 @@ function formatDate(dateLike) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function db() {
-  return wx.cloud.database();
-}
-
 async function fetchSettlementRecordsByUser(userId) {
-  const collection = db().collection(SETTLEMENT_RECORDS_COLLECTION);
-  const pageSize = 100;
-  let skip = 0;
-  const all = [];
-
-  while (true) {
-    const res = await collection.where({ userId }).orderBy("updatedAt", "desc").skip(skip).limit(pageSize).get();
-    const rows = res.data || [];
-    all.push(...rows);
-    if (rows.length < pageSize) {
-      break;
-    }
-    skip += pageSize;
-  }
-
-  return all;
+  return dataAccessService.fetchAll("settlement_records", {
+    where: { userId },
+    orderByField: "updatedAt",
+    orderByDirection: "desc"
+  });
 }
 
 Page({

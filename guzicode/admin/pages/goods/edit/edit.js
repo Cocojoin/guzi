@@ -2,6 +2,7 @@ const productsRepository = require("../../../../utils/productsRepository");
 const usersRepository = require("../../../../utils/usersRepository");
 const { ensureCloudImages } = require("../../../../utils/cloudFile");
 const { addOperationLog, formatFailureContext } = require("../../../../utils/adminSettings");
+const { normalizeIpName } = require("../../../../utils/ipGroupsRepository");
 
 const TYPE_OPTIONS = ["小卡", "吧唧", "镭射票", "自定义"];
 
@@ -30,7 +31,8 @@ Page({
     ownerOptions: [],
     ownerUserMap: {},
     ownerPickerOptions: ["请选择寄售用户"],
-    typeOptions: TYPE_OPTIONS
+    typeOptions: TYPE_OPTIONS,
+    originalIp: ""
   },
 
   async onLoad(options) {
@@ -80,7 +82,8 @@ Page({
           status: product.status,
           remark: product.remark || "",
           images: product.images || []
-        }
+        },
+        originalIp: normalizeIpName(product.ip)
       });
       this.markInitialSnapshot();
     } catch (error) {
@@ -364,11 +367,25 @@ Page({
         type: "商品",
         note: `${form.owner} · ${form.role} · ${form.series}`
       });
+      const previousIp = normalizeIpName(this.data.originalIp);
+      const nextIp = normalizeIpName(form.ip);
+      if (previousIp !== nextIp) {
+        await addOperationLog({
+          title: "商品编辑导致 IP 迁移",
+          target: form.id,
+          type: "IP管理",
+          note: `${previousIp || "未分配"} → ${nextIp || "未分配"}`
+        });
+      }
 
       wx.showToast({
         title: "保存成功",
         icon: "success"
       });
+      this.setData({
+        originalIp: nextIp
+      });
+      this.markInitialSnapshot();
       setTimeout(() => {
         if (options.fromBack) {
           this.doNavigateBack();

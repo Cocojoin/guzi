@@ -1,0 +1,23 @@
+{
+  "collectionName": "material_expenses",
+  "indexes": [
+    {
+      "name": "date_desc",
+      "fields": [
+        {
+          "field": "date",
+          "order": "desc"
+        }
+      ]
+    },
+    {
+      "name": "createdAt_desc",
+      "fields": [
+        {
+          "field": "createdAt",
+          "order": "desc"
+        }
+      ]
+    }
+  ]
+}

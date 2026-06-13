@@ -2,7 +2,8 @@
   <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
     <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
     <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
-      <view class="custom-nav-title">用户管理</view>
+      <view wx:if="{{currentView !== 'userList' && currentView !== 'emptyUser'}}" class="custom-nav-back" bindtap="handleBack"></view>
+      <view class="custom-nav-title">{{currentView === 'userList' || currentView === 'emptyUser' ? '用户管理' : (currentView === 'userGoods' || currentView === 'userGoodsFilters' ? '寄售商品' : (currentView === 'soldGoods' ? '待结算' : (currentView === 'settledList' ? '已结算' : '用户详情')))}}</view>
     </view>
   </view>
   <view class="management-page {{currentView === 'userList' ? 'management-page--list-offset' : ''}} {{multiSelect ? 'management-page--with-bar' : ''}}" style="padding-top: {{contentPaddingTop + 12}}px;">
@@ -111,7 +112,7 @@
     <scroll-view wx:if="{{currentView !== 'userList' && currentView !== 'emptyUser'}}" class="panel-scroll {{currentView === 'soldGoods' ? 'panel-scroll--sold' : ''}}" scroll-y enhanced show-scrollbar="{{false}}">
       
       <!-- Header区：头像 + 昵称 + 账号 -->
-      <view class="detail-card hero-user-card" wx:if="{{currentUser && currentView !== 'settlement' && currentView !== 'settledDetail'}}">
+      <view class="detail-card hero-user-card" wx:if="{{currentUser && currentView !== 'settlement' && currentView !== 'settledDetail' && currentView !== 'userGoods' && currentView !== 'userGoodsFilters' && currentView !== 'soldGoods' && currentView !== 'settledList'}}">
         <view class="avatar-chip">{{currentUser.initial}}</view>
         <view class="list-main">
           <view class="hero-name-line">
@@ -269,7 +270,7 @@
         </view>
       </view>
       
-      <view wx:if="{{currentView === 'userGoods'}}" wx:for="{{filteredUserGoodsItems}}" wx:key="id" class="detail-card goods-card">
+      <view wx:if="{{currentView === 'userGoods'}}" wx:for="{{filteredUserGoodsItems}}" wx:key="id" class="detail-card goods-card" data-id="{{item.id}}" bindtap="goGoodsDetail">
         <view class="goods-media">
           <view class="goods-thumb">
             <image
@@ -348,6 +349,16 @@
         <view class="empty-sub">该用户当前没有已售出待结算商品</view>
       </view>
 
+      <view wx:if="{{currentView === 'settlement'}}" class="settlement-poster-head">
+        <view class="settlement-poster-copy">
+          <view class="mini-title">待结算 · 共 {{settlementItems.length}} 件</view>
+        </view>
+        <view class="settlement-poster-btn" bindtap="generateSettlementPoster">
+          <view class="settlement-poster-btn-icon"></view>
+          <text>{{generatingSettlementPoster ? '生成中' : '生成图片'}}</text>
+        </view>
+      </view>
+
       <view wx:if="{{currentView === 'settlement'}}" class="detail-card section-card settlement-list-card">
         <view wx:for="{{settlementItems}}" wx:key="rowKey" class="settlement-item-row">
           <view class="settlement-item-thumb-wrap">
@@ -367,7 +378,7 @@
             <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
           </view>
           <view class="settlement-item-side">
-            <view class="price">¥{{item.totalPrice}}</view>
+            <view class="price">¥{{item.payableText || item.totalPrice}}</view>
             <view class="list-subtitle">单价：¥{{item.price}}</view>
           </view>
         </view>
@@ -475,7 +486,7 @@
             <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
           </view>
           <view class="settlement-item-side">
-            <view class="price">¥{{item.totalPrice}}</view>
+            <view class="price">¥{{item.payableText || item.totalPrice}}</view>
             <view class="list-subtitle">单价：¥{{item.price}}</view>
           </view>
         </view>
@@ -528,6 +539,39 @@
       </view>
     </view>
 
+    <view wx:if="{{showSettlementPosterPreview}}" class="poster-preview-mask" bindtap="closeSettlementPosterPreview" catchtouchmove="preventBubble">
+      <view class="poster-preview-dialog" catchtap="preventBubble">
+        <view class="poster-preview-card">
+          <swiper
+            wx:if="{{settlementPosterImages.length > 1}}"
+            class="poster-preview-swiper"
+            current="{{settlementPosterCurrent}}"
+            bindchange="onSettlementPosterChange"
+            circular="{{false}}"
+          >
+            <swiper-item wx:for="{{settlementPosterImages}}" wx:key="*this">
+              <image class="poster-preview-image" src="{{item}}" mode="aspectFit" bindtap="previewCurrentSettlementPoster" />
+            </swiper-item>
+          </swiper>
+          <view wx:else class="poster-preview-single">
+            <image
+              class="poster-preview-image"
+              src="{{settlementPosterImages[0]}}"
+              mode="aspectFit"
+              bindtap="previewCurrentSettlementPoster"
+            />
+          </view>
+        </view>
+        <view wx:if="{{settlementPosterImages.length > 1}}" class="poster-preview-page">
+          第 {{settlementPosterCurrent + 1}} 张 / 共 {{settlementPosterImages.length}} 张
+        </view>
+        <view class="poster-preview-actions">
+          <view class="poster-preview-action" bindtap="closeSettlementPosterPreview">关闭</view>
+          <view class="poster-preview-action poster-preview-action--primary" bindtap="saveSettlementPosterImages">保存到相册</view>
+        </view>
+      </view>
+    </view>
+
   </view>
 
   <!-- 底部导航 -->
@@ -557,4 +601,12 @@
       <view class="nav-label">设置</view>
     </view>
   </view>
+
+  <canvas
+    canvas-id="settlementPosterCanvas"
+    class="poster-canvas"
+    style="width: {{posterCanvasWidth}}px; height: {{posterCanvasHeight}}px;"
+    width="{{posterCanvasWidth}}"
+    height="{{posterCanvasHeight}}"
+  ></canvas>
 </view>

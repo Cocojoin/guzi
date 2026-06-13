@@ -4,28 +4,14 @@ const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
 const { formatRatePercent, getUserRateFraction } = require("../../../../utils/consignmentRate");
 const { debounce } = require("../../../../utils/debounce");
-
-function db() {
-  return wx.cloud.database();
-}
+const dataAccessService = require("../../../../utils/dataAccessService");
 
 async function fetchSettlementRecordsByUser(userId) {
-  const collection = db().collection("settlement_records");
-  const pageSize = 100;
-  let skip = 0;
-  const all = [];
-
-  while (true) {
-    const res = await collection.where({ userId }).orderBy("updatedAt", "desc").skip(skip).limit(pageSize).get();
-    const rows = res.data || [];
-    all.push(...rows);
-    if (rows.length < pageSize) {
-      break;
-    }
-    skip += pageSize;
-  }
-
-  return all;
+  return dataAccessService.fetchAll("settlement_records", {
+    where: { userId },
+    orderByField: "updatedAt",
+    orderByDirection: "desc"
+  });
 }
 
 function belongsToUser(product, user) {

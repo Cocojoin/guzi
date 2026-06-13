@@ -118,6 +118,11 @@
   color: #5f61c8;
 }
 
+.setting-icon--rose {
+  background: linear-gradient(180deg, rgba(251, 213, 234, 0.92), rgba(242, 190, 219, 0.92));
+  color: #d45c8c;
+}
+
 .setting-icon--blue {
   background: linear-gradient(180deg, rgba(206, 233, 255, 0.92), rgba(187, 222, 248, 0.92));
   color: #4c86d8;

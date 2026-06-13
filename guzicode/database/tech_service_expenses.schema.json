@@ -1,0 +1,36 @@
+{
+  "collectionName": "tech_service_expenses",
+  "description": "技术服务支出记录，存储技术服务类成本",
+  "fields": [
+    {
+      "name": "amount",
+      "type": "number",
+      "required": true,
+      "description": "支出金额"
+    },
+    {
+      "name": "date",
+      "type": "string",
+      "required": true,
+      "description": "发生日期，格式 YYYY-MM-DD"
+    },
+    {
+      "name": "note",
+      "type": "string",
+      "required": false,
+      "description": "备注说明"
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "required": true,
+      "description": "创建时间"
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "required": true,
+      "description": "更新时间"
+    }
+  ]
+}

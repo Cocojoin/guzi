@@ -5,16 +5,51 @@ const { navigateAdminRoot } = require("../../../utils/adminNavigation");
 const { debounce } = require("../../../utils/debounce");
 const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, settleSpecificSoldBatch } = require("../../../utils/consignmentRate");
 const { ensureCloudImages } = require("../../../utils/cloudFile");
+const dataAccessService = require("../../../utils/dataAccessService");
 const usersRepository = require("../../../utils/usersRepository");
 const authService = require("../../../utils/authService");
 const session = require("../../../utils/session");
 
-function db() {
-  return wx.cloud.database();
-}
+const POSTER_CANVAS_WIDTH = 620;
+const POSTER_CARD_WIDTH = 510;
+const POSTER_PADDING = 38;
+const POSTER_FIRST_PAGE_LIMIT = 4;
+const POSTER_NEXT_PAGE_LIMIT = 6;
 
 function fmt2(value) {
   return Number(value || 0).toFixed(2);
+}
+
+function calcPayableAmount(price, quantity, rateFraction) {
+  const grossAmount = Number(price || 0) * Number(quantity || 0);
+  const commissionAmount = grossAmount * normalizeRateFraction(rateFraction);
+  return grossAmount - commissionAmount;
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatDateTimeLabel(value) {
+  const date = new Date(value || Date.now());
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+function formatCompactDate(value) {
+  const date = new Date(value || Date.now());
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}`;
+}
+
+function buildDraftSettlementNo(user, now = Date.now()) {
+  const datePart = formatCompactDate(now);
+  const userPart = String((user && (user.id || user._id || user.account)) || "").replace(/\W/g, "").slice(-4).padStart(4, "0");
+  return `JS${datePart}${userPart}`;
 }
 
 function formatDateLabel(value) {
@@ -52,6 +87,41 @@ function roleTypeFromUser(user) {
   return "normal";
 }
 
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
+function productBelongsToUser(product, user) {
+  if (!product || !user) {
+    return false;
+  }
+
+  const productOwnerUserId = normalizeText(product.ownerUserId);
+  const userId = normalizeText(user.id || user._id);
+  if (productOwnerUserId && userId && productOwnerUserId === userId) {
+    return true;
+  }
+
+  const productOwner = normalizeText(product.owner);
+  if (!productOwner) {
+    return false;
+  }
+
+  const userNickname = normalizeText(user.nickname || user.name);
+  const userAccount = normalizeText(user.account);
+  const userIdText = normalizeText(user.id || user._id);
+  
+  // 额外匹配：商品 owner 匹配用户的 id 字段
+  if (userIdText && productOwner === userIdText) {
+    return true;
+  }
+
+  return Boolean(
+    (userNickname && productOwner === userNickname)
+    || (userAccount && productOwner === userAccount)
+  );
+}
+
 function canDeleteUser(user) {
   return !!(user && user.id);
 }
@@ -66,6 +136,8 @@ function buildPendingSettlementItems(product, fallbackRateFraction) {
       }
       const rateFraction = normalizeRateFraction(batch.rateFraction);
       const price = Number(product.price || 0);
+      const totalPrice = price * unsettledQty;
+      const payableAmount = calcPayableAmount(price, unsettledQty, rateFraction);
       return {
         id: product._id,
         rowKey: `${product._id}-${batchIndex}`,
@@ -73,7 +145,9 @@ function buildPendingSettlementItems(product, fallbackRateFraction) {
         title: `${product.role || ""} · ${product.series || ""}`.trim(),
         soldQty: unsettledQty,
         price,
-        totalPrice: price * unsettledQty,
+        totalPrice,
+        payableAmount,
+        payableText: fmt2(payableAmount),
         rate: Number((rateFraction * 100).toFixed(2)),
         rateFraction,
         batchIndex,
@@ -150,6 +224,14 @@ Page({
     settledTotalPayable: "0.00",
     settledTotalItems: 0,
     settledTotalTimes: 0,
+    generatingSettlementPoster: false,
+    showSettlementPosterPreview: false,
+    settlementPosterImages: [],
+    settlementPosterCurrent: 0,
+    settlementPosterOrderNo: "",
+    settlementPosterDateText: "",
+    posterCanvasWidth: POSTER_CANVAS_WIDTH,
+    posterCanvasHeight: 1200,
     isEditing: false,
     editingField: null,
     tempData: { nickname: "", contact: "", rate: "" },
@@ -304,11 +386,9 @@ Page({
           const owner = String(p.owner || "").trim();
           const ownerUserId = idByNickname[owner] || idByAccount[owner] || "";
           if (!ownerUserId) return Promise.resolve();
-          return db().collection(PRODUCTS_COLLECTION).doc(p._id).update({
-            data: {
-              ownerUserId,
-              updatedAt: new Date()
-            }
+          return dataAccessService.updateDocById(PRODUCTS_COLLECTION, p._id, {
+            ownerUserId,
+            updatedAt: new Date()
           });
         })
       );
@@ -318,19 +398,7 @@ Page({
   },
 
   async fetchAll(collectionName, where = null) {
-    const list = [];
-    const pageSize = 100;
-    let skip = 0;
-    while (true) {
-      let query = db().collection(collectionName);
-      if (where) query = query.where(where);
-      const res = await query.skip(skip).limit(pageSize).get({ latest: true });
-      const rows = res.data || [];
-      list.push(...rows);
-      if (rows.length < pageSize) break;
-      skip += pageSize;
-    }
-    return list;
+    return dataAccessService.fetchAll(collectionName, { where });
   },
 
   async loadUsersFromDb() {
@@ -432,8 +500,18 @@ Page({
 
   async refreshUserStats() {
     const products = await this.fetchAll(PRODUCTS_COLLECTION);
+    console.log("[refreshUserStats] Total products:", products.length);
+    
     const users = (this.data.users || []).map((user) => {
-      const matched = products.filter((p) => p.ownerUserId === user.id);
+      const matched = products.filter((p) => productBelongsToUser(p, user));
+      if (user.roleType === "consignment" && matched.length > 0) {
+        console.log("[refreshUserStats] User:", user.nickname, "| matched products:", matched.length, "| owner values:", matched.map(p => ({ owner: p.owner, ownerUserId: p.ownerUserId })));
+      }
+      if (user.roleType === "consignment" && matched.length === 0) {
+        console.log("[refreshUserStats] User with 0 products:", user.nickname, "| user.id:", user.id, "| user.account:", user.account);
+        const sampleOwners = products.slice(0, 3).map(p => ({ owner: p.owner, ownerUserId: p.ownerUserId, id: p.id }));
+        console.log("[refreshUserStats] Sample products:", JSON.stringify(sampleOwners));
+      }
       const goodsCount = matched.reduce((s, p) => s + Number(p.totalQuantity || 0), 0);
       const soldCount = matched.reduce((s, p) => s + Math.max(0, Number(p.soldCount || 0) - Number(p.settledCount || 0)), 0);
       const settledCount = matched.reduce((s, p) => s + Number(p.settledCount || 0), 0);
@@ -512,7 +590,7 @@ Page({
   async loadUserGoodsForCurrentUser() {
     const user = this.data.currentUser;
     if (!user) return;
-    const products = await this.fetchAll(PRODUCTS_COLLECTION, { ownerUserId: user.id });
+    const products = (await this.fetchAll(PRODUCTS_COLLECTION)).filter((p) => productBelongsToUser(p, user));
     // 按 _id 去重，避免重复显示
     const uniqueProductsMap = new Map();
     products.forEach(p => {
@@ -530,7 +608,7 @@ Page({
       const coverImage = Array.isArray(p.images) ? (p.images[0] || "") : "";
       
       return {
-        id: p._id,
+        id: p.id || p._id,
         title: `${p.role || ""} · ${p.series || ""}`.trim(),
         owner: p.owner || "-",
         ip: p.ip || "-",
@@ -581,6 +659,15 @@ Page({
       ...this.getViewCopy("userList")
     });
     await this.loadUsersFromDb();
+  },
+
+  goGoodsDetail(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id) return;
+
+    wx.navigateTo({
+      url: `/admin/pages/goods/detail/detail?id=${id}`
+    });
   },
 
   handleEditProfile() {
@@ -670,7 +757,7 @@ Page({
         Math.abs(previousRateFraction - nextRateFraction) > 0.000001
       ) {
         const products = await this.fetchAll(PRODUCTS_COLLECTION);
-        const ownedProducts = products.filter((item) => item.ownerUserId === currentUser.id);
+        const ownedProducts = products.filter((item) => productBelongsToUser(item, currentUser));
         await Promise.all(
           ownedProducts.map(async (product) => {
             const pendingQty = Math.max(0, Number(product.soldCount || 0) - Number(product.settledCount || 0));
@@ -678,11 +765,9 @@ Page({
               return;
             }
             const nextBatches = ensurePendingSoldBatches(product, previousRateFraction);
-            await db().collection(PRODUCTS_COLLECTION).doc(product._id).update({
-              data: {
-                soldBatches: nextBatches,
-                updatedAt: new Date()
-              }
+            await dataAccessService.updateDocById(PRODUCTS_COLLECTION, product._id, {
+              soldBatches: nextBatches,
+              updatedAt: new Date()
             });
           })
         );
@@ -758,7 +843,7 @@ Page({
       // 如果是关闭权限，需要将该用户所有已上架的商品下架
       if (!canConsign) {
         const allProducts = await this.fetchAll(PRODUCTS_COLLECTION);
-        const userProducts = allProducts.filter((item) => item.ownerUserId === user.id);
+        const userProducts = allProducts.filter((item) => productBelongsToUser(item, user));
         productsToUpdate = userProducts.filter((p) => {
           const totalQuantity = Number(p.totalQuantity || 0);
           const soldCount = Number(p.soldCount || 0);
@@ -768,11 +853,9 @@ Page({
         
         await Promise.all(
           productsToUpdate.map((item) =>
-            db().collection(PRODUCTS_COLLECTION).doc(item._id).update({
-              data: {
-                status: "down",
-                updatedAt: new Date()
-              }
+            dataAccessService.updateDocById(PRODUCTS_COLLECTION, item._id, {
+              status: "down",
+              updatedAt: new Date()
             })
           )
         );
@@ -1011,7 +1094,7 @@ Page({
           const allProducts = await this.fetchAll(PRODUCTS_COLLECTION);
           const relatedProducts = allProducts.filter((item) => this.data.selectedUserIds.includes(item.ownerUserId));
 
-          await Promise.all(relatedProducts.map((item) => db().collection(PRODUCTS_COLLECTION).doc(item._id).remove()));
+          await Promise.all(relatedProducts.map((item) => dataAccessService.removeDocById(PRODUCTS_COLLECTION, item._id)));
           await usersRepository.adminDeleteUsers(this.data.selectedUserIds);
           await addOperationLog({
             title: "批量删除用户",
@@ -1050,7 +1133,7 @@ Page({
       this.clearPageError();
       const products = await this.fetchAll(PRODUCTS_COLLECTION);
       const soldItems = products
-        .filter((p) => p.ownerUserId === user.id && Number(p.soldCount || 0) > Number(p.settledCount || 0))
+        .filter((p) => productBelongsToUser(p, user) && Number(p.soldCount || 0) > Number(p.settledCount || 0))
         .flatMap((p) => buildPendingSettlementItems(p, getUserRateFraction(user)));
       this.setData({ soldItems });
       this.recalcSoldSummary();
@@ -1087,7 +1170,9 @@ Page({
         ...item,
         rateFraction: normalizeRateFraction(item.rateFraction),
         rate: Number(item.rate || 0),
-        totalPrice: item.price * item.soldQty
+        totalPrice: item.price * item.soldQty,
+        payableAmount: calcPayableAmount(item.price, item.soldQty, item.rateFraction),
+        payableText: fmt2(calcPayableAmount(item.price, item.soldQty, item.rateFraction))
       })),
       settlementGross: fmt2(settlementGross),
       settlementCommission: fmt2(settlementCommission),
@@ -1101,6 +1186,577 @@ Page({
 
   onSettlementIncomeInput(event) {
     this.setData({ settlementActualIncome: event.detail.value || "" });
+  },
+
+  setDataAsync(nextData) {
+    return new Promise((resolve) => {
+      this.setData(nextData, resolve);
+    });
+  },
+
+  async resolvePosterImagePath(imageUrl) {
+    const src = String(imageUrl || "").trim();
+    if (!src) {
+      return "";
+    }
+    this._posterImageCache = this._posterImageCache || {};
+    if (this._posterImageCache[src]) {
+      return this._posterImageCache[src];
+    }
+
+    let resolved = src;
+    if (/^cloud:\/\//i.test(src)) {
+      const res = await wx.cloud.getTempFileURL({ fileList: [src] });
+      const tempFile = (res.fileList || [])[0];
+      if (!tempFile || tempFile.status !== 0 || !tempFile.tempFileURL) {
+        throw new Error("图片加载失败");
+      }
+      resolved = tempFile.tempFileURL;
+    }
+
+    if (/^https?:\/\//i.test(resolved)) {
+      resolved = await new Promise((resolve, reject) => {
+        wx.downloadFile({
+          url: resolved,
+          success: (res) => {
+            if (res.statusCode >= 200 && res.statusCode < 300 && res.tempFilePath) {
+              resolve(res.tempFilePath);
+              return;
+            }
+            reject(new Error("图片下载失败"));
+          },
+          fail: () => reject(new Error("图片下载失败"))
+        });
+      });
+    }
+
+    this._posterImageCache[src] = resolved;
+    return resolved;
+  },
+
+  splitSettlementPosterPages(items = []) {
+    const source = Array.isArray(items) ? items : [];
+    if (!source.length) {
+      return [];
+    }
+    const pages = [];
+    const firstPageItems = source.slice(0, POSTER_FIRST_PAGE_LIMIT);
+    const remainItems = source.slice(POSTER_FIRST_PAGE_LIMIT);
+
+    pages.push({
+      items: firstPageItems,
+      showSummary: remainItems.length === 0,
+      showFooter: remainItems.length === 0
+    });
+
+    for (let index = 0; index < remainItems.length; index += POSTER_NEXT_PAGE_LIMIT) {
+      const chunk = remainItems.slice(index, index + POSTER_NEXT_PAGE_LIMIT);
+      pages.push({
+        items: chunk,
+        showSummary: index + POSTER_NEXT_PAGE_LIMIT >= remainItems.length,
+        showFooter: index + POSTER_NEXT_PAGE_LIMIT >= remainItems.length
+      });
+    }
+
+    return pages.map((page, index) => ({
+      ...page,
+      pageNo: index + 1,
+      totalPages: pages.length
+    }));
+  },
+
+  buildSettlementPosterMeta() {
+    const user = this.data.currentUser || {};
+    const now = Date.now();
+    const settlementItems = Array.isArray(this.data.settlementItems) ? this.data.settlementItems : [];
+    const rateSet = Array.from(new Set(
+      settlementItems
+        .map((item) => Number(item.rate))
+        .filter((rate) => Number.isFinite(rate))
+        .map((rate) => rate.toFixed(rate % 1 === 0 ? 0 : 2))
+    ));
+    const commissionLabel = rateSet.length === 1 ? `平台抽成（${rateSet[0]}%）` : "平台抽成";
+    return {
+      platformName: "谷圈星社",
+      englishTitle: "CONSIGNMENT SETTLEMENT",
+      chineseTitle: "寄售结算单",
+      orderNo: buildDraftSettlementNo(user, now),
+      userName: user.nickname || user.name || "寄售用户",
+      userIdText: `UID ${user.id || user._id || user.account || "-"}`,
+      dateText: formatDateLabel(now),
+      timeText: formatDateTimeLabel(now),
+      grossText: fmt2(this.data.settlementGross),
+      commissionText: fmt2(this.data.settlementCommission),
+      payableText: fmt2(this.data.settlementPayable),
+      commissionLabel
+    };
+  },
+
+  getPosterCanvasHeight(pageInfo) {
+    const itemCount = (pageInfo.items || []).length;
+    const headerHeight = pageInfo.pageNo === 1 ? 370 : 248;
+    const rowHeight = 112;
+    const summaryHeight = pageInfo.showSummary ? 208 : 0;
+    const footerHeight = pageInfo.showFooter ? 92 : 38;
+    return Math.max(860, headerHeight + itemCount * rowHeight + summaryHeight + footerHeight);
+  },
+
+  drawRoundedRectPath(ctx, x, y, width, height, radius) {
+    const r = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + width, y, x + width, y + height, r);
+    ctx.arcTo(x + width, y + height, x, y + height, r);
+    ctx.arcTo(x, y + height, x, y, r);
+    ctx.arcTo(x, y, x + width, y, r);
+    ctx.closePath();
+  },
+
+  fillRoundedRect(ctx, x, y, width, height, radius, color) {
+    ctx.save();
+    this.drawRoundedRectPath(ctx, x, y, width, height, radius);
+    ctx.setFillStyle(color);
+    ctx.fill();
+    ctx.restore();
+  },
+
+  strokeRoundedRect(ctx, x, y, width, height, radius, color, lineWidth = 1) {
+    ctx.save();
+    this.drawRoundedRectPath(ctx, x, y, width, height, radius);
+    ctx.setStrokeStyle(color);
+    ctx.setLineWidth(lineWidth);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  truncateCanvasText(ctx, text, maxWidth) {
+    const content = String(text || "");
+    if (!content) {
+      return "";
+    }
+    if (ctx.measureText(content).width <= maxWidth) {
+      return content;
+    }
+    let output = content;
+    while (output.length > 0 && ctx.measureText(`${output}...`).width > maxWidth) {
+      output = output.slice(0, -1);
+    }
+    return `${output}...`;
+  },
+
+  drawCanvasTextPair(ctx, label, value, leftX, rightX, y, options = {}) {
+    const {
+      labelColor = "#8d806d",
+      valueColor = "#373737",
+      labelSize = 14,
+      valueSize = 15,
+      valueMaxWidth = 240
+    } = options;
+    ctx.setTextAlign("left");
+    ctx.setFillStyle(labelColor);
+    ctx.setFontSize(labelSize);
+    ctx.fillText(label, leftX, y);
+    ctx.setTextAlign("right");
+    ctx.setFillStyle(valueColor);
+    ctx.setFontSize(valueSize);
+    ctx.fillText(this.truncateCanvasText(ctx, value, valueMaxWidth), rightX, y);
+  },
+
+  drawSettlementPosterCover(ctx, item, imagePath, x, y, size) {
+    if (imagePath) {
+      try {
+        ctx.save();
+        this.drawRoundedRectPath(ctx, x, y, size, size, 14);
+        ctx.clip();
+        ctx.drawImage(imagePath, x, y, size, size);
+        ctx.restore();
+        return;
+      } catch (error) {
+        try {
+          ctx.restore();
+        } catch (e) {}
+      }
+    }
+
+    const gradient = ctx.createLinearGradient(x, y, x + size, y + size);
+    gradient.addColorStop(0, "#d7b4ff");
+    gradient.addColorStop(1, "#87c8ff");
+    this.fillRoundedRect(ctx, x, y, size, size, 14, gradient);
+    ctx.setFillStyle("#ffffff");
+    ctx.setFontSize(22);
+    ctx.setTextAlign("center");
+    ctx.setTextBaseline("middle");
+    const fallback = String((item.title || item.series || "谷").trim()).slice(0, 2);
+    ctx.fillText(fallback || "谷", x + size / 2, y + size / 2);
+    ctx.setTextAlign("left");
+    ctx.setTextBaseline("alphabetic");
+  },
+
+  async renderSettlementPosterPage(pageInfo, meta, localImageMap) {
+    const canvasHeight = this.getPosterCanvasHeight(pageInfo);
+    await this.setDataAsync({
+      posterCanvasWidth: POSTER_CANVAS_WIDTH,
+      posterCanvasHeight: canvasHeight
+    });
+
+    const ctx = wx.createCanvasContext("settlementPosterCanvas", this);
+    ctx.setFillStyle("#f7f3eb");
+    ctx.fillRect(0, 0, POSTER_CANVAS_WIDTH, canvasHeight);
+    const bg = ctx.createLinearGradient(0, 0, POSTER_CANVAS_WIDTH, canvasHeight);
+    bg.addColorStop(0, "rgba(255,255,255,0.28)");
+    bg.addColorStop(1, "rgba(244,236,224,0.08)");
+    ctx.setFillStyle(bg);
+    ctx.fillRect(0, 0, POSTER_CANVAS_WIDTH, canvasHeight);
+
+    const cardX = (POSTER_CANVAS_WIDTH - POSTER_CARD_WIDTH) / 2;
+    const cardY = 22;
+    const cardHeight = canvasHeight - 44;
+    this.fillRoundedRect(ctx, cardX, cardY, POSTER_CARD_WIDTH, cardHeight, 8, "#fffdfa");
+    this.strokeRoundedRect(ctx, cardX, cardY, POSTER_CARD_WIDTH, cardHeight, 8, "rgba(216, 204, 184, 0.9)", 1);
+
+    let cursorY = cardY + POSTER_PADDING;
+    const leftX = cardX + 30;
+    const rightX = cardX + POSTER_CARD_WIDTH - 30;
+
+    ctx.setFillStyle("#313131");
+    ctx.setTextAlign("center");
+    ctx.setFontSize(28);
+    ctx.fillText(meta.platformName, cardX + POSTER_CARD_WIDTH / 2, cursorY);
+    cursorY += 34;
+
+    ctx.setFillStyle("#b3a793");
+    ctx.setFontSize(11);
+    ctx.fillText(meta.englishTitle, cardX + POSTER_CARD_WIDTH / 2, cursorY);
+    cursorY += 34;
+
+    ctx.setFillStyle("#434343");
+    ctx.setFontSize(18);
+    ctx.fillText(pageInfo.pageNo === 1 ? meta.chineseTitle : "寄售结算单 · 续页", cardX + POSTER_CARD_WIDTH / 2, cursorY);
+    cursorY += 24;
+
+    if (pageInfo.totalPages > 1) {
+      ctx.setFillStyle("#b7ab96");
+      ctx.setFontSize(11);
+      ctx.fillText(`第 ${pageInfo.pageNo} 张 / 共 ${pageInfo.totalPages} 张`, cardX + POSTER_CARD_WIDTH / 2, cursorY);
+      cursorY += 22;
+    } else {
+      cursorY += 4;
+    }
+
+    ctx.setStrokeStyle("#d9cebf");
+    ctx.setLineWidth(1);
+    ctx.setLineDash([4, 4], 0);
+    ctx.beginPath();
+    ctx.moveTo(leftX, cursorY);
+    ctx.lineTo(rightX, cursorY);
+    ctx.stroke();
+    ctx.setLineDash([], 0);
+    cursorY += 28;
+
+    if (pageInfo.pageNo === 1) {
+      const infoRows = [
+        ["结算单号", meta.orderNo],
+        ["寄售用户", meta.userName],
+        ["结算日期", meta.dateText]
+      ];
+      infoRows.forEach(([label, value]) => {
+        this.drawCanvasTextPair(ctx, label, value, leftX, rightX, cursorY, {
+          labelColor: "#897c68",
+          valueColor: "#343434",
+          labelSize: 14,
+          valueSize: 15,
+          valueMaxWidth: 260
+        });
+        cursorY += 34;
+      });
+
+      ctx.setStrokeStyle("#d9cebf");
+      ctx.setLineDash([4, 4], 0);
+      ctx.beginPath();
+      ctx.moveTo(leftX, cursorY - 10);
+      ctx.lineTo(rightX, cursorY - 10);
+      ctx.stroke();
+      ctx.setLineDash([], 0);
+      cursorY += 24;
+    } else {
+      this.drawCanvasTextPair(ctx, "结算单号", meta.orderNo, leftX, rightX, cursorY, {
+        labelColor: "#8d806d",
+        valueColor: "#343434",
+        labelSize: 13,
+        valueSize: 14,
+        valueMaxWidth: 250
+      });
+      cursorY += 24;
+      this.drawCanvasTextPair(ctx, "寄售用户", meta.userName, leftX, rightX, cursorY, {
+        labelColor: "#8d806d",
+        valueColor: "#343434",
+        labelSize: 13,
+        valueSize: 14,
+        valueMaxWidth: 250
+      });
+      cursorY += 30;
+    }
+
+    ctx.setFillStyle("#b3a793");
+    ctx.setTextAlign("left");
+    ctx.setFontSize(13);
+    ctx.fillText("商品 · 名称 / 类型", leftX, cursorY);
+    ctx.setTextAlign("right");
+    ctx.fillText("抽成后金额", rightX, cursorY);
+    cursorY += 20;
+
+    const thumbSize = 64;
+    (pageInfo.items || []).forEach((item, index) => {
+      if (index > 0) {
+        ctx.setStrokeStyle("#efe4d3");
+        ctx.setLineWidth(1);
+        ctx.setLineDash([2, 2], 0);
+        ctx.beginPath();
+        ctx.moveTo(leftX, cursorY);
+        ctx.lineTo(rightX, cursorY);
+        ctx.stroke();
+        ctx.setLineDash([], 0);
+        cursorY += 18;
+      }
+
+      const imagePath = localImageMap[item.rowKey] || "";
+      this.drawSettlementPosterCover(ctx, item, imagePath, leftX, cursorY, thumbSize);
+
+      const titleX = leftX + thumbSize + 16;
+      const titleWidth = 220;
+      ctx.setFillStyle("#3a3a3a");
+      ctx.setTextAlign("left");
+      ctx.setFontSize(16);
+      ctx.fillText(this.truncateCanvasText(ctx, item.title || "-", titleWidth), titleX, cursorY + 18);
+
+      ctx.setFillStyle("#938670");
+      ctx.setFontSize(13);
+      ctx.fillText(this.truncateCanvasText(ctx, item.type || "-", titleWidth), titleX, cursorY + 42);
+
+      ctx.setFillStyle("#a89881");
+      ctx.setFontSize(12);
+      ctx.fillText(`标价 ¥${fmt2(item.price)} · 数量 ${item.soldQty || 1}`, titleX + 104, cursorY + 42);
+
+      ctx.setFillStyle("#343434");
+      ctx.setTextAlign("right");
+      ctx.setFontSize(17);
+      ctx.fillText(`¥${fmt2(item.payableAmount != null ? item.payableAmount : item.totalPrice)}`, rightX, cursorY + 18);
+
+      cursorY += 82;
+    });
+
+    if (pageInfo.showSummary) {
+      cursorY += 20;
+      ctx.setStrokeStyle("#d9cebf");
+      ctx.setLineDash([4, 4], 0);
+      ctx.beginPath();
+      ctx.moveTo(leftX, cursorY);
+      ctx.lineTo(rightX, cursorY);
+      ctx.stroke();
+      ctx.setLineDash([], 0);
+      cursorY += 34;
+
+      const summaryRows = [
+        ["商品总额（寄售价）", `¥${meta.grossText}`],
+        [meta.commissionLabel || "平台抽成", `-¥${meta.commissionText}`]
+      ];
+      summaryRows.forEach(([label, value]) => {
+        this.drawCanvasTextPair(ctx, label, value, leftX, rightX, cursorY, {
+          labelColor: "#6f6558",
+          valueColor: "#5a5248",
+          labelSize: 15,
+          valueSize: 15,
+          valueMaxWidth: 180
+        });
+        cursorY += 34;
+      });
+
+      ctx.setStrokeStyle("#d9cebf");
+      ctx.setLineDash([4, 4], 0);
+      ctx.beginPath();
+      ctx.moveTo(leftX, cursorY - 8);
+      ctx.lineTo(rightX, cursorY - 8);
+      ctx.stroke();
+      ctx.setLineDash([], 0);
+      cursorY += 34;
+
+      ctx.setFillStyle("#2f2f2f");
+      ctx.setFontSize(18);
+      ctx.setTextAlign("left");
+      ctx.fillText("应付寄售用户", leftX, cursorY);
+
+      ctx.setFillStyle("#ef617b");
+      ctx.setTextAlign("right");
+      ctx.setFontSize(29);
+      ctx.fillText(`¥${meta.payableText}`, rightX, cursorY);
+      cursorY += 36;
+    }
+
+    if (pageInfo.showFooter) {
+      cursorY += 18;
+    } else {
+      cursorY += 8;
+    }
+
+    ctx.setFillStyle("#bcaf99");
+    ctx.setFontSize(11);
+    ctx.setTextAlign("center");
+    ctx.fillText(`${meta.timeText}  ·  ${meta.orderNo}  ·  谷圈星社`, cardX + POSTER_CARD_WIDTH / 2, cursorY);
+
+    await new Promise((resolve) => ctx.draw(false, resolve));
+
+    return new Promise((resolve, reject) => {
+      wx.canvasToTempFilePath(
+        {
+          canvasId: "settlementPosterCanvas",
+          width: POSTER_CANVAS_WIDTH,
+          height: canvasHeight,
+          destWidth: POSTER_CANVAS_WIDTH * 2,
+          destHeight: canvasHeight * 2,
+          fileType: "png",
+          quality: 1,
+          success: (res) => resolve(res.tempFilePath),
+          fail: reject
+        },
+        this
+      );
+    }).catch(() => {
+      return new Promise((resolve, reject) => {
+        wx.canvasToTempFilePath(
+          {
+            canvasId: "settlementPosterCanvas",
+            width: POSTER_CANVAS_WIDTH,
+            height: canvasHeight,
+            fileType: "png",
+            quality: 1,
+            success: (res) => resolve(res.tempFilePath),
+            fail: reject
+          },
+          this
+        );
+      });
+    });
+  },
+
+  async generateSettlementPoster() {
+    const items = this.data.settlementItems || [];
+    if (!items.length) {
+      wx.showToast({ title: "请先选择待结算商品", icon: "none" });
+      return;
+    }
+    if (this.data.generatingSettlementPoster) {
+      return;
+    }
+
+    this.clearPageError();
+    await this.setDataAsync({ generatingSettlementPoster: true });
+    wx.showLoading({ title: "生成中...", mask: true });
+
+    try {
+      const pages = this.splitSettlementPosterPages(items);
+      const meta = this.buildSettlementPosterMeta();
+      const localImageMap = {};
+
+      await Promise.all(
+        items.map(async (item) => {
+          if (!item.coverImage) {
+            return;
+          }
+          try {
+            localImageMap[item.rowKey] = await this.resolvePosterImagePath(item.coverImage);
+          } catch (error) {
+            localImageMap[item.rowKey] = "";
+          }
+        })
+      );
+
+      const posterImages = [];
+      for (const pageInfo of pages) {
+        const filePath = await this.renderSettlementPosterPage(pageInfo, meta, localImageMap);
+        posterImages.push(filePath);
+      }
+
+      await this.setDataAsync({
+        showSettlementPosterPreview: true,
+        settlementPosterImages: posterImages,
+        settlementPosterCurrent: 0,
+        settlementPosterOrderNo: meta.orderNo,
+        settlementPosterDateText: meta.dateText
+      });
+    } catch (error) {
+      console.error("generateSettlementPoster error:", error);
+      this.handlePageError(error, "图片生成失败，请重试");
+      wx.showToast({ title: "图片生成失败，请重试", icon: "none" });
+    } finally {
+      wx.hideLoading();
+      await this.setDataAsync({ generatingSettlementPoster: false });
+    }
+  },
+
+  closeSettlementPosterPreview() {
+    this.setData({ showSettlementPosterPreview: false });
+  },
+
+  onSettlementPosterChange(event) {
+    this.setData({ settlementPosterCurrent: Number(event.detail.current || 0) });
+  },
+
+  previewCurrentSettlementPoster() {
+    const images = this.data.settlementPosterImages || [];
+    if (!images.length) {
+      return;
+    }
+    const current = images[this.data.settlementPosterCurrent] || images[0];
+    wx.previewImage({
+      current,
+      urls: images
+    });
+  },
+
+  async saveSettlementPosterImages() {
+    const images = this.data.settlementPosterImages || [];
+    if (!images.length) {
+      return;
+    }
+
+    wx.showLoading({ title: "保存中...", mask: true });
+    let savedCount = 0;
+    try {
+      for (const filePath of images) {
+        await new Promise((resolve, reject) => {
+          wx.saveImageToPhotosAlbum({
+            filePath,
+            success: resolve,
+            fail: reject
+          });
+        });
+        savedCount += 1;
+      }
+      wx.showToast({
+        title: savedCount > 1 ? `已保存 ${savedCount} 张结算图片` : "已保存到相册",
+        icon: "success"
+      });
+    } catch (error) {
+      const errMsg = String((error && error.errMsg) || "");
+      if (/auth deny|auth denied/i.test(errMsg)) {
+        wx.showModal({
+          title: "需要相册权限",
+          content: "请开启相册写入权限后重试",
+          confirmText: "去开启",
+          success: ({ confirm }) => {
+            if (confirm) {
+              wx.openSetting();
+            }
+          }
+        });
+      } else if (savedCount > 0) {
+        wx.showToast({ title: "部分图片保存失败，请重试", icon: "none" });
+      } else {
+        wx.showToast({ title: "保存失败，请检查相册权限", icon: "none" });
+      }
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   chooseSettlementVoucher() {
@@ -1227,11 +1883,10 @@ Page({
         createdAt: now,
         updatedAt: now
       };
-      await db().collection(SETTLEMENT_RECORDS_COLLECTION).add({ data: record });
+      await dataAccessService.addDoc(SETTLEMENT_RECORDS_COLLECTION, record);
       await Promise.all(
         items.map(async (item) => {
-          const product = await db().collection(PRODUCTS_COLLECTION).doc(item.id).get();
-          const p = product.data;
+          const p = await dataAccessService.getDocById(PRODUCTS_COLLECTION, item.id);
           const totalQuantity = Number(p.totalQuantity || 0);
           const soldCount = Number(p.soldCount || 0);
           const nextSettled = Number(p.settledCount || 0) + Number(item.soldQty || 0);
@@ -1246,13 +1901,11 @@ Page({
             nextStatus = "up";
           }
           
-          await db().collection(PRODUCTS_COLLECTION).doc(item.id).update({
-            data: {
-              settledCount: nextSettled,
-              soldBatches: settleSpecificSoldBatch(p, item.batchIndex, Number(item.soldQty || 0), item.rateFraction),
-              status: nextStatus,
-              updatedAt: new Date()
-            }
+          await dataAccessService.updateDocById(PRODUCTS_COLLECTION, item.id, {
+            settledCount: nextSettled,
+            soldBatches: settleSpecificSoldBatch(p, item.batchIndex, Number(item.soldQty || 0), item.rateFraction),
+            status: nextStatus,
+            updatedAt: new Date()
           });
         })
       );
@@ -1342,7 +1995,9 @@ Page({
     const settlementItems = ((settledDetail && settledDetail.settlementItems) || []).map((item, index) => ({
       ...item,
       rowKey: item.rowKey || `${item.id || "item"}-${index}`,
-      totalPrice: item.totalPrice || (item.price * item.soldQty)
+      totalPrice: item.totalPrice || (item.price * item.soldQty),
+      payableAmount: Number(item.payableAmount != null ? item.payableAmount : calcPayableAmount(item.price, item.soldQty, item.rateFraction)),
+      payableText: fmt2(item.payableAmount != null ? item.payableAmount : calcPayableAmount(item.price, item.soldQty, item.rateFraction))
     }));
     const subtitle = settledDetail ? `${settledDetail.date} · 共 ${settledDetail.items} 件商品` : "";
     

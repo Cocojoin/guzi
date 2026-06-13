@@ -16,6 +16,13 @@ Page({
     },
     systemItems: [
       {
+        key: "ip-groups",
+        title: "IP管理",
+        subtitle: "新增IP、调整商品归属、删除IP",
+        accentClass: "setting-icon--rose",
+        iconText: "IP"
+      },
+      {
         key: "operation-log",
         title: "操作日志",
         subtitle: "操作记录、异常行为追溯",
@@ -107,6 +114,7 @@ Page({
   openSettingDetail(event) {
     const { key } = event.currentTarget.dataset;
     const routeMap = {
+      "ip-groups": "/admin/pages/settings/ip-groups/ip-groups",
       "operation-log": "/admin/pages/settings/operation-log/operation-log",
       "data-backup": "/admin/pages/settings/data-backup/data-backup",
       "export-data": "/admin/pages/settings/export-data/export-data"

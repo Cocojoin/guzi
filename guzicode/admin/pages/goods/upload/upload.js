@@ -3,6 +3,7 @@ const usersRepository = require("../../../../utils/usersRepository");
 const { ensureCloudImages } = require("../../../../utils/cloudFile");
 const { addOperationLog, formatFailureContext } = require("../../../../utils/adminSettings");
 const { debounce } = require("../../../../utils/debounce");
+const { normalizeIpName } = require("../../../../utils/ipGroupsRepository");
 
 const TYPE_OPTIONS = ["小卡", "吧唧", "镭射票", "自定义"];
 
@@ -364,6 +365,14 @@ Page({
         type: "商品",
         note: `${form.owner} · ${form.role} · ${form.series}`
       });
+      if (normalizeIpName(form.ip)) {
+        await addOperationLog({
+          title: "新增商品自动创建 IP",
+          target: normalizeIpName(form.ip),
+          type: "IP管理",
+          note: `商品 ${form.id} 新增并归入该 IP`
+        });
+      }
 
       wx.showToast({
         title: "上传成功",

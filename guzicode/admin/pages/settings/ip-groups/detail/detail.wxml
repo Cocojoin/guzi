@@ -1,0 +1,38 @@
+<view class="management-shell">
+<view class="custom-nav" style="height: {{contentPaddingTop}}px;">
+<view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+<view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
+<view class="nav-back" bindtap="goBack"></view>
+<view class="custom-nav-title">IP 详情</view>
+</view>
+</view>
+<view class="management-page" style="padding-top: {{contentPaddingTop + 18}}px;">
+<view wx:if="{{summary}}" class="summary-card">
+<view class="group-cover group-cover--{{summary.tone}}">
+<text class="group-cover-text">{{summary.initials}}</text>
+</view>
+<view class="summary-metric"><view class="metric-value">{{summary.goodsCount}}</view><view class="metric-label">商品总数</view></view>
+<view class="summary-metric"><view class="metric-value">{{summary.onSaleCount}}</view><view class="metric-label">在售</view></view>
+<view class="summary-metric"><view class="metric-value">{{summary.roleCount}}</view><view class="metric-label">角色</view></view>
+</view>
+<view class="ip-detail-actions">
+<button class="primary-btn" bindtap="goAssign">＋ 分配商品</button>
+<button wx:if="{{summary}}" class="ghost-btn {{!summary.empty ? 'ghost-btn--disabled' : ''}}" bindtap="submitDelete">删除 IP</button>
+</view>
+<view class="section-title">IP 内商品（{{goods.length}}）</view>
+<view wx:if="{{loading && !hasLoaded}}" class="detail-card empty-state"><view class="empty-title">正在加载商品…</view></view>
+<view wx:elif="{{!goods.length}}" class="detail-card empty-state"><view class="empty-title">当前 IP 暂无商品</view><view class="empty-desc">可以先分配商品到该 IP，或删除这个空 IP</view></view>
+<view wx:else class="goods-list">
+<view class="select-all-row" bindtap="toggleAll"><view class="checkbox {{allChecked ? 'checkbox--checked' : ''}}"></view><text class="select-all-text">全选</text></view>
+<view class="goods-card" wx:for="{{goods}}" wx:key="id">
+<view class="goods-select" data-id="{{item.id}}" bindtap="toggleSelection"><view class="checkbox {{item.selected ? 'checkbox--checked' : ''}}"></view></view>
+<view class="group-cover group-cover--{{summary.tone}}"><text class="group-cover-text">{{summary.initials}}</text></view>
+<view class="goods-main" bindtap="openGoodsDetail" data-id="{{item.id}}">
+<view class="goods-title">{{item.title}}</view>
+<view class="goods-meta-row"><text class="status-pill {{item.statusClassName}}">{{item.statusLabel}}</text><text class="goods-price">{{item.priceText}}</text></view>
+</view>
+</view>
+</view>
+<view wx:if="{{goods.length}}" class="action-bar"><button class="action-btn" disabled="{{!selectedIds.length}}" bindtap="submitRemove">移出选中商品</button></view>
+</view>
+</view>

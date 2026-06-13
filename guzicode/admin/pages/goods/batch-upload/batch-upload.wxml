@@ -11,6 +11,7 @@
         <text class="upload-action-text">选择图片</text>
       </view>
       <view class="upload-success-hint">已上传 {{form.imagePaths.length}} 张图片（单张 ≤ 5M）</view>
+      <view class="table-hint">可多次点击选择图片，图片会自动累积</view>
       <view class="table-hint">同一条商品可填写多个图片名称，使用英文逗号分隔，例如：1.png,2.png</view>
       <view wx:if="{{errors.images}}" class="error-inline">{{errors.images}}</view>
     </view>

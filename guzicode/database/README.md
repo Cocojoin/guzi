@@ -1,4 +1,4 @@
-# users 表初始化说明
+# 数据库初始化说明
 
 ## 1. 目录说明
 
@@ -7,8 +7,27 @@
 - `users.init.jsonl`：微信云开发导入用 JSON Lines 格式，当前包含 1 条管理员账号
 - `users.init.import.json`：微信开发者工具可选择的 JSON Lines 导入文件，当前包含 1 条管理员账号
 - `users.indexes.json`：索引建议，包含账号唯一索引
+- `products.schema.json` / `settlement_records.schema.json`：商品和结算记录字段设计
+- `material_expenses.schema.json` / `logistics_expenses.schema.json` / `tech_service_expenses.schema.json`：统计页支出集合字段设计
+- `admin_operation_logs.schema.json`：管理端操作日志字段设计
+- `*.init.json`：对应集合的初始化占位配置
+- `*.indexes.json`：对应集合的索引建议
 
-## 2. 在微信开发者工具中创建 `users` 表
+## 2. 建议先创建的集合
+
+请至少创建以下集合，否则部分页面会报“collection not exists”：
+
+| 集合名 | 用途 |
+| --- | --- |
+| `users` | 登录、用户管理 |
+| `products` | 商品管理、用户端商品浏览 |
+| `settlement_records` | 结算记录 |
+| `material_expenses` | 材料支出 |
+| `logistics_expenses` | 物流支出 |
+| `tech_service_expenses` | 技术服务支出 |
+| `admin_operation_logs` | 管理端操作日志 |
+
+## 3. 在微信开发者工具中创建 `users` 表
 
 1. 打开微信开发者工具
 2. 确认当前项目已开通云开发，并绑定正确环境
@@ -36,7 +55,7 @@
 | createdAt | Date | 创建时间 |
 | updatedAt | Date | 更新时间 |
 
-## 3. 导入初始化数据
+## 4. 导入初始化数据
 
 1. 在数据库中选中 `users` 集合
 2. 点击「导入」
@@ -49,7 +68,30 @@
    - 初始密码：`cc19980905`
    - 存储方式：明文
 
-## 4. 集合权限
+## 5. 其他集合创建建议
+
+除 `users` 之外，其余集合可以先直接创建空集合，再按同名 `.schema.json` 和 `.indexes.json` 补字段与索引。
+
+建议顺序：
+
+1. 创建 `products`
+2. 创建 `settlement_records`
+3. 创建 `material_expenses`
+4. 创建 `logistics_expenses`
+5. 创建 `tech_service_expenses`
+6. 创建 `admin_operation_logs`
+
+如果你现在只想先解决统计页报错，最少先建：
+
+- `tech_service_expenses`
+- `material_expenses`
+- `logistics_expenses`
+
+如果还想去掉控制台里操作日志缺失告警，再补建：
+
+- `admin_operation_logs`
+
+## 6. 集合权限
 
 当前认证链路已切到 `auth` 云函数处理：
 
@@ -74,7 +116,7 @@
 
 如果当前仍处于联调期，可短暂保留测试权限；但在真机验收通过后，建议立即切回上述配置。
 
-## 5. 字段补充说明
+## 7. 字段补充说明
 
 1. 前台注册用户默认写入：
    - `role = normal_user`

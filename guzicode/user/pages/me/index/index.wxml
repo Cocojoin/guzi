@@ -1,4 +1,4 @@
-<view class="u-page">
+<view class="u-page u-page--tabbar">
   <view class="u-content">
     <view class="u-card profile-card">
       <view class="avatar">

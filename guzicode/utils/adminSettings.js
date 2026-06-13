@@ -1,5 +1,6 @@
 const session = require("./session");
 const usersRepository = require("./usersRepository");
+const dataAccessService = require("./dataAccessService");
 
 const PRODUCTS_COLLECTION = "products";
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
@@ -21,10 +22,6 @@ const LOG_RETENTION_OPTIONS = [
   { label: "180 天", days: 180 },
   { label: "永久保留", days: 0 }
 ];
-
-function db() {
-  return wx.cloud.database();
-}
 
 function getFs() {
   return wx.getFileSystemManager();
@@ -193,25 +190,7 @@ function cleanupLocalLogs(retentionDays) {
 }
 
 async function fetchAll(collectionName, where = null) {
-  const result = [];
-  let skip = 0;
-  const pageSize = 100;
-
-  while (true) {
-    let query = db().collection(collectionName);
-    if (where) {
-      query = query.where(where);
-    }
-    const res = await query.skip(skip).limit(pageSize).get();
-    const rows = res.data || [];
-    result.push(...rows);
-    if (rows.length < pageSize) {
-      break;
-    }
-    skip += pageSize;
-  }
-
-  return result;
+  return dataAccessService.fetchAll(collectionName, { where });
 }
 
 async function fetchAllSafe(collectionName, where = null) {
@@ -234,9 +213,7 @@ async function addOperationLog(input) {
   saveLocalLogs(localLogs);
 
   try {
-    await db().collection(OPERATION_LOGS_COLLECTION).add({
-      data: log
-    });
+    await dataAccessService.addDoc(OPERATION_LOGS_COLLECTION, log);
   } catch (error) {
     console.warn("addOperationLog fallback to local only:", error && (error.errMsg || error.message || error));
   }
@@ -282,7 +259,7 @@ async function cleanupOperationLogs(options = {}) {
     const expiredLogs = cloudLogs.filter((item) => !shouldKeepLog(item, retentionDays));
     if (expiredLogs.length) {
       await Promise.all(
-        expiredLogs.map((item) => db().collection(OPERATION_LOGS_COLLECTION).doc(item._id).remove())
+        expiredLogs.map((item) => dataAccessService.removeDocById(OPERATION_LOGS_COLLECTION, item._id))
       );
       removedCloudCount = expiredLogs.length;
     }
@@ -303,7 +280,7 @@ async function clearAllOperationLogs() {
     const cloudLogs = await fetchAllSafe(OPERATION_LOGS_COLLECTION);
     if (cloudLogs.length) {
       await Promise.all(
-        cloudLogs.map((item) => db().collection(OPERATION_LOGS_COLLECTION).doc(item._id).remove())
+        cloudLogs.map((item) => dataAccessService.removeDocById(OPERATION_LOGS_COLLECTION, item._id))
       );
       removedCloudCount = cloudLogs.length;
     }

@@ -1,0 +1,66 @@
+{
+  "collectionName": "admin_operation_logs",
+  "description": "管理端操作日志，记录管理员操作审计信息",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "required": true,
+      "description": "业务日志 ID"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "required": true,
+      "description": "操作标题"
+    },
+    {
+      "name": "target",
+      "type": "string",
+      "required": true,
+      "description": "操作对象"
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "required": true,
+      "description": "操作类型"
+    },
+    {
+      "name": "success",
+      "type": "boolean",
+      "required": true,
+      "description": "是否成功"
+    },
+    {
+      "name": "note",
+      "type": "string",
+      "required": false,
+      "description": "备注"
+    },
+    {
+      "name": "operator",
+      "type": "string",
+      "required": true,
+      "description": "操作人展示文案"
+    },
+    {
+      "name": "operatorAccount",
+      "type": "string",
+      "required": true,
+      "description": "操作人账号"
+    },
+    {
+      "name": "createdAt",
+      "type": "string",
+      "required": true,
+      "description": "创建时间 ISO 字符串"
+    },
+    {
+      "name": "time",
+      "type": "string",
+      "required": true,
+      "description": "展示时间 YYYY-MM-DD HH:mm:ss"
+    }
+  ]
+}

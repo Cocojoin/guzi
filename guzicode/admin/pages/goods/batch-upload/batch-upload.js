@@ -2,6 +2,7 @@ const productsRepository = require("../../../../utils/productsRepository");
 const usersRepository = require("../../../../utils/usersRepository");
 const { ensureCloudImages } = require("../../../../utils/cloudFile");
 const { addOperationLog, formatFailureContext } = require("../../../../utils/adminSettings");
+const { normalizeIpName } = require("../../../../utils/ipGroupsRepository");
 
 function parseCsvLine(line) {
   const fields = [];
@@ -344,9 +345,16 @@ function buildImageLookup(imageFiles) {
       });
     }
     
-    // 4. 序号匹配
+    // 4. 序号匹配（纯数字）
     lookup[order] = index;
     console.log(`    添加: ${order} -> ${index}`);
+    
+    // 5. 序号+扩展名匹配（例如 1.png, 2.jpg 等）
+    supportedExts.forEach(ext => {
+      const key = order + ext;
+      lookup[key] = index;
+      console.log(`    添加: ${key} -> ${index}`);
+    });
   });
   
   console.log("buildImageLookup - 最终查找表:", lookup);
@@ -756,6 +764,19 @@ Page({
         type: "商品",
         note: `${selectedOwner} · ${this.data.form.fileName || "批量文件"}`
       });
+      const importedIps = [...new Set(
+        pendingProducts
+          .map((item) => normalizeIpName(item.ip))
+          .filter(Boolean)
+      )];
+      if (importedIps.length) {
+        await addOperationLog({
+          title: "批量导入自动同步 IP",
+          target: `${importedIps.length} 个 IP`,
+          type: "IP管理",
+          note: importedIps.join("、")
+        });
+      }
       wx.showToast({
         title: `导入成功 ${createdCount} 条`,
         icon: "success"

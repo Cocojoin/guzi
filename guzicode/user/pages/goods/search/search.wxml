@@ -1,0 +1,61 @@
+<view class="u-page search-page">
+  <view class="u-content">
+    <view class="search-topbar">
+      <view class="search-input-wrap">
+        <text class="search-icon">⌕</text>
+        <input
+          class="search-input"
+          placeholder="搜索 IP / 角色 / 系列名"
+          placeholder-class="search-placeholder"
+          value="{{keyword}}"
+          focus="{{autoFocus}}"
+          bindinput="onInput"
+          bindconfirm="onConfirm"
+          confirm-type="search"
+        />
+      </view>
+      <view class="search-btn" catchtap="onConfirm">搜索</view>
+    </view>
+
+    <block wx:if="{{hasSearchResult}}">
+      <view wx:if="{{products.length > 0}}" class="goods-list">
+        <view class="goods-card u-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+          <view class="goods-thumb">
+            <image wx:if="{{item.picture}}" class="goods-img" src="{{item.picture}}" mode="aspectFill" />
+            <view wx:else class="goods-fallback">{{item.ipInitial}}</view>
+          </view>
+          <view class="goods-body">
+            <view class="goods-title">{{item.displayTitle}}</view>
+            <view class="goods-meta">{{item.displayType}} · {{item.totalQuantity}} 件</view>
+            <view class="goods-price">{{item.priceText}}</view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="state-card u-card">
+        <view class="state-title">未找到相关商品</view>
+        <view class="state-desc">换个关键词或筛选条件试试吧</view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view wx:if="{{searchHistory.length}}" class="section">
+        <view class="section-header">
+          <text class="section-title">搜索历史</text>
+          <text class="section-action" catchtap="clearHistory">清空</text>
+        </view>
+        <view class="tag-list">
+          <view class="tag-pill" wx:for="{{searchHistory}}" wx:key="*this" data-keyword="{{item}}" catchtap="useKeyword">{{item}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{hotTerms.length}}" class="section">
+        <view class="section-header">
+          <text class="section-title">热门 IP</text>
+        </view>
+        <view class="tag-list">
+          <view class="tag-pill tag-pill--hot" wx:for="{{hotTerms}}" wx:key="*this" data-keyword="{{item}}" catchtap="useKeyword">{{item}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
