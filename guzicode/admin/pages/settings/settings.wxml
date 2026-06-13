@@ -31,22 +31,6 @@
         <view class="setting-arrow">›</view>
       </view>
 
-      <view class="section-title section-title--spaced">关于</view>
-      <view class="about-card">
-        <view
-          wx:for="{{aboutItems}}"
-          wx:key="key"
-          class="about-row"
-          data-key="{{item.key}}"
-          bindtap="handleAboutTap"
-        >
-          <view class="about-title">{{item.title}}</view>
-          <view class="about-side">
-            <view wx:if="{{item.value}}" class="about-value">{{item.value}}</view>
-            <view class="setting-arrow">›</view>
-          </view>
-        </view>
-      </view>
     </view>
 
     <button class="logout-btn" bindtap="handleLogout">退出登录</button>

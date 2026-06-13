@@ -43,17 +43,6 @@ Page({
         accentClass: "setting-icon--mint",
         iconText: "导"
       }
-    ],
-    aboutItems: [
-      {
-        key: "version",
-        title: "版本",
-        value: "v1.7.0"
-      },
-      {
-        key: "help",
-        title: "帮助与反馈"
-      }
     ]
   },
 
@@ -124,24 +113,6 @@ Page({
       return;
     }
     wx.navigateTo({ url });
-  },
-
-  handleAboutTap(event) {
-    const { key } = event.currentTarget.dataset;
-    if (key === "version") {
-      wx.showToast({
-        title: "当前已是最新版本",
-        icon: "none"
-      });
-      return;
-    }
-
-    wx.showModal({
-      title: "帮助与反馈",
-      content: "如需反馈问题，请联系产品与技术支持。",
-      showCancel: false,
-      confirmText: "知道了"
-    });
   },
 
   handleLogout() {
