@@ -92,6 +92,9 @@ function sanitizeUser(user, options = {}) {
     sanitized.createdAt = user.createdAt || null;
     sanitized.updatedAt = user.updatedAt || null;
   }
+  if (options.includePassword === true) {
+    sanitized.password = user.password || "";
+  }
   return sanitized;
 }
 
@@ -280,7 +283,7 @@ async function handleListConsignmentUsers(_, openid) {
   });
 }
 
-async function handleListUsers(_, openid) {
+async function handleListUsers({ includePassword } = {}, openid) {
   const admin = await requireAdmin(openid);
   if (admin && admin.ok === false) {
     return admin;
@@ -290,7 +293,10 @@ async function handleListUsers(_, openid) {
   return ok({
     users: rows
       .filter((item) => item.role !== "admin")
-      .map((item) => sanitizeUser(item, { includeProfile: true }))
+      .map((item) => sanitizeUser(item, {
+        includeProfile: true,
+        includePassword: includePassword === true
+      }))
   });
 }
 

@@ -3,7 +3,7 @@ const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const { addOperationLog, formatFailureContext } = require("../../../utils/adminSettings");
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
 const { debounce } = require("../../../utils/debounce");
-const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, settleSpecificSoldBatch } = require("../../../utils/consignmentRate");
+const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, normalizeSoldBatches, settleSpecificSoldBatch } = require("../../../utils/consignmentRate");
 const { ensureCloudImages } = require("../../../utils/cloudFile");
 const dataAccessService = require("../../../utils/dataAccessService");
 const usersRepository = require("../../../utils/usersRepository");
@@ -1158,6 +1158,84 @@ Page({
       this.handlePageError(e, "待结算商品加载失败");
       this.setData({ soldItems: [], selectedSoldCount: 0, soldTotalPayable: "0.00" });
     }
+  },
+
+  async deleteSoldItem(event) {
+    const rowKey = event.currentTarget.dataset.id;
+    const item = this.data.soldItems.find((i) => i.rowKey === rowKey);
+    if (!item) {
+      wx.showToast({ title: "未找到商品", icon: "none" });
+      return;
+    }
+
+    wx.showModal({
+      title: "确认删除",
+      content: `确认删除「${item.title}」的已出售记录吗？删除后不可恢复。`,
+      success: async ({ confirm }) => {
+        if (!confirm) return;
+
+        try {
+          this.clearPageError();
+          const p = await dataAccessService.getDocById(PRODUCTS_COLLECTION, item.id);
+          if (!p) {
+            wx.showToast({ title: "商品不存在", icon: "none" });
+            return;
+          }
+
+          const totalQuantity = Number(p.totalQuantity || 0);
+          const soldCount = Number(p.soldCount || 0);
+          const settledCount = Number(p.settledCount || 0);
+          const deleteQty = Number(item.soldQty || 0);
+
+          const nextSoldCount = Math.max(0, soldCount - deleteQty);
+          const remainingCount = Math.max(0, totalQuantity - nextSoldCount);
+
+          let nextStatus = p.status;
+          if (nextSoldCount <= 0) {
+            nextStatus = "up";
+          } else if (remainingCount <= 0 && totalQuantity > 0) {
+            nextStatus = "sold";
+          }
+
+          let nextBatches = normalizeSoldBatches(p);
+          if (typeof item.batchIndex === "number" && item.batchIndex >= 0 && item.batchIndex < nextBatches.length) {
+            nextBatches = nextBatches.filter((_, idx) => idx !== item.batchIndex);
+          } else {
+            if (nextBatches.length > 0) {
+              nextBatches.pop();
+            }
+          }
+
+          await dataAccessService.updateDocById(PRODUCTS_COLLECTION, item.id, {
+            soldCount: nextSoldCount,
+            soldBatches: nextBatches.length > 0 ? nextBatches : undefined,
+            status: nextStatus,
+            updatedAt: new Date()
+          });
+
+          await addOperationLog({
+            title: "删除已出售记录",
+            target: item.title,
+            type: "商品",
+            note: `用户 ${this.data.currentUser.nickname} · 删除 ${deleteQty} 件`
+          });
+
+          wx.showToast({ title: "删除成功", icon: "success" });
+          await this.loadSoldItemsForCurrentUser();
+          await this.refreshUserStats();
+        } catch (e) {
+          await addOperationLog({
+            title: "删除已出售记录",
+            target: item.title,
+            type: "商品",
+            note: formatFailureContext(e, ""),
+            success: false
+          });
+          this.handlePageError(e, "删除失败，请重试");
+          console.error("deleteSoldItem error:", e);
+        }
+      }
+    });
   },
 
   toggleSoldItem(event) {

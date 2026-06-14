@@ -47,8 +47,10 @@ async function getUserById(userId) {
   return result.user || null;
 }
 
-async function listUsers() {
-  const result = await invokeAuth("listUsers");
+async function listUsers(options = {}) {
+  const result = await invokeAuth("listUsers", {
+    includePassword: options.includePassword === true
+  });
   return result.users || [];
 }
 

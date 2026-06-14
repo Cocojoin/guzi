@@ -1652,3 +1652,17 @@
 .dialog-actions {
   margin-top: 22rpx;
 }
+
+.goods-delete-btn {
+  flex-shrink: 0;
+  height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 200, 215, 0.8);
+  color: #c4546f;
+  font-size: 26rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

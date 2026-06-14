@@ -316,10 +316,8 @@
         wx:for="{{soldItems}}"
         wx:key="rowKey"
         class="detail-card goods-card goods-card--settle {{item.selected ? '' : 'goods-card--disabled'}}"
-        data-id="{{item.rowKey}}"
-        bindtap="toggleSoldItem"
       >
-        <view class="settle-check {{item.selected ? '' : 'settle-check--off'}}">{{item.selected ? '✓' : ''}}</view>
+        <view class="settle-check {{item.selected ? '' : 'settle-check--off'}}" data-id="{{item.rowKey}}" bindtap="toggleSoldItem">{{item.selected ? '✓' : ''}}</view>
         <view class="goods-media">
           <view class="goods-thumb">
             <image
@@ -342,6 +340,7 @@
           <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
           <view class="list-subtitle">单价：¥{{item.price}}</view>
         </view>
+        <view class="goods-delete-btn" data-id="{{item.rowKey}}" bindtap="deleteSoldItem">删除</view>
       </view>
       <view wx:if="{{currentView === 'soldGoods' && soldItems.length === 0}}" class="detail-card empty-state">
         <view class="empty-mark">空</view>

@@ -497,7 +497,9 @@ async function createExportFile(options = {}) {
   const range = resolveRangeDates(options.rangeType, options.customRange);
   const selectedKeys = Array.isArray(options.selectedKeys) ? options.selectedKeys : [];
   const [users, products, settlementRecords, materialExpenses, logisticsExpenses, operationLogs] = await Promise.all([
-    usersRepository.listUsers(),
+    usersRepository.listUsers({
+      includePassword: selectedKeys.includes("users")
+    }),
     fetchAllSafe(PRODUCTS_COLLECTION),
     fetchAllSafe(SETTLEMENT_RECORDS_COLLECTION),
     fetchAllSafe(MATERIAL_EXPENSES_COLLECTION),
@@ -516,9 +518,10 @@ async function createExportFile(options = {}) {
 
   if (selectedKeys.includes("users")) {
     sheets.push(createSheetXml("用户数据", [
-      ["账号", "昵称", "角色", "状态", "是否寄售", "联系方式", "创建时间"],
+      ["账号", "密码", "昵称", "角色", "状态", "是否寄售", "联系方式", "创建时间"],
       ...filteredUsers.map((item) => [
         item.account || "",
+        item.password || "",
         item.nickname || "",
         item.role || "",
         item.status || "",
