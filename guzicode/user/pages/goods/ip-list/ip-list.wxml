@@ -73,7 +73,7 @@
           </view>
           <view class="goods-body">
             <view class="goods-title">{{item.role || '-'}} · {{item.series || '-'}}</view>
-            <view class="goods-meta">{{item.displayType}} · {{item.totalQuantity || 0}} 件</view>
+            <view class="goods-meta">{{item.displayType}} · 剩余 {{item.remainingCount || 0}} 件</view>
             <view class="goods-price">{{item.priceText}}</view>
           </view>
         </view>

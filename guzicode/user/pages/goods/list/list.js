@@ -56,7 +56,7 @@ function buildIpSummaries(products) {
       latestTime: 0
     };
 
-    current.saleCount += Number(item.remainingCount || 0) > 0 ? 1 : 0;
+    current.saleCount += Math.max(0, Number(item.remainingCount || 0));
     if (role) {
       current.roles.add(role);
     }
