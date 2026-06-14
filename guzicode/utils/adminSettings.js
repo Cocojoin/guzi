@@ -234,7 +234,12 @@ async function listOperationLogs() {
   const retention = getLogRetentionConfig();
   await cleanupOperationLogs({ retentionDays: retention.days });
   const localLogs = getLocalLogs().map((item) => buildOperationLog(item)).filter((item) => shouldKeepLog(item, retention.days));
-  const cloudLogs = await fetchAllSafe(OPERATION_LOGS_COLLECTION);
+  let cloudLogs = [];
+  try {
+    cloudLogs = await fetchAllSafe(OPERATION_LOGS_COLLECTION);
+  } catch (error) {
+    console.warn("listOperationLogs cloud fetch skipped:", error && (error.errMsg || error.message || error));
+  }
   const cloudNormalized = cloudLogs.map(normalizeCloudLog).filter((item) => shouldKeepLog(item, retention.days));
   const merged = {};
 

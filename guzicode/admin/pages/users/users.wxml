@@ -6,7 +6,7 @@
       <view class="custom-nav-title">{{currentView === 'userList' || currentView === 'emptyUser' ? '用户管理' : (currentView === 'userGoods' || currentView === 'userGoodsFilters' ? '寄售商品' : (currentView === 'soldGoods' ? '待结算' : (currentView === 'settledList' ? '已结算' : '用户详情')))}}</view>
     </view>
   </view>
-  <view class="management-page {{currentView === 'userList' ? 'management-page--list-offset' : ''}} {{multiSelect ? 'management-page--with-bar' : ''}}" style="padding-top: {{contentPaddingTop + 12}}px;">
+  <view class="management-page {{currentView === 'userList' ? 'management-page--list-offset' : ''}} {{multiSelect ? 'management-page--with-bar' : ''}} {{currentView === 'userGoods' || currentView === 'userGoodsFilters' ? 'management-page--goods-compact' : ''}}" style="padding-top: {{contentPaddingTop + 12}}px;">
     <view wx:if="{{currentView === 'userList' || currentView === 'emptyUser'}}" class="management-header management-header--compact">
       <view class="header-actions">
         <view class="header-search">
@@ -109,7 +109,7 @@
     </view>
 
     <!-- 用户详情 -->
-    <scroll-view wx:if="{{currentView !== 'userList' && currentView !== 'emptyUser'}}" class="panel-scroll {{currentView === 'soldGoods' ? 'panel-scroll--sold' : ''}}" scroll-y enhanced show-scrollbar="{{false}}">
+    <scroll-view wx:if="{{currentView !== 'userList' && currentView !== 'emptyUser'}}" class="panel-scroll {{currentView === 'soldGoods' ? 'panel-scroll--sold' : ''}} {{currentView === 'userGoods' || currentView === 'userGoodsFilters' ? 'panel-scroll--goods' : ''}}" scroll-y enhanced show-scrollbar="{{false}}">
       
       <!-- Header区：头像 + 昵称 + 账号 -->
       <view class="detail-card hero-user-card" wx:if="{{currentUser && currentView !== 'settlement' && currentView !== 'settledDetail' && currentView !== 'userGoods' && currentView !== 'userGoodsFilters' && currentView !== 'soldGoods' && currentView !== 'settledList'}}">

@@ -77,6 +77,10 @@
   padding-bottom: 300rpx;
 }
 
+.management-page--goods-compact {
+  padding-bottom: 32rpx;
+}
+
 .error-banner {
   margin: 10rpx 4rpx 16rpx;
   padding: 18rpx 20rpx;
@@ -425,6 +429,10 @@
 
 .panel-scroll--sold {
   padding-bottom: 240rpx;
+}
+
+.panel-scroll--goods {
+  height: auto;
 }
 
 .top-more {

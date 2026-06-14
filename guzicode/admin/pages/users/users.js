@@ -283,6 +283,8 @@ Page({
     if (this._networkStatusHandler && wx.offNetworkStatusChange) {
       wx.offNetworkStatusChange(this._networkStatusHandler);
     }
+    this._networkStatusHandler = null;
+    this._networkStatusBound = false;
   },
 
   onHide() {
@@ -329,15 +331,29 @@ Page({
   },
 
   bindNetworkStatus() {
+    if (this._networkStatusHandler && wx.offNetworkStatusChange) {
+      wx.offNetworkStatusChange(this._networkStatusHandler);
+    }
     wx.getNetworkType({
       success: (res) => {
         const online = res.networkType && res.networkType !== "none";
+        this._lastNetworkOnline = !!online;
+        this._networkStatusReady = true;
         this.setData({ networkOnline: online });
       }
     });
     this._networkStatusHandler = (res) => {
       const online = !!res.isConnected;
+      const prevOnline = typeof this._lastNetworkOnline === "boolean" ? this._lastNetworkOnline : null;
+      this._lastNetworkOnline = online;
       this.setData({ networkOnline: online });
+      if (!this._networkStatusReady) {
+        this._networkStatusReady = true;
+        return;
+      }
+      if (prevOnline === online) {
+        return;
+      }
       if (!online) {
         wx.showToast({ title: "网络已断开", icon: "none" });
       } else {
@@ -345,6 +361,7 @@ Page({
       }
     };
     wx.onNetworkStatusChange(this._networkStatusHandler);
+    this._networkStatusBound = true;
   },
 
   getFriendlyErrorMessage(error, fallback = "操作失败，请稍后重试") {
@@ -1713,6 +1730,63 @@ Page({
     });
   },
 
+  ensureAlbumPermission() {
+    return new Promise((resolve, reject) => {
+      wx.getSetting({
+        success: (settingRes) => {
+          const scopeKey = "scope.writePhotosAlbum";
+          const authState = settingRes.authSetting ? settingRes.authSetting[scopeKey] : undefined;
+
+          if (authState === true || authState === undefined) {
+            resolve();
+            return;
+          }
+
+          wx.showModal({
+            title: "需要相册权限",
+            content: "保存图片到本地需要开启相册权限。",
+            success: ({ confirm }) => {
+              if (!confirm) {
+                reject(new Error("已取消保存"));
+                return;
+              }
+
+              wx.openSetting({
+                success: (openRes) => {
+                  if (openRes.authSetting && openRes.authSetting[scopeKey]) {
+                    resolve();
+                  } else {
+                    reject(new Error("未开启相册权限"));
+                  }
+                },
+                fail: () => reject(new Error("无法打开权限设置"))
+              });
+            },
+            fail: () => reject(new Error("权限校验失败"))
+          });
+        },
+        fail: () => reject(new Error("权限校验失败"))
+      });
+    });
+  },
+
+  saveImageToAlbum(filePath) {
+    return new Promise((resolve, reject) => {
+      wx.saveImageToPhotosAlbum({
+        filePath,
+        success: resolve,
+        fail: (error) => {
+          const errMsg = String((error && error.errMsg) || "");
+          if (/auth deny|auth denied|permission|photosalbum/i.test(errMsg)) {
+            reject(new Error("未开启相册权限"));
+            return;
+          }
+          reject(new Error("保存图片失败"));
+        }
+      });
+    });
+  },
+
   async saveSettlementPosterImages() {
     const images = this.data.settlementPosterImages || [];
     if (!images.length) {
@@ -1722,14 +1796,9 @@ Page({
     wx.showLoading({ title: "保存中...", mask: true });
     let savedCount = 0;
     try {
+      await this.ensureAlbumPermission();
       for (const filePath of images) {
-        await new Promise((resolve, reject) => {
-          wx.saveImageToPhotosAlbum({
-            filePath,
-            success: resolve,
-            fail: reject
-          });
-        });
+        await this.saveImageToAlbum(filePath);
         savedCount += 1;
       }
       wx.showToast({
@@ -1737,8 +1806,8 @@ Page({
         icon: "success"
       });
     } catch (error) {
-      const errMsg = String((error && error.errMsg) || "");
-      if (/auth deny|auth denied/i.test(errMsg)) {
+      const errMsg = String((error && (error.errMsg || error.message)) || "");
+      if (/相册权限|未开启相册权限|权限|auth deny|auth denied/i.test(errMsg)) {
         wx.showModal({
           title: "需要相册权限",
           content: "请开启相册写入权限后重试",
@@ -1752,7 +1821,7 @@ Page({
       } else if (savedCount > 0) {
         wx.showToast({ title: "部分图片保存失败，请重试", icon: "none" });
       } else {
-        wx.showToast({ title: "保存失败，请检查相册权限", icon: "none" });
+        wx.showToast({ title: "保存失败，请重试", icon: "none" });
       }
     } finally {
       wx.hideLoading();
