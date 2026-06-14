@@ -1,5 +1,4 @@
-<view class="u-page">
-  <view class="banner-mask"></view>
+<view class="u-page consignment-page">
   <view class="u-content">
     <view class="search-section">
       <view class="search-bar">
@@ -65,7 +64,7 @@
     </view>
 
     <block wx:else>
-      <view class="goods-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <view class="goods-card u-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
         <view class="goods-thumb">
           <image wx:if="{{item.picture}}" class="goods-img" src="{{item.picture}}" mode="aspectFill" />
         </view>

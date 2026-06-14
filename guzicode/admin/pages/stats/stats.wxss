@@ -590,7 +590,10 @@
   gap: 12rpx;
 }
 
-.list-scroll { height: calc(100vh - 260rpx); }
+.list-scroll {
+  height: auto;
+  max-height: calc(100vh - 260rpx);
+}
 .income-card {
   border-radius: 30rpx;
   background: rgba(255, 255, 255, 0.94);

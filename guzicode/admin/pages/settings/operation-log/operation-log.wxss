@@ -151,7 +151,8 @@
 }
 
 .log-scroll {
-  height: calc(100vh - 330rpx - env(safe-area-inset-top));
+  height: auto;
+  max-height: calc(100vh - 330rpx - env(safe-area-inset-top));
   margin-top: 24rpx;
 }
 

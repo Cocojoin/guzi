@@ -421,7 +421,8 @@
 }
 
 .panel-scroll {
-  height: calc(100vh - 420rpx - env(safe-area-inset-top));
+  height: auto;
+  max-height: calc(100vh - 420rpx - env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   gap: 16rpx;
