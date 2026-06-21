@@ -1,0 +1,69 @@
+<view class="shop-page-shell">
+  <view class="shop-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="shop-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="shop-nav-bar" style="height: {{navBarHeight}}px;">
+      <view class="shop-back" bindtap="goBack"></view>
+      <view class="shop-nav-main">
+        <view class="shop-nav-title">购买店铺</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="shop-page" style="padding-top: {{contentPaddingTop}}px;">
+    <view class="shop-top-gap"></view>
+    <view class="section-row">
+      <view class="section-title">店铺列表（{{channels.length}}）</view>
+      <view class="add-btn" bindtap="goCreate">+ 添加店铺</view>
+    </view>
+
+    <view class="channel-list">
+      <view class="channel-card {{!item.enabled ? 'channel-card--disabled' : ''}}" wx:for="{{channels}}" wx:key="id" data-id="{{item.id}}" bindtap="openEditor">
+        <view class="channel-main">
+          <view class="preview-platform {{item.accentClass}}">{{item.platformShortLabel}}</view>
+          <view class="channel-meta">
+            <view class="channel-title-row">
+              <view class="channel-title">{{item.storeName}}</view>
+              <view wx:if="{{!item.enabled}}" class="disabled-tag">已停用</view>
+            </view>
+            <view class="channel-subtitle">{{item.platformSubtitle}}</view>
+          </view>
+        </view>
+        <view class="channel-actions" catchtap="noop">
+          <view class="edit-btn" data-id="{{item.id}}" bindtap="openEditor">✎ 编辑</view>
+          <view
+            class="toggle-switch {{item.enabled ? 'toggle-switch--on' : ''}}"
+            data-id="{{item.id}}"
+            data-enabled="{{item.enabled ? '1' : '0'}}"
+            bindtap="toggleChannelEnabled"
+          >
+            <view class="toggle-switch-knob"></view>
+          </view>
+        </view>
+        <view wx:if="{{sortMode}}" class="sort-actions" catchtap="noop">
+          <view class="sort-btn" data-id="{{item.id}}" data-direction="up" bindtap="moveChannel">上移</view>
+          <view class="sort-btn" data-id="{{item.id}}" data-direction="down" bindtap="moveChannel">下移</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-title section-title--spaced">联系客服模块</view>
+    <view class="service-card">
+      <view class="service-main">
+        <view class="service-title">在详情页显示客服</view>
+        <view class="service-desc">关闭后买家详情页不展示客服入口</view>
+      </view>
+      <view
+        class="toggle-switch {{contactServiceEnabled ? 'toggle-switch--on' : ''}}"
+        data-enabled="{{contactServiceEnabled ? '1' : '0'}}"
+        bindtap="toggleContactService"
+      >
+        <view class="toggle-switch-knob"></view>
+      </view>
+    </view>
+
+    <view class="shop-footnote">
+      <view>店铺顺序即买家端「在哪里买」的展示顺序</view>
+      <view>停用的店铺仅在管理端可见</view>
+    </view>
+  </view>
+</view>

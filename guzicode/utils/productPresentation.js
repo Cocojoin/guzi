@@ -13,6 +13,14 @@ function getDisplayStatus(product) {
   const settledCount = Number(product.settledCount || 0);
   const remainingCount = getRemainingCount(product);
 
+  if (product.status === "settled") {
+    return "settled";
+  }
+
+  if (settledCount > 0 && soldCount > 0 && settledCount >= soldCount) {
+    return "settled";
+  }
+
   if (remainingCount <= 0 && totalQuantity > 0) {
     if (settledCount > 0 && soldCount <= 0) {
       return "settled";

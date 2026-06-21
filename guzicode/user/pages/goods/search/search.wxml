@@ -1,4 +1,4 @@
-<view class="u-page search-page">
+<view class="u-page u-page--compact search-page">
   <view class="u-content">
     <view class="search-topbar">
       <view class="search-input-wrap">

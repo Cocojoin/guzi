@@ -130,8 +130,31 @@ function validateNickname(value) {
   return "";
 }
 
+function validateAccount(value, options = {}) {
+  const account = String(value || "").trim();
+  if (!account) {
+    return "请输入账号";
+  }
+
+  if (options.allowAdmin === true && account === "admin") {
+    return "";
+  }
+
+  if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$/.test(account)) {
+    return "账号需为6-20位数字和字母组合";
+  }
+
+  return "";
+}
+
 async function handleLogin({ account, password }, openid) {
-  const user = await getUserByAccount(String(account || "").trim());
+  const normalizedAccount = String(account || "").trim();
+  const accountError = validateAccount(normalizedAccount, { allowAdmin: true });
+  if (accountError) {
+    return fail("INVALID_ACCOUNT", accountError);
+  }
+
+  const user = await getUserByAccount(normalizedAccount);
   if (!user) {
     return fail("ACCOUNT_NOT_FOUND", "账号不存在，请先注册");
   }
@@ -160,6 +183,11 @@ async function handleRegister({ account, password }, openid) {
   const normalizedPassword = String(password || "");
   if (!normalizedAccount || !normalizedPassword) {
     return fail("INVALID_PARAMS", "账号或密码不能为空");
+  }
+
+  const accountError = validateAccount(normalizedAccount);
+  if (accountError) {
+    return fail("INVALID_ACCOUNT", accountError);
   }
 
   const existing = await getUserByAccount(normalizedAccount);

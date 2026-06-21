@@ -27,6 +27,8 @@
     "admin/pages/stats/stats",
     "admin/pages/users/users",
     "admin/pages/settings/settings",
+    "admin/pages/settings/shop-channels/shop-channels",
+    "admin/pages/settings/shop-channels/editor/editor",
     "admin/pages/settings/ip-groups/ip-groups",
     "admin/pages/settings/ip-groups/detail/detail",
     "admin/pages/settings/ip-groups/assign/assign",

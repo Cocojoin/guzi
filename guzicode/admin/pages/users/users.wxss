@@ -434,6 +434,7 @@
 
 .panel-scroll--goods {
   height: auto;
+  max-height: none;
 }
 
 .top-more {

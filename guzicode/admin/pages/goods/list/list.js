@@ -10,11 +10,54 @@ const STATUS_OPTIONS = [
   { label: "全部状态", value: "all" },
   { label: "已上架", value: "up" },
   { label: "已下架", value: "down" },
-  { label: "已售出", value: "sold" }
+  { label: "已售出", value: "sold" },
+  { label: "已结算", value: "settled" }
 ];
 
+const STATUS_ORDER = {
+  up: 0,
+  down: 1,
+  sold: 2,
+  settled: 3
+};
+
+function resolveOwnerName(product, consignmentUsers) {
+  const ownerUserId = String(product && product.ownerUserId || "").trim();
+  const owner = String(product && product.owner || "").trim();
+  const list = Array.isArray(consignmentUsers) ? consignmentUsers : [];
+
+  if (ownerUserId) {
+    const matchedById = list.find((item) => String(item && item._id || "").trim() === ownerUserId);
+    const nicknameById = String(matchedById && matchedById.nickname || "").trim();
+    if (nicknameById) {
+      return nicknameById;
+    }
+  }
+
+  if (owner) {
+    const matchedByAccount = list.find((item) => String(item && item.account || "").trim() === owner);
+    const nicknameByAccount = String(matchedByAccount && matchedByAccount.nickname || "").trim();
+    if (nicknameByAccount) {
+      return nicknameByAccount;
+    }
+  }
+
+  return owner;
+}
+
 function sortProducts(products) {
-  return products.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
+  return products.sort((left, right) => {
+    const leftOrder = STATUS_ORDER[left.displayStatus] != null ? STATUS_ORDER[left.displayStatus] : Number.MAX_SAFE_INTEGER;
+    const rightOrder = STATUS_ORDER[right.displayStatus] != null ? STATUS_ORDER[right.displayStatus] : Number.MAX_SAFE_INTEGER;
+
+    if (leftOrder !== rightOrder) {
+      return leftOrder - rightOrder;
+    }
+
+    const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime();
+    const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime();
+    return rightTime - leftTime;
+  });
 }
 
 Page({
@@ -29,7 +72,7 @@ Page({
     ownerOptions: ["全部用户"],
     ownerIndex: 0,
     statusIndex: 0,
-    statusLabels: ["商品状态", "已上架", "已下架", "已售出"],
+    statusLabels: ["商品状态", "已上架", "已下架", "已售出", "已结算"],
     roleOptions: ["角色"],
     roleIndex: 0,
     searchText: "",
@@ -82,8 +125,15 @@ Page({
   async loadProducts() {
     this.setData({ loading: true });
     try {
-      const allProducts = sortProducts((await productsRepository.getAllProducts()).map(buildProductCard));
       const consignmentUsers = await usersRepository.listConsignmentUsers();
+      const allProducts = sortProducts((await productsRepository.getAllProducts()).map((item) => {
+        const displayOwner = resolveOwnerName(item, consignmentUsers);
+        return buildProductCard({
+          ...item,
+          owner: displayOwner,
+          ownerRaw: item.owner || ""
+        });
+      }));
       const ownerPool = new Set([
         ...consignmentUsers.map((item) => String(item.nickname || "").trim()).filter(Boolean),
         ...allProducts.map((item) => String(item.owner || "").trim()).filter(Boolean)
@@ -150,7 +200,7 @@ Page({
           return true;
         }
 
-        return [item.role, item.series, item.ip, item.owner, item.id]
+        return [item.role, item.series, item.ip, item.owner, item.ownerRaw, item.id]
           .join("|")
           .toLowerCase()
           .includes(keyword);

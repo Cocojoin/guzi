@@ -47,21 +47,35 @@ function getNameWithoutExt(fileName) {
   return String(fileName || "").replace(/\.[^.]+$/, "");
 }
 
+function buildIndexedImageFile(filePath, index, sourceName) {
+  const normalizedPath = String(filePath || "");
+  const extMatch = normalizedPath.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+  const ext = extMatch ? `.${extMatch[1].toLowerCase()}` : ".jpg";
+  return {
+    path: normalizedPath,
+    name: `${index}${ext}`,
+    sourceName: String(sourceName || "").trim()
+  };
+}
+
+function addLookupKey(lookup, key, index) {
+  const normalizedKey = String(key || "").trim().toLowerCase();
+  if (!normalizedKey || Number.isInteger(lookup[normalizedKey])) {
+    return;
+  }
+  lookup[normalizedKey] = index;
+}
+
+function resolveImageIndex(imageRef, imageLookup) {
+  const lookupKey = String(imageRef || "").trim().toLowerCase();
+  return lookupKey ? imageLookup[lookupKey] : undefined;
+}
+
 function parseSingleImageRef(value) {
   const text = String(value || "").trim();
   if (!text) {
     return "";
   }
-
-  if (/^\d+$/.test(text)) {
-    return text;
-  }
-
-  const nameMatch = text.match(/^(\d+)\.(jpg|jpeg|png|webp)$/i);
-  if (nameMatch) {
-    return text.toLowerCase();
-  }
-
   return text.toLowerCase();
 }
 
@@ -314,47 +328,21 @@ async function parseXlsXmlFile(fs, filePath) {
 
 function buildImageLookup(imageFiles) {
   const lookup = {};
-  const supportedExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'];
   
   console.log("buildImageLookup - 输入文件:", imageFiles);
   
   (Array.isArray(imageFiles) ? imageFiles : []).forEach((item, index) => {
     const fileName = String(item && item.name ? item.name : "").trim();
-    const baseName = fileName.toLowerCase();
-    const nameWithoutExt = getNameWithoutExt(fileName).toLowerCase();
-    const order = String(index + 1);
+    const sourceName = getBaseName(item && item.sourceName ? item.sourceName : (item && item.path ? item.path : ""));
+    const sourceBaseName = sourceName.toLowerCase();
 
-    console.log(`  第${index + 1}张图 - 文件名: ${fileName}, 无扩展名: ${nameWithoutExt}`);
+    console.log(`  第${index + 1}张图 - 序号名: ${fileName}, 原始名: ${sourceName}`);
 
-    // 1. 完整文件名匹配
-    if (baseName) {
-      lookup[baseName] = index;
-      console.log(`    添加: ${baseName} -> ${index}`);
+    // 只按原始文件名匹配，要求 Excel 中填写的图片字段与上传文件名一致
+    if (sourceBaseName) {
+      addLookupKey(lookup, sourceBaseName, index);
+      console.log(`    添加: ${sourceBaseName} -> ${index}`);
     }
-    
-    // 2. 无扩展名匹配
-    if (nameWithoutExt) {
-      lookup[nameWithoutExt] = index;
-      console.log(`    添加: ${nameWithoutExt} -> ${index}`);
-      
-      // 3. 支持不同扩展名的匹配 (例如 1.jpeg 可以匹配 1.jpg)
-      supportedExts.forEach(ext => {
-        const key = nameWithoutExt + ext;
-        lookup[key] = index;
-        console.log(`    添加: ${key} -> ${index}`);
-      });
-    }
-    
-    // 4. 序号匹配（纯数字）
-    lookup[order] = index;
-    console.log(`    添加: ${order} -> ${index}`);
-    
-    // 5. 序号+扩展名匹配（例如 1.png, 2.jpg 等）
-    supportedExts.forEach(ext => {
-      const key = order + ext;
-      lookup[key] = index;
-      console.log(`    添加: ${key} -> ${index}`);
-    });
   });
   
   console.log("buildImageLookup - 最终查找表:", lookup);
@@ -418,51 +406,72 @@ Page({
   },
 
   choosePhoto() {
-    wx.chooseMedia({
-      count: 999,
-      mediaType: ["image"],
-      sizeType: ["compressed", "original"],
-      sourceType: ["album", "camera"],
-      success: async (res) => {
-        const valid = [];
-        const validFiles = [];
-        let rejected = 0;
-        
-        console.log("选择的文件:", res.tempFiles);
-        
-        (res.tempFiles || []).forEach((file) => {
-          if (file.size && file.size > 5 * 1024 * 1024) {
-            rejected += 1;
-            return;
-          }
-          const filePath = String(file.tempFilePath || "");
-          valid.push(filePath);
-          
-          let fileName = String(file.name || getBaseName(filePath) || "");
-          // 如果没有文件名或扩展名，默认给一个
-          if (!fileName) {
-            fileName = `${this.data.form.imagePaths.length + validFiles.length + 1}.jpg`;
-          }
-          
-          validFiles.push({
-            path: filePath,
-            name: fileName
-          });
-        });
+    const appendFiles = (tempFiles, useOriginalName) => {
+      const valid = [];
+      const validFiles = [];
+      let rejected = 0;
 
-        console.log("有效的图片文件:", validFiles.map(f => f.name));
-
-        if (rejected) {
-          wx.showToast({
-            title: `已过滤 ${rejected} 张超过 5M 的图片`,
-            icon: "none"
-          });
+      (tempFiles || []).forEach((file) => {
+        if (file.size && file.size > 5 * 1024 * 1024) {
+          rejected += 1;
+          return;
         }
 
-        this.setData({
-          "form.imageFiles": this.data.form.imageFiles.concat(validFiles),
-          "form.imagePaths": this.data.form.imagePaths.concat(valid),
-          "errors.images": ""
+        const filePath = String(file.path || file.tempFilePath || "");
+        if (!filePath) {
+          return;
+        }
+
+        const existingCount = this.data.form.imageFiles.length + validFiles.length + 1;
+        const sourceName = useOriginalName
+          ? String(file.name || getBaseName(filePath) || "").trim()
+          : getBaseName(filePath);
+
+        valid.push(filePath);
+        validFiles.push(buildIndexedImageFile(filePath, existingCount, sourceName));
+      });
+
+      console.log("有效的图片文件:", validFiles.map((f) => ({
+        indexName: f.name,
+        sourceName: f.sourceName
+      })));
+
+      if (rejected) {
+        wx.showToast({
+          title: `已过滤 ${rejected} 张超过 5M 的图片`,
+          icon: "none"
+        });
+      }
+
+      this.setData({
+        "form.imageFiles": this.data.form.imageFiles.concat(validFiles),
+        "form.imagePaths": this.data.form.imagePaths.concat(valid),
+        "errors.images": ""
+      });
+    };
+
+    wx.chooseMessageFile({
+      count: 100,
+      type: "image",
+      success: (res) => {
+        console.log("chooseMessageFile 选择的文件:", res.tempFiles);
+        appendFiles(res.tempFiles, true);
+      },
+      fail: (err) => {
+        console.warn("chooseMessageFile 选择图片失败，回退 chooseMedia:", err);
+        if (String(err.errMsg || "").indexOf("cancel") !== -1) {
+          return;
+        }
+
+        wx.chooseMedia({
+          count: 999,
+          mediaType: ["image"],
+          sizeType: ["compressed", "original"],
+          sourceType: ["album", "camera"],
+          success: (res) => {
+            console.log("chooseMedia 选择的文件:", res.tempFiles);
+            appendFiles(res.tempFiles, false);
+          }
         });
       }
     });
@@ -652,11 +661,40 @@ Page({
       const imageFiles = this.data.form.imageFiles;
       console.log("已上传的图片文件:", imageFiles.map(f => f.name));
       
+      if (!imageFiles.length) {
+        wx.showToast({
+          title: "请先上传商品图片",
+          icon: "none"
+        });
+        return;
+      }
+      
       const imageLookup = buildImageLookup(imageFiles);
       console.log("图片查找表:", imageLookup);
       
+      // 检查是否有有效的图片映射
+      const lookupKeys = Object.keys(imageLookup);
+      if (lookupKeys.length === 0) {
+        wx.showToast({
+          title: "图片文件名解析失败",
+          icon: "none"
+        });
+        return;
+      }
+      
       const cloudImagePaths = await ensureCloudImages(imagePaths, "products");
       console.log("云存储图片路径:", cloudImagePaths);
+      
+      // 检查是否有上传失败的图片
+      const failedUploads = cloudImagePaths.map((path, index) => ({ path, index })).filter(item => !item.path);
+      if (failedUploads.length > 0) {
+        wx.showModal({
+          title: "图片上传失败",
+          content: `有 ${failedUploads.length} 张图片上传失败，请检查网络后重试。`,
+          showCancel: false
+        });
+        return;
+      }
       
       const selectedOwner = this.data.form.owner;
       let createdCount = 0;
@@ -691,14 +729,16 @@ Page({
           continue;
         }
 
+        const missingImages = [];
         const images = imageRefs
           .map((imageRef) => {
             const lookupKey = String(imageRef || "").toLowerCase();
-            const imageIndex = imageLookup[lookupKey];
+            const imageIndex = resolveImageIndex(imageRef, imageLookup);
             console.log(`  查找图片 "${lookupKey}": 索引 = ${imageIndex}`);
             
             if (!Number.isInteger(imageIndex) || imageIndex < 0 || imageIndex >= cloudImagePaths.length) {
               console.log(`  ❌ 图片 "${imageRef}" 未找到`);
+              missingImages.push(imageRef);
               return "";
             }
             console.log(`  ✅ 找到图片:`, cloudImagePaths[imageIndex]);
@@ -708,7 +748,10 @@ Page({
 
         if (images.length !== imageRefs.length) {
           console.log(`第${rowIndex + 2}行图片不匹配: 期望${imageRefs.length}张, 实际${images.length}张`);
-          invalidImageRows.push(rowIndex + 2);
+          invalidImageRows.push({
+            row: rowIndex + 2,
+            missing: missingImages
+          });
           continue;
         }
 
@@ -732,9 +775,15 @@ Page({
       }
 
       if (invalidImageRows.length) {
-        wx.showToast({
-          title: `图片编号无效：第${invalidImageRows.slice(0, 3).join("、")}行`,
-          icon: "none"
+        const firstError = invalidImageRows[0];
+        const rowNum = typeof firstError === 'object' ? firstError.row : firstError;
+        const missing = typeof firstError === 'object' ? firstError.missing : [];
+        const missingStr = missing.length ? `（${missing.join(", ")}）` : "";
+        
+        wx.showModal({
+          title: "图片匹配失败",
+          content: `第${rowNum}行图片未找到${missingStr}。\n\nExcel 图片字段必须与上传图片的文件名完全一致。`,
+          showCancel: false
         });
         return;
       }

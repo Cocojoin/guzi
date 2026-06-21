@@ -1,4 +1,4 @@
-<view class="u-page">
+<view class="u-page u-page--compact">
   <view class="u-content">
     <view class="settled-total">
       <text>累计已结算货款</text>

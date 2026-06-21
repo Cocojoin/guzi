@@ -1,8 +1,16 @@
 <view class="stats-shell">
   <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
     <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
-    <view class="custom-nav-title-box" style="height: {{navBarHeight}}px;">
-      <view class="custom-nav-title">数据统计</view>
+    <view class="custom-nav-title-box {{(view === 'income' || view === 'settledDetail') ? 'custom-nav-title-box--with-back' : ''}}" style="height: {{navBarHeight}}px;">
+      <block wx:if="{{view === 'income'}}">
+        <view class="custom-nav-back" bindtap="goBackHome">‹</view>
+        <view class="custom-nav-title">收入明细</view>
+      </block>
+      <block wx:elif="{{view === 'settledDetail'}}">
+        <view class="custom-nav-back" bindtap="goBackFromSettledDetail">‹</view>
+        <view class="custom-nav-title">结算详情</view>
+      </block>
+      <view wx:else class="custom-nav-title">数据统计</view>
     </view>
   </view>
   <view class="stats-page" style="padding-top: {{contentPaddingTop + 12}}px;">
@@ -13,23 +21,20 @@
     <view wx:if="{{statsLoading && statsLoaded}}" class="stats-refresh-tip">刷新中…</view>
 
     <block wx:if="{{statsLoaded && view === 'home'}}">
-      <view class="head-row">
-        <view class="head-title-wrap">
-          <view class="title">统计</view>
-        </view>
-        <view class="switch-pill">
-          <view class="switch-thumb {{statMode === 'all' ? 'switch-thumb--right' : ''}}"></view>
-          <view class="switch-item {{statMode === 'month' ? 'active' : ''}}" data-mode="month" bindtap="switchMode">本月</view>
-          <view class="switch-item {{statMode === 'all' ? 'active' : ''}}" data-mode="all" bindtap="switchMode">累计</view>
-        </view>
-      </view>
-
       <view class="hero-card">
-        <view class="hero-top">
-          <view class="hero-title">{{heroTitle}}</view>
+        <view class="hero-control-row">
+          <view class="switch-pill switch-pill--hero">
+            <view class="switch-thumb {{statMode === 'all' ? 'switch-thumb--right' : ''}}"></view>
+            <view class="switch-item {{statMode === 'month' ? 'active' : ''}}" data-mode="month" bindtap="switchMode">本月</view>
+            <view class="switch-item {{statMode === 'all' ? 'active' : ''}}" data-mode="all" bindtap="switchMode">累计</view>
+          </view>
           <view class="month-btn" bindtap="toggleMonthPanel">{{statMode === 'all' ? '全部' : selectedMonth}} ˇ</view>
         </view>
+        <view class="hero-top">
+          <view class="hero-title">{{heroTitle}}</view>
+        </view>
         <view class="hero-amount {{heroAmountClass}}">{{heroAmountDisplay}}</view>
+        <view class="hero-divider"></view>
         <view class="hero-mini-row">
           <view><text class="mini-label">抽成收益</text><text class="mini-value">{{commissionIncome}}</text></view>
           <view><text class="mini-label">差价收益</text><text class="mini-value">{{spreadIncome}}</text></view>
@@ -91,13 +96,6 @@
     </block>
 
     <block wx:if="{{statsLoaded && view === 'income'}}">
-      <view class="sub-head">
-        <view class="back-chip" bindtap="goBackHome">‹</view>
-        <view>
-          <view class="sub-title">收入明细</view>
-          <view class="sub-caption">已结算 {{selectedMonth}}</view>
-        </view>
-      </view>
       <view class="search-bar">
         <text class="search-icon-mark">🔍</text>
         <input
@@ -117,7 +115,12 @@
       </view>
       <scroll-view class="list-scroll" scroll-y="true">
         <block wx:for="{{filteredIncomeItems}}" wx:key="title">
-          <view class="income-card" bindtap="openIncomeDetail" data-record-id="{{item.settlementRecordId}}">
+          <view
+            class="income-card"
+            bindtap="openIncomeDetail"
+            data-record-id="{{item.settlementRecordId}}"
+            data-product-id="{{item.productId}}"
+          >
             <view class="income-title">{{item.title}}</view>
             <view class="income-meta">{{item.code}}</view>
             <view class="income-meta income-meta-link" catchtap="goUserFromIncome" data-user-id="{{item.userId}}" data-user-name="{{item.userNickname}}">寄售用户：{{item.userNickname}}</view>
@@ -264,40 +267,40 @@
     </block>
 
     <block wx:if="{{statsLoaded && view === 'settledDetail' && settledDetail}}">
-      <view class="sub-head">
-        <view class="back-chip" bindtap="goBackHome">‹</view>
-        <view>
-          <view class="sub-title">结算详情</view>
-          <view class="sub-caption">{{settledDetail.date}} · 共 {{settledDetail.items}} 件商品</view>
-        </view>
-      </view>
-
       <scroll-view class="list-scroll" scroll-y="true">
+        <view class="settled-user-card">
+          <view class="settled-user-avatar">{{settledDetailUserInitial}}</view>
+          <view class="settled-user-main">
+            <view class="settled-user-name">{{settledDetail.userNickname}}</view>
+            <view class="settled-user-meta">账号 {{settledDetail.userAccount}} · 抽成 {{settledDetailRateText}}</view>
+          </view>
+          <view class="settled-user-side">
+            <text>寄售用户</text>
+            <text class="settled-user-side-arrow">›</text>
+          </view>
+        </view>
+
         <view class="settled-detail-top">
-          <view class="settlement-hint">本次应付寄售用户</view>
-          <view class="settled-detail-main-money">¥ {{settledDetailPayable}}</view>
+          <view class="settled-detail-top-orb"></view>
+          <view class="settlement-hint settlement-hint--light">当前商品实际收入</view>
+          <view class="settled-detail-main-money">¥ {{settledDetailActualIncome}}</view>
+          <view class="settled-detail-divider"></view>
           <view class="settled-detail-nums">
-            <view><view class="settlement-hint">商品总额</view><view class="money-text-red">¥ {{settledDetailGross}}</view></view>
-            <view><view class="settlement-hint">平台抽成</view><view class="money-text-red">¥ {{settledDetailCommission}}</view></view>
-            <view><view class="settlement-hint">实际收入</view><view class="money-text-red">¥ {{settledDetailActualIncome}}</view></view>
+            <view><view class="settlement-hint settlement-hint--light">商品价格</view><view class="settled-detail-num-money">¥{{settledDetailGross}}</view></view>
+            <view><view class="settlement-hint settlement-hint--light">平台抽成</view><view class="settled-detail-num-money">¥{{settledDetailCommission}}</view></view>
+            <view><view class="settlement-hint settlement-hint--light">实际收入</view><view class="settled-detail-num-money">¥{{settledDetailActualIncome}}</view></view>
           </view>
         </view>
 
-        <view class="settled-user-info detail-card">
-          <view class="mini-title">寄售用户</view>
-          <view class="user-info-row">
-            <text class="user-label">昵称</text>
-            <text class="user-value">{{settledDetail.userNickname}}</text>
-          </view>
-          <view class="user-info-row">
-            <text class="user-label">账号</text>
-            <text class="user-value">{{settledDetail.userAccount}}</text>
-          </view>
-        </view>
-
-        <view class="detail-card section-card settlement-list-card">
-          <view class="section-head"><view class="mini-title">结算商品</view><view class="settlement-hint">共 {{settledDetail.items}} 件</view></view>
-          <view wx:for="{{settlementItems}}" wx:key="rowKey" class="settlement-item-row">
+        <view class="section-head section-head--settled"><view class="mini-title">结算商品</view></view>
+        <view class="settlement-card-list">
+          <view
+            wx:for="{{settlementItems}}"
+            wx:key="rowKey"
+            class="settlement-item-row settlement-item-row--clickable settlement-item-row--card"
+            bindtap="openSettlementProductDetail"
+            data-product-id="{{item.id}}"
+          >
             <view class="settlement-item-thumb-wrap">
               <view class="settlement-item-thumb">
                 <image
@@ -312,23 +315,20 @@
             <view class="settlement-item-main">
               <view class="list-title">{{item.title}}</view>
               <view class="list-subtitle">{{item.series}} · {{item.type}} · 抽成 {{item.rate}}%</view>
-              <view class="list-subtitle">出售数量：{{item.soldQty}}件</view>
+              <view class="list-subtitle">出售数量 {{item.soldQty}} 件</view>
             </view>
             <view class="settlement-item-side">
               <view class="price">¥{{item.totalPrice}}</view>
-              <view class="list-subtitle">单价：¥{{item.price}}</view>
+              <view class="list-subtitle">单价 ¥{{item.price}}</view>
             </view>
           </view>
         </view>
 
-        <view wx:if="{{settlementVouchers && settlementVouchers.length > 0}}" class="detail-card section-card">
-          <view class="section-head"><view class="mini-title">结算凭证</view><view class="settlement-hint">{{settlementVouchers.length}} 张 · 点击放大</view></view>
-          <view class="photo-grid">
-            <block wx:for="{{settlementVouchers}}" wx:key="index">
-              <view class="photo-item" data-index="{{index}}">
-                <image class="photo-img" src="{{item}}" mode="aspectFill" bindtap="previewSettlementVoucher" data-index="{{index}}" />
-              </view>
-            </block>
+        <view class="section-head section-head--settled"><view class="mini-title">结算凭证</view></view>
+        <view class="detail-card section-card settlement-voucher-card {{!(settlementVouchers && settlementVouchers.length > 0) ? 'settlement-voucher-card--empty' : ''}}">
+          <view class="settlement-voucher-preview {{!(settlementVouchers && settlementVouchers.length > 0) ? 'settlement-voucher-preview--empty' : ''}}">
+            <image wx:if="{{settlementVouchers && settlementVouchers.length > 0}}" class="settlement-voucher-image" src="{{settlementVouchers[0]}}" mode="aspectFill" bindtap="previewSettlementVoucher" data-index="0" />
+            <view wx:else class="goods-star"></view>
           </view>
         </view>
       </scroll-view>

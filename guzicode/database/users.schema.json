@@ -7,7 +7,7 @@
       "type": "string",
       "required": true,
       "unique": true,
-      "description": "登录账号，6-12位数字字母组合；管理员账号允许为 admin"
+      "description": "登录账号，6-20位数字字母组合；管理员账号允许为 admin"
     },
     {
       "name": "nickname",

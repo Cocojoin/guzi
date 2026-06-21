@@ -95,12 +95,56 @@ Page({
     }
   },
 
-  previewImage(event) {
+  async previewImage(event) {
     const { index } = event.currentTarget.dataset;
-    this.setData({
-      showImageViewer: true,
-      imageViewerIndex: Number(index) || 0
+    const images = this.data.product && Array.isArray(this.data.product.images) ? this.data.product.images : [];
+    if (!images.length) {
+      return;
+    }
+
+    wx.showLoading({
+      title: "加载中",
+      mask: true
     });
+
+    try {
+      const cloudIds = images.filter((item) => isCloudFileId(item));
+      const tempUrlMap = {};
+
+      if (cloudIds.length > 0) {
+        const res = await wx.cloud.getTempFileURL({
+          fileList: cloudIds
+        });
+        (res.fileList || []).forEach((item) => {
+          if (item.status === 0 && item.tempFileURL) {
+            tempUrlMap[item.fileID] = item.tempFileURL;
+          }
+        });
+      }
+
+      const previewUrls = images.map((item) => {
+        if (isCloudFileId(item)) {
+          return tempUrlMap[item] || "";
+        }
+        return item;
+      }).filter(Boolean);
+
+      const currentIndex = Math.max(0, Number(index) || 0);
+      const current = previewUrls[currentIndex] || previewUrls[0];
+
+      wx.hideLoading();
+      wx.previewImage({
+        current,
+        urls: previewUrls,
+        showmenu: true
+      });
+    } catch (error) {
+      wx.hideLoading();
+      wx.showToast({
+        title: "图片加载失败",
+        icon: "none"
+      });
+    }
   },
 
   closeImageViewer() {

@@ -22,8 +22,7 @@ Page({
 
   async onShow() {
     try {
-      const items = (await productsRepository.getAllProducts())
-        .filter((item) => this.data.ids.includes(item.id))
+      const items = (await productsRepository.getProductsByIds(this.data.ids))
         .map(buildProductCard);
       this.setData({ items });
     } catch (error) {

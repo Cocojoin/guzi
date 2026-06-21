@@ -1,0 +1,147 @@
+@import "../shop-channels.wxss";
+
+.editor-shell {
+  min-height: 100vh;
+}
+
+.editor-page {
+  min-height: 100vh;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
+}
+
+.field-title {
+  margin: 8rpx 4rpx 18rpx;
+  color: #526887;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.required {
+  color: #ff7f96;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16rpx;
+  margin-bottom: 28rpx;
+}
+
+.platform-item {
+  min-height: 136rpx;
+  padding: 20rpx 0 18rpx;
+  border-radius: 26rpx;
+  background: rgba(255, 255, 255, 0.86);
+  border: 2rpx solid rgba(230, 236, 246, 0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+}
+
+.platform-item--active {
+  border-color: #b9c8ff;
+  box-shadow: 0 14rpx 28rpx rgba(162, 179, 255, 0.14);
+}
+
+.platform-label {
+  color: #6f80a0;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.field-input-wrap,
+.switch-card {
+  background: rgba(255, 255, 255, 0.94);
+  border: 2rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 30rpx;
+  box-shadow: 0 20rpx 42rpx rgba(116, 148, 181, 0.12);
+}
+
+.field-input-wrap {
+  padding: 0 28rpx;
+}
+
+.field-input {
+  width: 100%;
+  height: 96rpx;
+  color: #31425e;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.placeholder {
+  color: #b3bfd0;
+}
+
+.field-count {
+  margin: 10rpx 8rpx 28rpx 0;
+  text-align: right;
+  color: #aab6c7;
+  font-size: 24rpx;
+}
+
+.switch-card {
+  margin-top: 8rpx;
+  padding: 26rpx 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.switch-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.switch-title {
+  color: #31425e;
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.switch-desc {
+  margin-top: 8rpx;
+  color: #a0aec0;
+  font-size: 24rpx;
+}
+
+.delete-btn {
+  margin-top: 28rpx;
+  width: 100%;
+  height: 88rpx;
+  border-radius: 28rpx;
+  color: #ff6f8f;
+  background: rgba(255, 243, 246, 0.96);
+  border: 2rpx solid rgba(255, 199, 211, 0.9);
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 24rpx;
+}
+
+.delete-btn::after {
+  border: 0;
+}
+
+.editor-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(248, 251, 255, 0) 0%, rgba(248, 251, 255, 0.94) 26%, rgba(248, 251, 255, 0.98) 100%);
+  backdrop-filter: blur(12rpx);
+}
+
+.editor-submit {
+  margin-top: 0;
+  width: 100%;
+}

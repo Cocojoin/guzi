@@ -1,4 +1,4 @@
-<view class="u-page consignment-home-page">
+<view class="u-page u-page--compact consignment-home-page">
   <view class="u-content">
     <view class="rate-card">
       <view class="rate-label">我的寄售抽成比例</view>

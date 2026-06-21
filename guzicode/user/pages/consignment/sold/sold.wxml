@@ -1,4 +1,4 @@
-<view class="u-page">
+<view class="u-page u-page--compact">
   <view class="u-content">
     <view wx:if="{{loading && !hasLoaded}}" class="empty-note">加载中…</view>
     <view wx:elif="{{products.length === 0}}" class="u-card empty-card empty-card--search">

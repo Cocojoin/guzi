@@ -123,6 +123,11 @@
   color: #d45c8c;
 }
 
+.setting-icon--peach {
+  background: linear-gradient(180deg, rgba(255, 231, 215, 0.96), rgba(255, 214, 196, 0.96));
+  color: #e8733d;
+}
+
 .setting-icon--blue {
   background: linear-gradient(180deg, rgba(206, 233, 255, 0.92), rgba(187, 222, 248, 0.92));
   color: #4c86d8;

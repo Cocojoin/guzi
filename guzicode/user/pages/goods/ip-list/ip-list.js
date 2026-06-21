@@ -1,6 +1,7 @@
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
 const { debounce } = require("../../../../utils/debounce");
+const { buildShareAppMessage, buildShareTimeline, enableShareMenus } = require("../../../../utils/share");
 
 function uniqueOptions(products, key, label) {
   const values = Array.from(new Set(
@@ -59,6 +60,7 @@ Page({
     });
 
     wx.setNavigationBarTitle({ title: navTitle });
+    enableShareMenus();
   },
 
   onShow() {
@@ -234,6 +236,35 @@ Page({
 
     wx.navigateTo({
       url: `/user/pages/goods/detail/detail?id=${id}`
+    });
+  },
+
+  onShareAppMessage() {
+    const isSearchMode = this.data.mode === "search";
+    const title = isSearchMode
+      ? `谷圈星社 | ${this.data.keyword || "搜索结果"}`
+      : `谷圈星社 | ${this.data.ip || "商品列表"}好物一览`;
+
+    return buildShareAppMessage({
+      title,
+      path: "/user/pages/goods/ip-list/ip-list",
+      query: isSearchMode
+        ? { mode: "search", keyword: this.data.keyword || "" }
+        : { mode: "ip", ip: this.data.ip || "" }
+    });
+  },
+
+  onShareTimeline() {
+    const isSearchMode = this.data.mode === "search";
+    const title = isSearchMode
+      ? `谷圈星社 | ${this.data.keyword || "搜索结果"}`
+      : `谷圈星社 | ${this.data.ip || "商品列表"}好物一览`;
+
+    return buildShareTimeline({
+      title,
+      query: isSearchMode
+        ? { mode: "search", keyword: this.data.keyword || "" }
+        : { mode: "ip", ip: this.data.ip || "" }
     });
   }
 });

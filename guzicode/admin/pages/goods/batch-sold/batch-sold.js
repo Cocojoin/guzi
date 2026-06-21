@@ -16,7 +16,9 @@ Page({
   data: {
     ids: [],
     items: [],
-    remark: ""
+    remark: "",
+    loading: true,
+    submitting: false
   },
 
   onLoad(options) {
@@ -29,8 +31,7 @@ Page({
 
   async onShow() {
     try {
-      const items = (await productsRepository.getAllProducts())
-        .filter((item) => this.data.ids.includes(item.id))
+      const items = (await productsRepository.getProductsByIds(this.data.ids))
         .map(buildProductCard)
         .map((item) => ({
           id: item.id,
@@ -40,8 +41,9 @@ Page({
           salePrice: String(item.price || "")
         }));
 
-      this.setData({ items });
+      this.setData({ items, loading: false });
     } catch (error) {
+      this.setData({ loading: false });
       wx.showToast({ title: "商品加载失败", icon: "none" });
     }
   },
@@ -82,6 +84,10 @@ Page({
   },
 
   async handleSubmit() {
+    if (this.data.submitting) {
+      return;
+    }
+
     if (!this.data.items.length) {
       wx.showToast({ title: "请先选择商品", icon: "none" });
       return;
@@ -101,25 +107,20 @@ Page({
     }
 
     try {
-      for (const item of selling) {
-        const product = await productsRepository.getProductById(item.id);
-        if (!product) {
-          continue;
-        }
+      this.setData({ submitting: true });
+      wx.showLoading({ title: "提交中", mask: true });
 
-        const remaining = Math.max(
-          0,
-          Number(product.totalQuantity || 0) - Number(product.soldCount || 0) - Number(product.settledCount || 0)
-        );
-        const qty = clampInt(item.qty, 0, remaining);
+      const consignmentUsers = await usersRepository.listConsignmentUsers();
+      const ownerUserMap = new Map(
+        consignmentUsers.map((item) => [String(item._id || "").trim(), item])
+      );
+
+      await productsRepository.bulkRecordProductSales(selling, async (product) => {
         const ownerUserId = String(product.ownerUserId || "").trim();
-        const ownerUser = ownerUserId ? await usersRepository.getUserById(ownerUserId) : null;
-        const rateFraction = getUserRateFraction(ownerUser);
+        const ownerUser = ownerUserId ? ownerUserMap.get(ownerUserId) || null : null;
+        return getUserRateFraction(ownerUser);
+      });
 
-        await productsRepository.recordProductSale(item.id, qty, rateFraction, {
-          price: Number.isFinite(item.price) && item.price > 0 ? item.price : product.price
-        });
-      }
       await addOperationLog({
         title: "批量标记售出",
         target: `${selling.length} 件商品`,
@@ -127,11 +128,13 @@ Page({
         note: selling.map((item) => `${item.id}×${item.qty}`).slice(0, 5).join("、")
       });
 
+      wx.hideLoading();
       wx.showToast({ title: "已标记售出", icon: "success" });
       setTimeout(() => {
         wx.reLaunch({ url: "/admin/pages/goods/list/list" });
       }, 500);
     } catch (error) {
+      wx.hideLoading();
       await addOperationLog({
         title: "批量标记售出",
         target: `${selling.length} 件商品`,
@@ -140,6 +143,8 @@ Page({
         success: false
       });
       wx.showToast({ title: "提交失败，请重试", icon: "none" });
+    } finally {
+      this.setData({ submitting: false });
     }
   },
 

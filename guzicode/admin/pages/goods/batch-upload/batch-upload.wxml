@@ -4,7 +4,7 @@
     <view class="form-card">
       <view class="card-label-row">
         <view class="card-label">商品图片 <text class="required">*</text></view>
-        <view class="link-hint">图片名称与表格名称对应</view>
+        <view class="link-hint">表格图片字段需与文件名一致</view>
       </view>
       <view class="upload-action-btn" bindtap="choosePhoto">
         <view class="upload-action-icon"></view>
@@ -13,6 +13,7 @@
       <view class="upload-success-hint">已上传 {{form.imagePaths.length}} 张图片（单张 ≤ 5M）</view>
       <view class="table-hint">可多次点击选择图片，图片会自动累积</view>
       <view class="table-hint">同一条商品可填写多个图片名称，使用英文逗号分隔，例如：1.png,2.png</view>
+      <view class="table-hint">Excel 图片字段必须填写上传图片的完整文件名，例如：24.jpg</view>
       <view wx:if="{{errors.images}}" class="error-inline">{{errors.images}}</view>
     </view>
 
@@ -33,7 +34,7 @@
         <view class="card-label">商品表格 <text class="required">*</text></view>
         <view class="link-hint">支持 .csv / .xlsx / .xls</view>
       </view>
-      <view class="table-hint">先下载模板填写多条商品数据，再上传表格。图片字段按图片名称填写，支持多个名称，使用英文逗号分隔。当前导入支持 CSV / XLSX / XLS。</view>
+      <view class="table-hint">先下载模板填写多条商品数据，再上传表格。图片字段必须与上传图片文件名一致，多个名称使用英文逗号分隔。当前导入支持 CSV / XLSX / XLS。</view>
       <view class="upload-action-btn" bindtap="downloadTemplate">
         <view class="upload-file-icon"></view>
         <text class="upload-action-text">下载商品模板</text>

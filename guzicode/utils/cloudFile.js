@@ -55,7 +55,8 @@ async function ensureCloudImages(paths, folder = "products", options = {}) {
   }
   await Promise.all(workers);
 
-  return result.filter(Boolean);
+  // 保持索引对应关系，不过滤空值
+  return result;
 }
 
 module.exports = {

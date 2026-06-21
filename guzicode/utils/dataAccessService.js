@@ -49,6 +49,14 @@ async function fetchAll(collectionName, options = {}) {
   return result.items || [];
 }
 
+async function bulkUpdateDocs(collectionName, updates) {
+  const result = await invoke("bulkUpdateDocs", {
+    collectionName,
+    updates: Array.isArray(updates) ? updates : []
+  });
+  return result.items || [];
+}
+
 async function getDocById(collectionName, docId) {
   const result = await invoke("getDocById", {
     collectionName,
@@ -84,6 +92,7 @@ async function removeDocById(collectionName, docId) {
 
 module.exports = {
   addDoc,
+  bulkUpdateDocs,
   fetchAll,
   getDocById,
   removeDocById,

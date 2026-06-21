@@ -1,11 +1,15 @@
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
 const { debounce } = require("../../../../utils/debounce");
+const { buildShareAppMessage, buildShareTimeline, enableShareMenus } = require("../../../../utils/share");
+const { getVisibleShopChannels, getContactServiceSetting } = require("../../../../utils/shopChannelsRepository");
 
 Page({
   data: {
     id: "",
     product: null,
+    shopChannels: [],
+    contactServiceEnabled: true,
     editable: false,
     submitting: false,
     invalid: false,
@@ -20,6 +24,7 @@ Page({
     this.backToList = debounce(this.backToList.bind(this), 800);
     
     this.setData({ id: options.id || "", editable: options.editable === "1" });
+    enableShareMenus();
   },
 
   async onShow() {
@@ -28,7 +33,11 @@ Page({
 
   async loadProduct() {
     try {
-      const product = await productsRepository.getProductById(this.data.id);
+      const [product, shopChannels, contactServiceSetting] = await Promise.all([
+        productsRepository.getProductById(this.data.id),
+        getVisibleShopChannels(),
+        getContactServiceSetting()
+      ]);
       if (!product) {
         this.setData({
           product: null,
@@ -46,7 +55,12 @@ Page({
         });
         return;
       }
-      this.setData({ product: productView, invalid: false });
+      this.setData({
+        product: productView,
+        shopChannels,
+        contactServiceEnabled: contactServiceSetting.enabled !== false,
+        invalid: false
+      });
     } catch (error) {
       wx.showToast({ title: "商品加载失败", icon: "none" });
     }
@@ -89,6 +103,59 @@ Page({
           wx.showToast({ title: "删除失败", icon: "none" });
         }
       }
+    });
+  },
+
+  copyShopKeyword(event) {
+    const { text } = event.currentTarget.dataset;
+    if (!text) {
+      wx.showToast({
+        title: "复制失败，请手动搜索店铺名",
+        icon: "none"
+      });
+      return;
+    }
+    wx.setClipboardData({
+      data: text,
+      success: () => {
+        wx.showToast({
+          title: "店铺名已复制",
+          icon: "none"
+        });
+      },
+      fail: () => {
+        wx.showToast({
+          title: "复制失败，请手动搜索店铺名",
+          icon: "none"
+        });
+      }
+    });
+  },
+
+  onShareAppMessage() {
+    const product = this.data.product;
+    const title = product
+      ? `谷圈星社 | ${product.title || "商品详情"}`
+      : "谷圈星社 | 商品详情";
+
+    return buildShareAppMessage({
+      title,
+      path: "/user/pages/goods/detail/detail",
+      query: { id: this.data.id || "" },
+      imageUrl: product && product.coverImage ? product.coverImage : undefined
+    });
+  },
+
+  onShareTimeline() {
+    const product = this.data.product;
+    const title = product
+      ? `谷圈星社 | ${product.title || "商品详情"}`
+      : "谷圈星社 | 商品详情";
+
+    return buildShareTimeline({
+      title,
+      query: { id: this.data.id || "" },
+      imageUrl: product && product.coverImage ? product.coverImage : undefined
     });
   }
 });

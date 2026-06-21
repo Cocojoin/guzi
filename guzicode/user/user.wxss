@@ -21,6 +21,10 @@ page {
   padding-bottom: 24rpx;
 }
 
+.u-page--compact {
+  padding-bottom: 24rpx;
+}
+
 .u-page::after {
   content: "";
   position: absolute;

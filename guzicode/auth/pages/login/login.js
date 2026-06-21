@@ -1,14 +1,15 @@
 const authService = require("../../../utils/authService");
 const session = require("../../../utils/session");
 const { addOperationLog } = require("../../../utils/adminSettings");
+const { buildShareAppMessage, buildShareTimeline, enableShareMenus } = require("../../../utils/share");
 
 function validateAccount(value) {
   if (!value) {
     return "请输入账号";
   }
 
-  if (value !== "admin" && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$/.test(value)) {
-    return "账号需为6-12位数字和字母组合";
+  if (value !== "admin" && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$/.test(value)) {
+    return "账号需为6-20位数字和字母组合";
   }
 
   return "";
@@ -53,6 +54,7 @@ Page({
   onShow() {
     const currentSession = session.getSession();
     if (!currentSession) {
+      enableShareMenus();
       return;
     }
 
@@ -156,6 +158,19 @@ Page({
   goRegister() {
     wx.navigateTo({
       url: "/auth/pages/register/register"
+    });
+  },
+
+  onShareAppMessage() {
+    return buildShareAppMessage({
+      title: "谷圈星社 | 登录后查看寄售与收藏",
+      path: "/auth/pages/login/login"
+    });
+  },
+
+  onShareTimeline() {
+    return buildShareTimeline({
+      title: "谷圈星社 | 登录后查看寄售与收藏"
     });
   }
 });

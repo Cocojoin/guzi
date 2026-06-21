@@ -1,6 +1,7 @@
 const productsRepository = require("../../../../utils/productsRepository");
 const { buildProductCard } = require("../../../../utils/productPresentation");
 const { debounce } = require("../../../../utils/debounce");
+const { buildShareAppMessage, buildShareTimeline, enableShareMenus } = require("../../../../utils/share");
 
 const BANNER_LIMIT = 3;
 
@@ -92,6 +93,7 @@ Page({
 
   onLoad() {
     this.openIp = debounce(this.openIp.bind(this), 500);
+    enableShareMenus();
   },
 
   onShow() {
@@ -147,6 +149,19 @@ Page({
 
     wx.navigateTo({
       url: `/user/pages/goods/ip-list/ip-list?mode=ip&ip=${encodeURIComponent(ip)}`
+    });
+  },
+
+  onShareAppMessage() {
+    return buildShareAppMessage({
+      title: "谷圈星社 | 发现正在上架的谷子好物",
+      path: "/user/pages/goods/list/list"
+    });
+  },
+
+  onShareTimeline() {
+    return buildShareTimeline({
+      title: "谷圈星社 | 发现正在上架的谷子好物"
     });
   }
 });

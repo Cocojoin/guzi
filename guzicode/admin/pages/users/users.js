@@ -3,9 +3,10 @@ const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const { addOperationLog, formatFailureContext } = require("../../../utils/adminSettings");
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
 const { debounce } = require("../../../utils/debounce");
-const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, normalizeSoldBatches, settleSpecificSoldBatch } = require("../../../utils/consignmentRate");
+const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, normalizeSoldBatches } = require("../../../utils/consignmentRate");
 const { ensureCloudImages } = require("../../../utils/cloudFile");
 const dataAccessService = require("../../../utils/dataAccessService");
+const productsRepository = require("../../../utils/productsRepository");
 const usersRepository = require("../../../utils/usersRepository");
 const authService = require("../../../utils/authService");
 const session = require("../../../utils/session");
@@ -2033,27 +2034,11 @@ Page({
       await dataAccessService.addDoc(SETTLEMENT_RECORDS_COLLECTION, record);
       await Promise.all(
         items.map(async (item) => {
-          const p = await dataAccessService.getDocById(PRODUCTS_COLLECTION, item.id);
-          const totalQuantity = Number(p.totalQuantity || 0);
-          const soldCount = Number(p.soldCount || 0);
-          const nextSettled = Number(p.settledCount || 0) + Number(item.soldQty || 0);
-          const remainingCount = Math.max(0, totalQuantity - soldCount);
-          
-          // 计算新状态：只有当剩余数量为0时才设置为已售出
-          let nextStatus = p.status;
-          if (remainingCount <= 0 && totalQuantity > 0) {
-            nextStatus = "sold";
-          } else if (nextStatus === "sold" && remainingCount > 0) {
-            // 如果状态是sold但还有剩余数量，恢复为up
-            nextStatus = "up";
-          }
-          
-          await dataAccessService.updateDocById(PRODUCTS_COLLECTION, item.id, {
-            settledCount: nextSettled,
-            soldBatches: settleSpecificSoldBatch(p, item.batchIndex, Number(item.soldQty || 0), item.rateFraction),
-            status: nextStatus,
-            updatedAt: new Date()
-          });
+          await productsRepository.applySettlementToProduct(
+            item.id,
+            Number(item.soldQty || 0),
+            normalizeRateFraction(item.rateFraction)
+          );
         })
       );
       await addOperationLog({

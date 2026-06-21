@@ -224,6 +224,43 @@ async function handleUpdateDocById({ collectionName, docId, data }, requester) {
   });
 }
 
+async function handleBulkUpdateDocs({ collectionName, updates }, requester) {
+  if (!canWriteCollection(collectionName, requester)) {
+    return fail("FORBIDDEN", "暂无数据写入权限");
+  }
+
+  const list = Array.isArray(updates) ? updates : [];
+  if (!list.length) {
+    return ok({ items: [] });
+  }
+
+  const items = [];
+  for (const updateItem of list) {
+    const normalizedDocId = String(updateItem && updateItem.docId || "").trim();
+    if (!normalizedDocId) {
+      continue;
+    }
+
+    const current = await getDoc(collectionName, normalizedDocId);
+    if (!current) {
+      continue;
+    }
+
+    const payload = updateItem && updateItem.data && typeof updateItem.data === "object"
+      ? updateItem.data
+      : {};
+
+    await db.collection(collectionName).doc(normalizedDocId).update({ data: payload });
+    items.push({
+      ...current,
+      ...payload,
+      _id: normalizedDocId
+    });
+  }
+
+  return ok({ items });
+}
+
 async function handleRemoveDocById({ collectionName, docId }, requester) {
   if (!canWriteCollection(collectionName, requester)) {
     return fail("FORBIDDEN", "暂无数据删除权限");
@@ -266,6 +303,9 @@ exports.main = async (event) => {
     }
     if (action === "updateDocById") {
       return await handleUpdateDocById(event, requester);
+    }
+    if (action === "bulkUpdateDocs") {
+      return await handleBulkUpdateDocs(event, requester);
     }
     if (action === "removeDocById") {
       return await handleRemoveDocById(event, requester);

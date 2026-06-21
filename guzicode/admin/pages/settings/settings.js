@@ -23,6 +23,13 @@ Page({
         iconText: "IP"
       },
       {
+        key: "shop-channels",
+        title: "购买店铺",
+        subtitle: "配置商品详情页「在哪里买」",
+        accentClass: "setting-icon--peach",
+        iconText: "店"
+      },
+      {
         key: "operation-log",
         title: "操作日志",
         subtitle: "操作记录、异常行为追溯",
@@ -104,6 +111,7 @@ Page({
     const { key } = event.currentTarget.dataset;
     const routeMap = {
       "ip-groups": "/admin/pages/settings/ip-groups/ip-groups",
+      "shop-channels": "/admin/pages/settings/shop-channels/shop-channels",
       "operation-log": "/admin/pages/settings/operation-log/operation-log",
       "data-backup": "/admin/pages/settings/data-backup/data-backup",
       "export-data": "/admin/pages/settings/export-data/export-data"

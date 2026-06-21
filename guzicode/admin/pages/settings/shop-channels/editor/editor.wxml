@@ -1,0 +1,54 @@
+<view class="editor-shell">
+  <view class="shop-nav" style="height: {{contentPaddingTop}}px;">
+    <view class="shop-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="shop-nav-bar" style="height: {{navBarHeight}}px;">
+      <view class="shop-back" bindtap="goBack"></view>
+      <view class="shop-nav-main">
+        <view class="shop-nav-title">{{isEdit ? '编辑店铺' : '添加店铺'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="editor-page" style="padding-top: {{contentPaddingTop + 24}}px;">
+    <view class="field-title">所属平台 <text class="required">*</text></view>
+    <view class="platform-grid">
+      <view
+        wx:for="{{platformOptions}}"
+        wx:key="key"
+        class="platform-item {{form.platformKey === item.key ? 'platform-item--active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="choosePlatform"
+      >
+        <view class="preview-platform {{item.accentClass}}">{{item.shortLabel}}</view>
+        <view class="platform-label">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="field-title">店铺名称 <text class="required">*</text></view>
+    <view class="field-input-wrap">
+      <input
+        class="field-input"
+        placeholder="如：谷圈星社官方店"
+        placeholder-class="placeholder"
+        maxlength="20"
+        value="{{form.storeName}}"
+        bindinput="onStoreNameInput"
+      />
+    </view>
+    <view class="field-count">{{storeNameCount}}/20</view>
+
+    <view class="switch-card">
+      <view class="switch-copy">
+        <view class="switch-title">在详情页展示</view>
+        <view class="switch-desc">关闭则保留配置但不对买家显示</view>
+      </view>
+      <switch color="#b8d7fb" checked="{{form.showInDetail}}" bindchange="onDetailSwitch" />
+    </view>
+
+    <button wx:if="{{isEdit}}" class="delete-btn" bindtap="handleDelete">删除此店铺</button>
+  </view>
+
+  <view class="editor-footer">
+    <button class="submit-btn editor-submit" bindtap="handleSubmit">{{isEdit ? '保存修改' : '确认添加'}}</button>
+  </view>
+</view>

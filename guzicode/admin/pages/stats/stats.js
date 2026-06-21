@@ -4,6 +4,7 @@ const { navigateAdminRoot } = require("../../../utils/adminNavigation");
 const session = require("../../../utils/session");
 const { debounce } = require("../../../utils/debounce");
 const dataAccessService = require("../../../utils/dataAccessService");
+const { getDisplayStatus } = require("../../../utils/productPresentation");
 
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const MATERIAL_EXPENSES_COLLECTION = "material_expenses";
@@ -211,14 +212,18 @@ Page({
     showDeleteDialog: false,
     pendingDeleteType: "",
     pendingDeleteId: "",
+    previousView: "home",
 
     settledDetail: null,
     settlementItems: [],
+    settlementItemCount: 0,
     settlementVouchers: [],
     settledDetailPayable: "0.00",
     settledDetailGross: "0.00",
     settledDetailCommission: "0.00",
-    settledDetailActualIncome: "0.00"
+    settledDetailActualIncome: "0.00",
+    settledDetailRateText: "0%",
+    settledDetailUserInitial: "寄"
   },
 
   onLoad() {
@@ -355,9 +360,9 @@ Page({
   computeProductCounts(products) {
     return {
       totalCount: products.length,
-      upCount: products.filter((item) => item.status === "up").length,
-      soldCount: products.filter((item) => item.status === "sold").length,
-      settledCount: products.filter((item) => item.status === "settled").length
+      upCount: products.filter((item) => getDisplayStatus(item) === "up").length,
+      soldCount: products.filter((item) => getDisplayStatus(item) === "sold").length,
+      settledCount: products.filter((item) => getDisplayStatus(item) === "settled").length
     };
   },
 
@@ -423,16 +428,15 @@ Page({
     const rows = [];
     settlementRecords.forEach((record) => {
       const list = record.settlementItems || [];
-      const grossTotal = toNumber(record.gross) || 1;
-      const actualIncomeTotal = toNumber(record.actualIncome);
       list.forEach((item) => {
         const qty = toNumber(item.soldQty || 1);
         const price = toNumber(item.price);
         const gross = price * qty;
-        const ratio = grossTotal ? gross / grossTotal : 0;
-        const settleAmount = actualIncomeTotal * ratio;
         const rate = toNumber(item.rate);
         const commission = gross * (rate / 100);
+        const payableAmount = item.payableAmount != null
+          ? toNumber(item.payableAmount)
+          : Math.max(0, gross - commission);
 
         rows.push({
           id: `${record._id || record.id || record.date}-${item.id || item.productId || Math.random()}`,
@@ -445,7 +449,7 @@ Page({
           userNickname: record.userNickname || "未知用户",
           userAccount: record.userAccount || "",
           price: fmtMoney(gross),
-          income: fmtMoney(settleAmount),
+          income: fmtMoney(payableAmount),
           commission: fmtMoney(commission),
           rateText: `${rate.toFixed(0)}%`,
           statusText: "已结算",
@@ -614,26 +618,56 @@ Page({
   },
 
   async openIncomeDetail(e) {
-    const recordId = e.currentTarget.dataset.recordId;
-    const incomeItem = this.data.incomeItems?.find(item => item.settlementRecordId === recordId);
+    const recordId = String(e.currentTarget.dataset.recordId || "").trim();
+    const productId = String(e.currentTarget.dataset.productId || "").trim();
+    if (!recordId) return;
+
+    const incomeItem = (this.data.filteredIncomeItems || []).find((item) =>
+      String(item.settlementRecordId || "").trim() === recordId
+      && String(item.productId || "").trim() === productId
+    ) || (this.data.incomeItems || []).find((item) =>
+      String(item.settlementRecordId || "").trim() === recordId
+      && String(item.productId || "").trim() === productId
+    ) || (this.data.filteredIncomeItems || []).find((item) => String(item.settlementRecordId || "").trim() === recordId)
+      || (this.data.incomeItems || []).find((item) => String(item.settlementRecordId || "").trim() === recordId);
     const record = incomeItem?.settlementRecord;
     if (!record) return;
 
-    const settlementItems = (record.settlementItems || []).map((item, index) => ({
+    const allSettlementItems = (record.settlementItems || []).map((item, index) => ({
       ...item,
       rowKey: item.rowKey || `${item.id || "item"}-${index}`,
       totalPrice: item.totalPrice || (item.price * item.soldQty)
     }));
-    const subtitle = `${record.date} · 共 ${record.items} 件商品`;
+
+    const settlementItems = allSettlementItems.filter((item) => {
+      if (!productId) {
+        return true;
+      }
+      return String(item.id || item.productId || "").trim() === productId;
+    });
+
+    const currentItem = settlementItems[0] || allSettlementItems[0] || null;
+    const currentQty = toNumber(currentItem?.soldQty || 1);
+    const currentGross = toNumber(currentItem?.totalPrice != null ? currentItem.totalPrice : toNumber(currentItem?.price) * currentQty);
+    const currentRate = toNumber(currentItem?.rate);
+    const currentCommission = currentGross * (currentRate / 100);
+    const allGross = allSettlementItems.reduce((sum, item) => sum + toNumber(item.totalPrice != null ? item.totalPrice : toNumber(item.price) * toNumber(item.soldQty || 1)), 0);
+    const currentActualIncome = currentItem && currentItem.actualIncome != null
+      ? toNumber(currentItem.actualIncome)
+      : (allGross > 0 ? (toNumber(record.actualIncome) * currentGross) / allGross : 0);
 
     this.setData({
+      previousView: this.data.view || "income",
       settledDetail: record,
       settlementItems,
+      settlementItemCount: settlementItems.length,
       settlementVouchers: [],
-      settledDetailPayable: fmt2(record.payable),
-      settledDetailGross: fmt2(record.gross),
-      settledDetailCommission: fmt2(record.commission),
-      settledDetailActualIncome: fmt2(record.actualIncome),
+      settledDetailPayable: fmt2(currentItem?.payableAmount != null ? toNumber(currentItem.payableAmount) : Math.max(0, currentGross - currentCommission)),
+      settledDetailGross: fmt2(currentGross),
+      settledDetailCommission: fmt2(currentCommission),
+      settledDetailActualIncome: fmt2(currentActualIncome),
+      settledDetailRateText: `${currentRate.toFixed(0)}%`,
+      settledDetailUserInitial: String(record.userNickname || "寄").slice(0, 1),
       view: "settledDetail"
     });
 
@@ -665,6 +699,12 @@ Page({
         this.setData({ settlementVouchers: vouchers });
       }
     }
+  },
+
+  goBackFromSettledDetail() {
+    this.setData({
+      view: this.data.previousView || "income"
+    });
   },
 
   async previewSettlementVoucher(e) {
@@ -717,6 +757,21 @@ Page({
     const userId = e.currentTarget.dataset.userId || "";
     const userName = e.currentTarget.dataset.userName || "";
     navigateAdminRoot("/admin/pages/users/users", { keyword: userName || userId });
+  },
+
+  openSettlementProductDetail(e) {
+    const productId = String(e.currentTarget.dataset.productId || "").trim();
+    if (!productId) {
+      wx.showToast({
+        title: "商品信息不存在",
+        icon: "none"
+      });
+      return;
+    }
+
+    wx.navigateTo({
+      url: `/admin/pages/goods/detail/detail?id=${productId}`
+    });
   },
 
   onIncomeStartDateChange(e) {
@@ -977,8 +1032,8 @@ Page({
       commissionIncome: fmtMoney(source.commissionTotal),
       spreadIncome: fmtSignedMoney(source.spreadTotal),
       totalExpense: fmtMoney(-source.totalExpense),
-      actualSale: fmtMoney(source.settledPriceTotal),
-      settleIncome: fmtMoney(source.actualIncomeTotal),
+      actualSale: fmtMoney(source.actualIncomeTotal),
+      settleIncome: fmtMoney(source.payableTotal),
       netIncomeRaw: source.netIncome,
       summaryNetIncomeRaw: this.data.allStatsRaw ? this.data.allStatsRaw.netIncome : source.netIncome,
       materialTotal: fmtMoney(-source.materialTotal),

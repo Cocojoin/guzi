@@ -1,4 +1,4 @@
-<view class="u-page goods-page">
+<view class="u-page u-page--compact goods-page">
   <view class="u-content">
     <view class="search-bar u-card">
       <text class="search-icon">⌕</text>

@@ -1,13 +1,14 @@
 const authService = require("../../../utils/authService");
 const session = require("../../../utils/session");
+const { buildShareAppMessage, buildShareTimeline, enableShareMenus } = require("../../../utils/share");
 
 function validateAccount(value) {
   if (!value) {
     return "请输入账号";
   }
 
-  if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$/.test(value)) {
-    return "账号需为6-12位数字和字母组合";
+  if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$/.test(value)) {
+    return "账号需为6-20位数字和字母组合";
   }
 
   return "";
@@ -52,6 +53,10 @@ Page({
     passwordVisible: false,
     confirmPasswordVisible: false,
     submitting: false
+  },
+
+  onLoad() {
+    enableShareMenus();
   },
 
   onAccountInput(event) {
@@ -162,6 +167,19 @@ Page({
     session.clearSession();
     wx.navigateBack({
       delta: 1
+    });
+  },
+
+  onShareAppMessage() {
+    return buildShareAppMessage({
+      title: "谷圈星社 | 注册账号开始记录喜欢",
+      path: "/auth/pages/register/register"
+    });
+  },
+
+  onShareTimeline() {
+    return buildShareTimeline({
+      title: "谷圈星社 | 注册账号开始记录喜欢"
     });
   }
 });

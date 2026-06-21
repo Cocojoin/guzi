@@ -1,4 +1,4 @@
-<view class="u-page" wx:if="{{record}}">
+<view class="u-page u-page--compact" wx:if="{{record}}">
   <view class="u-content">
     <view class="settle-hero">
       <view>本次结算货款</view>

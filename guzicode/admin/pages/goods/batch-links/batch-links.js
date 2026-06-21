@@ -38,7 +38,7 @@ Page({
       .filter(Boolean);
 
     try {
-      const records = await Promise.all(ids.map((id) => productsRepository.getProductById(id)));
+      const records = await productsRepository.getProductsByIds(ids);
       const items = records
         .filter(Boolean)
         .map((item) => {
@@ -125,10 +125,13 @@ Page({
     }
 
     try {
-      await Promise.all(
-        this.data.items.map((item) => productsRepository.updateProduct(item.id, {
+      await productsRepository.bulkUpdateProducts(
+        this.data.items.map((item) => ({
+          id: item.id,
+          data: {
           status: "up",
           links: sanitizeLinks(item.links)
+          }
         }))
       );
       await addOperationLog({

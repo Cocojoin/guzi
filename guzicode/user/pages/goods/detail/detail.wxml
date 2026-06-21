@@ -5,28 +5,54 @@
     </view>
 
     <view class="u-card detail-head">
-      <view>
+      <view class="detail-head-main">
         <view class="detail-title">{{product.title}}</view>
         <view class="detail-sub">{{product.ip}} · {{product.typeLabel}}</view>
         <view class="detail-badges">
           <text class="badge {{product.qualityClassName === 'quality-badge--flaw' ? 'badge-flaw' : 'badge-clean'}}">{{product.qualityLabel}}</text>
           <text class="badge status-pill--up">剩余 {{product.remainingCount}} 件</text>
-          
         </view>
       </view>
       <view class="detail-price">{{product.priceText}}</view>
     </view>
 
-    <view class="u-card spec-card">
-      <view class="spec-row"><text>IP</text><text>{{product.ip}}</text></view>
-      <view class="spec-row"><text>角色</text><text>{{product.role}}</text></view>
-      <view class="spec-row"><text>系列</text><text>{{product.series}}</text></view>
-      <view class="spec-row"><text>类型</text><text>{{product.typeLabel}}</text></view>
-    </view>
-
     <view class="u-card desc-card">
       <view class="section-title">商品描述</view>
       <view class="desc-text">{{product.remark || "卖家暂未填写商品描述"}}</view>
+    </view>
+
+    <view wx:if="{{shopChannels.length && product.displayStatus === 'up'}}" class="u-card where-card">
+      <view class="where-head">
+        <view class="section-title where-title">在哪里买</view>
+        <view class="where-safe">认准官方店铺 · 谨防仿货</view>
+      </view>
+      <view class="where-row" wx:for="{{shopChannels}}" wx:key="id">
+        <view class="where-platform {{item.accentClass}}">{{item.platformShortLabel}}</view>
+        <view class="where-meta">
+          <view class="where-meta-line">
+            <view class="where-platform-name">{{item.platformSubtitle}}</view>
+            <view class="where-store-name">{{item.storeName}}</view>
+          </view>
+        </view>
+        <view class="where-action">
+          <button class="where-copy-btn" data-text="{{item.searchKeyword || item.storeName}}" bindtap="copyShopKeyword">复制</button>
+        </view>
+      </view>
+      <view class="where-foot">
+        <text class="where-foot-icon">i</text>
+        <text>复制店铺名后，到对应平台搜索店铺即可进店购买</text>
+      </view>
+    </view>
+
+    <view wx:if="{{contactServiceEnabled}}" class="u-card contact-card">
+      <view class="contact-icon">客</view>
+      <view class="contact-main">
+        <view class="section-title contact-title">联系客服</view>
+        <view class="contact-desc">咨询商品详情、申请对光验货、售后都找客服</view>
+      </view>
+      <view class="contact-action">
+        <button class="contact-btn" open-type="contact">联系</button>
+      </view>
     </view>
   </view>
 
