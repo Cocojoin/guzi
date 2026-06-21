@@ -36,17 +36,21 @@
   left: 24rpx;
   top: 50%;
   transform: translateY(-50%);
-  width: 60rpx;
-  height: 60rpx;
-  border-radius: 18rpx;
-  background: rgba(247, 250, 255, 0.95);
-  border: 2rpx solid rgba(217, 236, 248, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #3b4e68;
-  font-size: 40rpx;
+  width: 72rpx;
+  height: 72rpx;
   flex-shrink: 0;
+}
+
+.custom-nav-back::before {
+  content: "";
+  position: absolute;
+  left: 22rpx;
+  top: 24rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-left: 4rpx solid #1f2937;
+  border-bottom: 4rpx solid #1f2937;
+  transform: rotate(45deg);
 }
 
 .stats-shell {

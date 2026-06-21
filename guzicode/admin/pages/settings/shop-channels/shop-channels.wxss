@@ -58,10 +58,10 @@
 
 .shop-nav-title {
   text-align: center;
-  font-size: 44rpx;
-  font-weight: 800;
-  color: #31425e;
-  line-height: 1.1;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
