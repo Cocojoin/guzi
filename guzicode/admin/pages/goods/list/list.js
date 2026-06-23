@@ -10,15 +10,13 @@ const STATUS_OPTIONS = [
   { label: "全部状态", value: "all" },
   { label: "已上架", value: "up" },
   { label: "已下架", value: "down" },
-  { label: "已售出", value: "sold" },
-  { label: "已结算", value: "settled" }
+  { label: "已售出", value: "sold" }
 ];
 
 const STATUS_ORDER = {
   up: 0,
   down: 1,
-  sold: 2,
-  settled: 3
+  sold: 2
 };
 
 function resolveOwnerName(product, consignmentUsers) {
@@ -72,7 +70,7 @@ Page({
     ownerOptions: ["全部用户"],
     ownerIndex: 0,
     statusIndex: 0,
-    statusLabels: ["商品状态", "已上架", "已下架", "已售出", "已结算"],
+    statusLabels: ["商品状态", "已上架", "已下架", "已售出"],
     roleOptions: ["角色"],
     roleIndex: 0,
     searchText: "",

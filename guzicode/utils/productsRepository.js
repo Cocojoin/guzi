@@ -339,7 +339,9 @@ async function applySettlementToProduct(id, quantity, fallbackRateFraction) {
     const remainingCount = Math.max(0, totalQuantity - nextSold);
 
     let nextStatus = current.status;
-    if (remainingCount <= 0 && totalQuantity > 0) {
+    if (nextSettled > 0 && nextSold <= 0) {
+      nextStatus = "settled";
+    } else if (remainingCount <= 0 && totalQuantity > 0) {
       nextStatus = nextSold > 0 ? "sold" : "settled";
     } else if (["sold", "settled"].includes(nextStatus) && remainingCount > 0) {
       nextStatus = "up";

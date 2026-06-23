@@ -83,7 +83,7 @@
 
       <block wx:elif="{{filteredProducts.length}}">
         <view
-          class="goods-card {{multiSelect ? 'goods-card--batch' : ''}} {{item.selected ? 'goods-card--selected' : ''}} {{item.selectable ? '' : 'goods-card--disabled'}}"
+          class="goods-card {{multiSelect ? 'goods-card--batch' : ''}} {{item.selected ? 'goods-card--selected' : ''}} {{item.displayStatus === 'sold' ? 'goods-card--sold' : ''}} {{item.selectable ? '' : 'goods-card--disabled'}}"
           wx:for="{{filteredProducts}}"
           wx:key="id"
           data-id="{{item.id}}"

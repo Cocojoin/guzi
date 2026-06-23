@@ -9,22 +9,13 @@ function getRemainingCount(product) {
 
 function getDisplayStatus(product) {
   const totalQuantity = Number(product.totalQuantity || 0);
-  const soldCount = Number(product.soldCount || 0);
-  const settledCount = Number(product.settledCount || 0);
   const remainingCount = getRemainingCount(product);
 
   if (product.status === "settled") {
-    return "settled";
-  }
-
-  if (settledCount > 0 && soldCount > 0 && settledCount >= soldCount) {
-    return "settled";
+    return "sold";
   }
 
   if (remainingCount <= 0 && totalQuantity > 0) {
-    if (settledCount > 0 && soldCount <= 0) {
-      return "settled";
-    }
     return "sold";
   }
 
@@ -39,8 +30,7 @@ function getStatusMeta(status) {
   const statusMap = {
     down: { label: "已下架", className: "status-pill--down" },
     up: { label: "已上架", className: "status-pill--up" },
-    sold: { label: "已售出", className: "status-pill--sold" },
-    settled: { label: "已结算", className: "status-pill--settled" }
+    sold: { label: "已售出", className: "status-pill--sold" }
   };
 
   return statusMap[status] || statusMap.down;

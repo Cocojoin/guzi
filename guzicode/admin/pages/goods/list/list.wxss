@@ -344,6 +344,24 @@ page {
   opacity: 0.56;
 }
 
+.goods-card--sold {
+  background: linear-gradient(180deg, rgba(250, 251, 253, 0.96), rgba(243, 246, 250, 0.92));
+  border-color: rgba(223, 229, 238, 0.96);
+}
+
+.goods-card--sold .goods-title,
+.goods-card--sold .goods-price,
+.goods-card--sold .goods-meta-item,
+.goods-card--sold .goods-owner {
+  color: #97a3b5;
+}
+
+.goods-card--sold .goods-thumb {
+  background:
+    radial-gradient(circle at 72% 28%, rgba(255, 255, 255, 0.88) 0 10rpx, transparent 11rpx),
+    linear-gradient(160deg, rgba(244, 247, 251, 0.92) 0%, rgba(227, 234, 242, 0.9) 100%);
+}
+
 .goods-card--batch {
   padding-left: 96rpx;
 }
