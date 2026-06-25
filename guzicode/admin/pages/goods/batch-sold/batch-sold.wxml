@@ -2,18 +2,48 @@
   <view class="subpage">
     <view class="sub-scroll">
       <view class="form-section">
-        <view class="section-title required">售出数量</view>
+        <view class="section-head-row">
+          <view class="section-title required">售出明细</view>
+          <view class="section-copy-tip">数量 + 实际成交金额</view>
+        </view>
         <view class="sold-list">
           <view class="sold-item" wx:for="{{items}}" wx:key="id">
-            <view class="sold-info">
-              <view class="sold-name">{{item.title}}</view>
-              <view class="sold-stock">当前库存 {{item.remainingCount}} · 最多可售出 {{item.remainingCount}}</view>
+            <view class="sold-card-head">
+              <view class="sold-avatar">✦</view>
+              <view class="sold-info">
+                <view class="sold-name">{{item.title}}</view>
+                <view class="sold-stock">当前库存 {{item.remainingCount}} · <text class="sold-stock-strong">最多可售 {{item.remainingCount}}</text></view>
+              </view>
             </view>
-            <view class="sold-input-box">
-              <input class="sold-input" type="number" placeholder="0" placeholder-class="placeholder" value="{{item.soldQuantity}}" data-id="{{item.id}}" bindinput="onQtyInput" />
+            <view class="sold-form-row">
+              <view class="sold-form-field">
+                <view class="sold-form-label">售出数量</view>
+                <view class="qty-stepper">
+                  <view class="qty-stepper-btn" data-id="{{item.id}}" bindtap="decreaseQty">－</view>
+                  <view class="qty-stepper-value-wrap">
+                    <input class="qty-stepper-value" type="number" placeholder="0" placeholder-class="placeholder" value="{{item.soldQuantity}}" data-id="{{item.id}}" bindinput="onQtyInput" />
+                  </view>
+                  <view class="qty-stepper-btn" data-id="{{item.id}}" bindtap="increaseQty">＋</view>
+                </view>
+              </view>
+              <view class="sold-form-field sold-form-field--amount">
+                <view class="sold-form-label">实际出售金额</view>
+                <view class="sold-amount-input">
+                  <text class="sold-amount-prefix">¥</text>
+                  <input class="sold-amount-field" type="digit" placeholder="0.00" placeholder-class="placeholder" value="{{item.saleAmount}}" data-id="{{item.id}}" bindinput="onPriceInput" />
+                </view>
+              </view>
             </view>
           </view>
         </view>
+      </view>
+
+      <view class="summary-card">
+        <view>
+          <view class="summary-title">本次售出合计</view>
+          <view class="summary-sub">共 {{totalSoldQuantity}} 件</view>
+        </view>
+        <view class="summary-amount">¥ {{totalSaleAmount}}</view>
       </view>
 
       <view class="form-section">

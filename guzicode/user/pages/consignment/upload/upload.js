@@ -4,6 +4,7 @@ const { ensureCloudImages } = require("../../../../utils/cloudFile");
 const { debounce } = require("../../../../utils/debounce");
 
 const TYPE_OPTIONS = ["小卡", "吧唧", "镭射票", "自定义"];
+const PRODUCT_SAVE_MAX_RETRIES = 2;
 
 Page({
   data: {
@@ -155,6 +156,31 @@ Page({
     });
   },
 
+  async createProductWithRetry(payload) {
+    let lastError = null;
+
+    for (let attempt = 0; attempt < PRODUCT_SAVE_MAX_RETRIES; attempt += 1) {
+      try {
+        await productsRepository.createProduct(payload);
+        return payload.id;
+      } catch (error) {
+        lastError = error;
+        const message = String((error && (error.userMessage || error.errMsg || error.message)) || "");
+        if (!/数据重复|duplicate/i.test(message) || attempt === PRODUCT_SAVE_MAX_RETRIES - 1) {
+          throw error;
+        }
+
+        const nextId = await productsRepository.buildNewProductId();
+        payload.id = nextId;
+        await new Promise((resolve) => {
+          this.setData({ "form.id": nextId }, resolve);
+        });
+      }
+    }
+
+    throw lastError || new Error("保存失败");
+  },
+
   // ===== 照片相关 =====
   choosePhoto() {
     const remaining = 9 - this.data.form.images.length;
@@ -255,8 +281,8 @@ Page({
     // IP
     if (!form.ip) {
       errors.ip = "请填写 IP";
-    } else if (form.ip.length > 12) {
-      errors.ip = "IP 字数不能超过 12 个";
+    } else if (form.ip.length > 30) {
+      errors.ip = "IP 字数不能超过 30 个";
     }
 
     // 系列
@@ -269,15 +295,15 @@ Page({
     // 角色
     if (!form.role) {
       errors.role = "请填写角色";
-    } else if (form.role.length > 12) {
-      errors.role = "角色字数不能超过 12 个";
+    } else if (form.role.length > 30) {
+      errors.role = "角色字数不能超过 30 个";
     }
 
     // 自定义类型
     if (form.type === "自定义" && !form.customType) {
       errors.customType = "请填写自定义类型";
-    } else if (form.type === "自定义" && form.customType.length > 12) {
-      errors.customType = "自定义类型字数不能超过 12 个";
+    } else if (form.type === "自定义" && form.customType.length > 30) {
+      errors.customType = "自定义类型字数不能超过 30 个";
     }
 
     // 数量
@@ -343,7 +369,7 @@ Page({
         await productsRepository.updateProduct(this.data.id, payload);
       } else {
         const newId = await productsRepository.buildNewProductId();
-        await productsRepository.createProduct({ ...payload, id: newId });
+        await this.createProductWithRetry({ ...payload, id: newId });
       }
 
       wx.hideLoading();

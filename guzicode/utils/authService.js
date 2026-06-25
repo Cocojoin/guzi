@@ -12,7 +12,7 @@ function extractErrorMessage(error, fallback = "操作失败，请稍后重试")
   if (/network|timeout|fail/i.test(message)) {
     return "网络异常，请稍后重试";
   }
-  return fallback;
+  return message;
 }
 
 async function invokeAuth(action, data = {}) {

@@ -12,8 +12,14 @@
     {
       "name": "nickname",
       "type": "string",
+      "required": true,
+      "description": "用户昵称，不能为空"
+    },
+    {
+      "name": "nicknameKey",
+      "type": "string",
       "required": false,
-      "description": "用户昵称"
+      "description": "昵称唯一键，使用 trim 后的小写值做唯一约束；空昵称时可为空"
     },
     {
       "name": "password",

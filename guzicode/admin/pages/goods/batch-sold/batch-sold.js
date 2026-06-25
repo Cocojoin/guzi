@@ -12,13 +12,26 @@ function clampInt(value, min, max) {
   return Math.max(min, Math.min(max, Math.floor(numeric)));
 }
 
+function formatMoneyInput(value) {
+  return Number(value || 0).toFixed(2);
+}
+
+function sanitizeMoneyInput(value) {
+  return String(value || "")
+    .replace(/[^\d.]/g, "")
+    .replace(/(\..*)\./g, "$1")
+    .replace(/^0+(\d)/, "$1");
+}
+
 Page({
   data: {
     ids: [],
     items: [],
     remark: "",
     loading: true,
-    submitting: false
+    submitting: false,
+    totalSoldQuantity: 0,
+    totalSaleAmount: "0.00"
   },
 
   onLoad(options) {
@@ -38,10 +51,11 @@ Page({
           title: item.title,
           remainingCount: item.remainingCount,
           soldQuantity: "",
-          salePrice: String(item.price || "")
+          unitPrice: Number(item.price || 0),
+          saleAmount: ""
         }));
 
-      this.setData({ items, loading: false });
+      this.setData({ items, loading: false }, () => this.recalcSummary());
     } catch (error) {
       this.setData({ loading: false });
       wx.showToast({ title: "商品加载失败", icon: "none" });
@@ -57,12 +71,14 @@ Page({
       const max = Number(item.remainingCount || 0);
       const value = event.detail.value;
       const numeric = value === "" ? "" : String(clampInt(value, 0, max));
+      const qty = Number(numeric || 0);
       return {
         ...item,
-        soldQuantity: numeric
+        soldQuantity: numeric,
+        saleAmount: qty > 0 ? formatMoneyInput(item.unitPrice * qty) : ""
       };
     });
-    this.setData({ items: next });
+    this.setData({ items: next }, () => this.recalcSummary());
   },
 
   onPriceInput(event) {
@@ -73,14 +89,56 @@ Page({
       }
       return {
         ...item,
-        salePrice: event.detail.value
+        saleAmount: sanitizeMoneyInput(event.detail.value)
       };
     });
-    this.setData({ items: next });
+    this.setData({ items: next }, () => this.recalcSummary());
+  },
+
+  increaseQty(event) {
+    const id = event.currentTarget.dataset.id;
+    const next = this.data.items.map((item) => {
+      if (item.id !== id) {
+        return item;
+      }
+      const max = Number(item.remainingCount || 0);
+      const qty = clampInt(Number(item.soldQuantity || 0) + 1, 0, max);
+      return {
+        ...item,
+        soldQuantity: String(qty),
+        saleAmount: qty > 0 ? formatMoneyInput(item.unitPrice * qty) : ""
+      };
+    });
+    this.setData({ items: next }, () => this.recalcSummary());
+  },
+
+  decreaseQty(event) {
+    const id = event.currentTarget.dataset.id;
+    const next = this.data.items.map((item) => {
+      if (item.id !== id) {
+        return item;
+      }
+      const qty = Math.max(0, Number(item.soldQuantity || 0) - 1);
+      return {
+        ...item,
+        soldQuantity: qty > 0 ? String(qty) : "",
+        saleAmount: qty > 0 ? formatMoneyInput(item.unitPrice * qty) : ""
+      };
+    });
+    this.setData({ items: next }, () => this.recalcSummary());
   },
 
   onRemarkInput(event) {
     this.setData({ remark: event.detail.value });
+  },
+
+  recalcSummary() {
+    const totalSoldQuantity = this.data.items.reduce((sum, item) => sum + Number(item.soldQuantity || 0), 0);
+    const totalSaleAmount = this.data.items.reduce((sum, item) => sum + Number(item.saleAmount || 0), 0);
+    this.setData({
+      totalSoldQuantity,
+      totalSaleAmount: formatMoneyInput(totalSaleAmount)
+    });
   },
 
   async handleSubmit() {
@@ -97,12 +155,18 @@ Page({
       .map((item) => ({
         ...item,
         qty: Number(item.soldQuantity || 0),
-        price: Number(item.salePrice || 0)
+        price: Number(item.unitPrice || 0),
+        saleAmount: Number(item.saleAmount || 0)
       }))
       .filter((item) => item.qty > 0);
 
     if (!selling.length) {
       wx.showToast({ title: "请至少填写 1 个商品的售出数量", icon: "none" });
+      return;
+    }
+
+    if (selling.some((item) => !Number.isFinite(item.saleAmount) || item.saleAmount <= 0)) {
+      wx.showToast({ title: "请填写实际出售金额", icon: "none" });
       return;
     }
 

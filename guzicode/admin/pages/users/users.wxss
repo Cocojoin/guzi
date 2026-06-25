@@ -1288,12 +1288,11 @@
   margin-right: 10rpx;
 }
 
-.settlement-income-input {
+.settlement-income-value {
   flex: 1;
   height: 100%;
-  border: 0;
-  background: transparent;
-  padding: 0;
+  display: flex;
+  align-items: center;
   font-size: 32rpx;
   color: #E55472;
   font-weight: 700;

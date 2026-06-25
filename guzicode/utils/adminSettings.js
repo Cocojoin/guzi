@@ -212,11 +212,9 @@ async function addOperationLog(input) {
   const localLogs = [log].concat(getLocalLogs()).slice(0, 300);
   saveLocalLogs(localLogs);
 
-  try {
-    await dataAccessService.addDoc(OPERATION_LOGS_COLLECTION, log);
-  } catch (error) {
+  dataAccessService.addDoc(OPERATION_LOGS_COLLECTION, log).catch((error) => {
     console.warn("addOperationLog fallback to local only:", error && (error.errMsg || error.message || error));
-  }
+  });
 
   return log;
 }

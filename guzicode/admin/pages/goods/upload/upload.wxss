@@ -322,6 +322,18 @@
   justify-content: space-between;
 }
 
+.upload-page .owner-picker-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-page .owner-selected-hint {
+  margin-top: 10rpx;
+  color: #8c9cb2;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
 .upload-page .is-placeholder {
   color: #a5b3c7;
 }
@@ -430,6 +442,225 @@
   top: 50%;
   margin-left: -5rpx;
   margin-top: -8rpx;
+}
+
+/* ===== 寄售用户底部弹窗 ===== */
+.owner-popup {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+}
+
+.owner-popup-mask {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(17, 24, 39, 0.24);
+}
+
+.owner-popup-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72vh;
+  max-height: 960rpx;
+  padding: 16rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+  border-radius: 36rpx 36rpx 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #ffffff 100%);
+  box-shadow: 0 -16rpx 50rpx rgba(40, 60, 90, 0.16);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  animation: ownerPopupSlideUp 0.2s ease-out;
+}
+
+.owner-popup-handle {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: #d9e3ef;
+  margin: 0 auto 18rpx;
+}
+
+.owner-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.owner-popup-action {
+  min-width: 88rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 44rpx;
+}
+
+.owner-popup-action--cancel {
+  color: #718198;
+}
+
+.owner-popup-action--confirm {
+  color: #5c9cf4;
+  text-align: right;
+}
+
+.owner-popup-title {
+  color: #24364f;
+  font-size: 36rpx;
+  font-weight: 800;
+  line-height: 48rpx;
+}
+
+.owner-search-box {
+  height: 84rpx;
+  padding: 0 28rpx;
+  border-radius: 24rpx;
+  background: #f4f7fb;
+  border: 2rpx solid #e5edf6;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.owner-search-input {
+  width: 100%;
+  font-size: 28rpx;
+  color: #24364f;
+  font-weight: 500;
+}
+
+.owner-popup-scroll {
+  flex: 1;
+  min-height: 0;
+  margin-top: 20rpx;
+}
+
+.owner-section {
+  margin-bottom: 20rpx;
+}
+
+.owner-section-title {
+  margin-bottom: 14rpx;
+  color: #8d9aae;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.owner-option {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 22rpx;
+  margin-bottom: 16rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+}
+
+.owner-option--active {
+  background: linear-gradient(180deg, rgba(255, 241, 245, 0.95) 0%, rgba(255, 248, 250, 0.95) 100%);
+  border-color: rgba(255, 198, 214, 0.75);
+}
+
+.owner-option-avatar {
+  flex: 0 0 72rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f7d2ee 0%, #b5dfff 100%);
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 72rpx;
+  text-align: center;
+}
+
+.owner-option-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.owner-option-top {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.owner-option-name {
+  color: #24364f;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.owner-option-rate {
+  height: 40rpx;
+  padding: 0 12rpx;
+  border-radius: 12rpx;
+  background: #dff5ea;
+  color: #39a674;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 40rpx;
+}
+
+.owner-option-meta {
+  margin-top: 6rpx;
+  color: #8d9aae;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.owner-option-check {
+  flex: 0 0 40rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 2rpx solid #d5e0ee;
+  background: #ffffff;
+  position: relative;
+}
+
+.owner-option-check--active {
+  background: #263951;
+  border-color: #263951;
+}
+
+.owner-option-check--active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16rpx;
+  height: 8rpx;
+  border-left: 4rpx solid #ffffff;
+  border-bottom: 4rpx solid #ffffff;
+  transform: translate(-50%, -60%) rotate(-45deg);
+}
+
+.owner-empty {
+  padding: 80rpx 24rpx;
+  color: #9aabbe;
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: center;
+}
+
+@keyframes ownerPopupSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* ===== 自定义类型 ===== */

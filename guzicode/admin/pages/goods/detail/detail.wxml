@@ -121,13 +121,32 @@
       </view>
 
       <view class="sheet-section" wx:if="{{statusTarget === 'sold'}}">
-        <view class="sheet-section-title">本次修改数量</view>
+        <view class="sheet-section-row">
+          <view class="sheet-section-title">本次修改数量</view>
+          <view class="sheet-section-side">最多 {{maxStatusQuantity}}</view>
+        </view>
         <view class="stepper-row">
           <view class="stepper-btn" bindtap="decreaseStatusQuantity">－</view>
           <view class="stepper-value">{{statusQuantity}}</view>
           <view class="stepper-btn" bindtap="increaseStatusQuantity">＋</view>
         </view>
-        <view class="stepper-hint">最多 {{maxStatusQuantity}}</view>
+      </view>
+
+      <view class="sheet-section" wx:if="{{statusTarget === 'sold'}}">
+        <view class="sheet-section-row">
+          <view class="sheet-section-title">实际出售金额 <text class="sheet-required">*</text></view>
+          <view class="sheet-section-side">仅平台统计</view>
+        </view>
+        <view class="sheet-money-input">
+          <text class="sheet-money-prefix">¥</text>
+          <input
+            class="sheet-money-field"
+            type="digit"
+            value="{{statusSaleAmount}}"
+            bindinput="onStatusSaleAmountInput"
+          />
+          <text class="sheet-money-tail">本次 {{statusQuantity}} 件合计</text>
+        </view>
       </view>
 
       <view class="sheet-note">{{statusNote}}</view>

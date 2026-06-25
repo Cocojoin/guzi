@@ -699,8 +699,8 @@ Page({
       const selectedOwner = this.data.form.owner;
       let createdCount = 0;
       const invalidImageRows = [];
-      const existingProducts = await productsRepository.getAllProducts();
-      let nextIdNumber = existingProducts.reduce((max, item) => Math.max(max, extractProductIdNumber(item.id)), 0) + 1;
+      const nextProductId = await productsRepository.buildNewProductId();
+      let nextIdNumber = extractProductIdNumber(nextProductId);
       const rows = tableRows.slice(1);
       const pendingProducts = [];
 

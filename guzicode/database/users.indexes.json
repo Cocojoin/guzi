@@ -13,6 +13,17 @@
       "description": "账号唯一索引"
     },
     {
+      "name": "idx_nickname_key_unique",
+      "fields": [
+        {
+          "field": "nicknameKey",
+          "order": "asc"
+        }
+      ],
+      "unique": true,
+      "description": "昵称唯一键索引，约束标准化后的昵称不可重复"
+    },
+    {
       "name": "idx_role_status",
       "fields": [
         {

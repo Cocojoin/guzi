@@ -44,7 +44,8 @@ async function fetchAll(collectionName, options = {}) {
     collectionName,
     where: options.where || null,
     orderByField: options.orderByField || "",
-    orderByDirection: options.orderByDirection || "desc"
+    orderByDirection: options.orderByDirection || "desc",
+    limit: Number.isInteger(options.limit) && options.limit > 0 ? options.limit : 0
   });
   return result.items || [];
 }

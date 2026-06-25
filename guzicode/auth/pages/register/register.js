@@ -155,7 +155,7 @@ Page({
       console.error("注册失败", error);
       this.setData({ submitting: false });
       const message = error && error.message ? error.message : (error && error.userMessage) || "注册失败，请重试";
-      if (message.includes("账号已存在")) {
+      if (message.includes("账号已存在") || (error && error.code === "DEFAULT_NICKNAME_EXISTS")) {
         this.setData({ "errors.account": message });
         return;
       }

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "id_unique",
+    "unique": true,
+    "fields": [
+      {
+        "name": "id",
+        "direction": "asc"
+      }
+    ]
+  },
+  {
+    "name": "sortIndex_asc",
+    "unique": false,
+    "fields": [
+      {
+        "name": "sortIndex",
+        "direction": "asc"
+      }
+    ]
+  }
+]

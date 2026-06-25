@@ -58,6 +58,48 @@ function sortProducts(products) {
   });
 }
 
+async function resolveCloudImageUrls(products) {
+  const list = Array.isArray(products) ? products : [];
+  const cloudIds = Array.from(new Set(
+    list
+      .map((item) => String(item && item.coverImage || "").trim())
+      .filter((item) => item.indexOf("cloud://") === 0)
+  ));
+
+  if (!cloudIds.length) {
+    return list;
+  }
+
+  try {
+    const res = await wx.cloud.getTempFileURL({ fileList: cloudIds });
+    const fileList = res && Array.isArray(res.fileList) ? res.fileList : [];
+    const tempUrlMap = {};
+    fileList.forEach((item) => {
+      if (item && item.status === 0 && item.fileID && item.tempFileURL) {
+        tempUrlMap[item.fileID] = item.tempFileURL;
+      }
+    });
+
+    return list.map((item) => {
+      const coverImage = String(item && item.coverImage || "").trim();
+      if (!coverImage || coverImage.indexOf("cloud://") !== 0) {
+        return item;
+      }
+      const tempCoverImage = tempUrlMap[coverImage];
+      if (!tempCoverImage) {
+        return item;
+      }
+      return {
+        ...item,
+        picture: tempCoverImage,
+        coverImage: tempCoverImage
+      };
+    });
+  } catch (error) {
+    return list;
+  }
+}
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -123,8 +165,11 @@ Page({
   async loadProducts() {
     this.setData({ loading: true });
     try {
-      const consignmentUsers = await usersRepository.listConsignmentUsers();
-      const allProducts = sortProducts((await productsRepository.getAllProducts()).map((item) => {
+      const [consignmentUsers, productItems] = await Promise.all([
+        usersRepository.listConsignmentUsers(),
+        productsRepository.getAllProducts()
+      ]);
+      const rawProducts = sortProducts(productItems.map((item) => {
         const displayOwner = resolveOwnerName(item, consignmentUsers);
         return buildProductCard({
           ...item,
@@ -132,6 +177,7 @@ Page({
           ownerRaw: item.owner || ""
         });
       }));
+      const allProducts = await resolveCloudImageUrls(rawProducts);
       const ownerPool = new Set([
         ...consignmentUsers.map((item) => String(item.nickname || "").trim()).filter(Boolean),
         ...allProducts.map((item) => String(item.owner || "").trim()).filter(Boolean)

@@ -139,6 +139,9 @@ function buildPendingSettlementItems(product, fallbackRateFraction) {
       const price = Number(product.price || 0);
       const totalPrice = price * unsettledQty;
       const payableAmount = calcPayableAmount(price, unsettledQty, rateFraction);
+      const batchSaleAmount = Number(batch.saleAmount || 0);
+      const unitSaleAmount = batch.qty > 0 && batchSaleAmount > 0 ? batchSaleAmount / Number(batch.qty || 1) : price;
+      const saleAmount = Number((unitSaleAmount * unsettledQty).toFixed(2));
       return {
         id: product._id,
         rowKey: `${product._id}-${batchIndex}`,
@@ -147,6 +150,8 @@ function buildPendingSettlementItems(product, fallbackRateFraction) {
         soldQty: unsettledQty,
         price,
         totalPrice,
+        saleAmount,
+        saleAmountText: fmt2(saleAmount),
         payableAmount,
         payableText: fmt2(payableAmount),
         rate: Number((rateFraction * 100).toFixed(2)),
@@ -824,6 +829,15 @@ Page({
       const user = this.data.users.find((u) => u.id === currentUser.id) || null;
       this.setData({ currentUser: user });
     } catch (e) {
+      const message = String((e && (e.userMessage || e.message)) || "").trim();
+      if (e && (e.code === "NICKNAME_EXISTS" || e.code === "INVALID_NICKNAME")) {
+        this.setData({
+          errors: {
+            ...this.data.errors,
+            nickname: message || "昵称校验失败"
+          }
+        });
+      }
       await addOperationLog({
         title: "编辑用户资料",
         target: currentUser.account || currentUser.id,
@@ -831,7 +845,9 @@ Page({
         note: formatFailureContext(e, tempData.nickname || currentUser.nickname || ""),
         success: false
       });
-      this.handlePageError(e, "保存失败，请重试");
+      if (!(e && (e.code === "NICKNAME_EXISTS" || e.code === "INVALID_NICKNAME"))) {
+        this.handlePageError(e, "保存失败，请重试");
+      }
       console.error("doSaveEdit error:", e);
     }
   },
@@ -1261,19 +1277,22 @@ Page({
     }
     const settlementGross = selectedItems.reduce((sum, item) => sum + item.price * item.soldQty, 0);
     const settlementCommission = selectedItems.reduce((sum, item) => sum + item.price * item.soldQty * item.rateFraction, 0);
+    const settlementActualIncome = selectedItems.reduce((sum, item) => sum + Number(item.saleAmount != null ? item.saleAmount : item.price * item.soldQty), 0);
     this.setData({
       settlementItems: selectedItems.map((item) => ({
         ...item,
         rateFraction: normalizeRateFraction(item.rateFraction),
         rate: Number(item.rate || 0),
         totalPrice: item.price * item.soldQty,
+        saleAmount: Number(item.saleAmount != null ? item.saleAmount : item.price * item.soldQty),
+        saleAmountText: fmt2(item.saleAmount != null ? item.saleAmount : item.price * item.soldQty),
         payableAmount: calcPayableAmount(item.price, item.soldQty, item.rateFraction),
         payableText: fmt2(calcPayableAmount(item.price, item.soldQty, item.rateFraction))
       })),
       settlementGross: fmt2(settlementGross),
       settlementCommission: fmt2(settlementCommission),
       settlementPayable: fmt2(settlementGross - settlementCommission),
-      settlementActualIncome: fmt2(settlementGross),
+      settlementActualIncome: fmt2(settlementActualIncome),
       settlementVouchers: [],
       currentView: "settlement",
       ...this.getViewCopy("settlement")
@@ -2024,6 +2043,7 @@ Page({
         actualIncome: Number(this.data.settlementActualIncome || this.data.settlementGross),
         settlementItems: items.map((item) => ({
           ...item,
+          saleAmount: Number(item.saleAmount != null ? item.saleAmount : item.price * item.soldQty),
           rateFraction: normalizeRateFraction(item.rateFraction),
           rate: Number(item.rate || 0)
         })),

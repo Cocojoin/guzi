@@ -13,6 +13,7 @@ const LOGISTICS_EXPENSES_COLLECTION = "logistics_expenses";
 const TECH_SERVICE_EXPENSES_COLLECTION = "tech_service_expenses";
 const OPERATION_LOGS_COLLECTION = "admin_operation_logs";
 const IP_GROUPS_COLLECTION = "ip_groups";
+const SHOP_CHANNELS_COLLECTION = "shop_channels";
 
 function ok(extra = {}) {
   return { ok: true, ...extra };
@@ -20,6 +21,45 @@ function ok(extra = {}) {
 
 function fail(code, message) {
   return { ok: false, code, message };
+}
+
+function normalizeWritePayload(input) {
+  if (input instanceof Date) {
+    return input.toISOString();
+  }
+  if (Array.isArray(input)) {
+    return input.map((item) => normalizeWritePayload(item));
+  }
+  if (!input || typeof input !== "object") {
+    return input;
+  }
+
+  const result = {};
+  Object.keys(input).forEach((key) => {
+    const value = input[key];
+    if (value === undefined) {
+      return;
+    }
+    result[key] = normalizeWritePayload(value);
+  });
+  return result;
+}
+
+function extractServerErrorMessage(error) {
+  const raw = String((error && (error.errMsg || error.message || error)) || "").trim();
+  if (!raw) {
+    return "数据服务异常，请稍后重试";
+  }
+  if (/duplicate/i.test(raw)) {
+    return "数据重复，请刷新后重试";
+  }
+  if (/permission|auth|denied/i.test(raw)) {
+    return "暂无数据操作权限，请重新登录后重试";
+  }
+  if (/timeout|network|fail/i.test(raw)) {
+    return "数据服务请求超时，请稍后重试";
+  }
+  return raw.slice(0, 120);
 }
 
 function isPublicProductRead(action, collectionName) {
@@ -72,6 +112,7 @@ function normalizeWhere(where) {
 async function queryAll(collectionName, options = {}) {
   const result = [];
   const pageSize = 100;
+  const limit = Number.isInteger(options.limit) && options.limit > 0 ? options.limit : 0;
   let skip = 0;
   const normalizedWhere = normalizeWhere(options.where);
   const orderByField = String(options.orderByField || "").trim();
@@ -85,10 +126,14 @@ async function queryAll(collectionName, options = {}) {
     if (orderByField) {
       query = query.orderBy(orderByField, orderByDirection);
     }
-    const res = await query.skip(skip).limit(pageSize).get();
+    const currentLimit = limit ? Math.min(pageSize, Math.max(limit - result.length, 0)) : pageSize;
+    if (!currentLimit) {
+      break;
+    }
+    const res = await query.skip(skip).limit(currentLimit).get();
     const rows = res.data || [];
     result.push(...rows);
-    if (rows.length < pageSize) {
+    if (rows.length < currentLimit || (limit && result.length >= limit)) {
       break;
     }
     skip += pageSize;
@@ -117,6 +162,9 @@ function canReadCollection(collectionName, requester, where = null) {
   if (collectionName === PRODUCTS_COLLECTION) {
     return !!requester;
   }
+  if (collectionName === SHOP_CHANNELS_COLLECTION) {
+    return !!requester;
+  }
   if (collectionName === SETTLEMENT_RECORDS_COLLECTION) {
     return isAdmin(requester) || !!(where && String(where.userId || "").trim() === String(requester._id || "").trim());
   }
@@ -130,6 +178,9 @@ function canWriteCollection(collectionName, requester) {
   if (collectionName === PRODUCTS_COLLECTION) {
     return canManageProducts(requester);
   }
+  if (collectionName === SHOP_CHANNELS_COLLECTION) {
+    return isAdmin(requester);
+  }
   if (collectionName === SETTLEMENT_RECORDS_COLLECTION) {
     return isAdmin(requester);
   }
@@ -139,7 +190,7 @@ function canWriteCollection(collectionName, requester) {
   return false;
 }
 
-async function handleFetchAll({ collectionName, where, orderByField, orderByDirection }, requester) {
+async function handleFetchAll({ collectionName, where, orderByField, orderByDirection, limit }, requester) {
   if (!requester && collectionName === PRODUCTS_COLLECTION) {
     const publicWhere = {
       ...(normalizeWhere(where) || {}),
@@ -148,7 +199,8 @@ async function handleFetchAll({ collectionName, where, orderByField, orderByDire
     const items = await queryAll(collectionName, {
       where: publicWhere,
       orderByField,
-      orderByDirection
+      orderByDirection,
+      limit
     });
     return ok({ items });
   }
@@ -159,7 +211,8 @@ async function handleFetchAll({ collectionName, where, orderByField, orderByDire
   const items = await queryAll(collectionName, {
     where,
     orderByField,
-    orderByDirection
+    orderByDirection,
+    limit
   });
   return ok({ items });
 }
@@ -191,7 +244,7 @@ async function handleAddDoc({ collectionName, data }, requester) {
   if (!canWriteCollection(collectionName, requester)) {
     return fail("FORBIDDEN", "暂无数据写入权限");
   }
-  const payload = data && typeof data === "object" ? data : {};
+  const payload = normalizeWritePayload(data && typeof data === "object" ? data : {});
   const res = await db.collection(collectionName).add({ data: payload });
   return ok({
     item: {
@@ -213,7 +266,7 @@ async function handleUpdateDocById({ collectionName, docId, data }, requester) {
   if (!current) {
     return ok({ item: null });
   }
-  const payload = data && typeof data === "object" ? data : {};
+  const payload = normalizeWritePayload(data && typeof data === "object" ? data : {});
   await db.collection(collectionName).doc(normalizedDocId).update({ data: payload });
   return ok({
     item: {
@@ -234,31 +287,30 @@ async function handleBulkUpdateDocs({ collectionName, updates }, requester) {
     return ok({ items: [] });
   }
 
-  const items = [];
-  for (const updateItem of list) {
+  const results = await Promise.all(list.map(async (updateItem) => {
     const normalizedDocId = String(updateItem && updateItem.docId || "").trim();
     if (!normalizedDocId) {
-      continue;
+      return null;
     }
 
     const current = await getDoc(collectionName, normalizedDocId);
     if (!current) {
-      continue;
+      return null;
     }
 
     const payload = updateItem && updateItem.data && typeof updateItem.data === "object"
-      ? updateItem.data
+      ? normalizeWritePayload(updateItem.data)
       : {};
 
     await db.collection(collectionName).doc(normalizedDocId).update({ data: payload });
-    items.push({
+    return {
       ...current,
       ...payload,
       _id: normalizedDocId
-    });
-  }
+    };
+  }));
 
-  return ok({ items });
+  return ok({ items: results.filter(Boolean) });
 }
 
 async function handleRemoveDocById({ collectionName, docId }, requester) {
@@ -314,6 +366,6 @@ exports.main = async (event) => {
     return fail("UNKNOWN_ACTION", "未知数据操作");
   } catch (error) {
     console.error("dataAccess cloud function error:", error);
-    return fail("INTERNAL_ERROR", "数据服务异常，请稍后重试");
+    return fail("INTERNAL_ERROR", extractServerErrorMessage(error));
   }
 };

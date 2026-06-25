@@ -284,8 +284,8 @@ Page({
     // IP
     if (!form.ip) {
       errors.ip = "请填写 IP";
-    } else if (form.ip.length > 12) {
-      errors.ip = "IP 字数不能超过 12 个";
+    } else if (form.ip.length > 30) {
+      errors.ip = "IP 字数不能超过 30 个";
     }
 
     // 系列
@@ -298,15 +298,15 @@ Page({
     // 角色
     if (!form.role) {
       errors.role = "请填写角色";
-    } else if (form.role.length > 12) {
-      errors.role = "角色字数不能超过 12 个";
+    } else if (form.role.length > 30) {
+      errors.role = "角色字数不能超过 30 个";
     }
 
     // 自定义类型
     if (form.type === "自定义" && !form.customType) {
       errors.customType = "请填写自定义类型";
-    } else if (form.type === "自定义" && form.customType.length > 12) {
-      errors.customType = "自定义类型字数不能超过 12 个";
+    } else if (form.type === "自定义" && form.customType.length > 30) {
+      errors.customType = "自定义类型字数不能超过 30 个";
     }
 
     // 数量

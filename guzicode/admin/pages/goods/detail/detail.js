@@ -5,6 +5,17 @@ const { isCloudFileId } = require("../../../../utils/cloudFile");
 const { addOperationLog, formatFailureContext } = require("../../../../utils/adminSettings");
 const { formatRatePercent, getUserRateFraction } = require("../../../../utils/consignmentRate");
 
+function fmtMoneyInput(value) {
+  return Number(value || 0).toFixed(2);
+}
+
+function sanitizeMoneyInput(value) {
+  return String(value || "")
+    .replace(/[^\d.]/g, "")
+    .replace(/(\..*)\./g, "$1")
+    .replace(/^0+(\d)/, "$1");
+}
+
 Page({
   data: {
     id: "",
@@ -21,7 +32,8 @@ Page({
     statusTarget: "sold",
     statusQuantity: 1,
     maxStatusQuantity: 1,
-    statusNote: ""
+    statusNote: "",
+    statusSaleAmount: "0.00"
   },
 
   onLoad(options) {
@@ -421,7 +433,7 @@ Page({
 
   buildStatusNote(status, quantity) {
     if (status === "sold") {
-      return `确认后将从剩余可售扣减 ${quantity} 件并累加到「已售出」。扣到 0 时整件商品自动显示为「已售出」。`;
+      return `在外部平台实际成交合计。仅平台统计用，不展示给寄售用户，不影响给寄售用户的结算金额。`;
     }
 
     if (status === "up") {
@@ -434,13 +446,16 @@ Page({
   setStatusState(status, quantity, showStatusSheet) {
     const maxStatusQuantity = this.getMaxStatusQuantity(status);
     const nextQuantity = Math.min(Math.max(1, quantity), maxStatusQuantity);
+    const unitPrice = Number((this.data.product && this.data.product.price) || 0);
+    const statusSaleAmount = status === "sold" ? fmtMoneyInput(unitPrice * nextQuantity) : "0.00";
 
     this.setData({
       showStatusSheet,
       statusTarget: status,
       statusQuantity: nextQuantity,
       maxStatusQuantity,
-      statusNote: this.buildStatusNote(status, nextQuantity)
+      statusNote: this.buildStatusNote(status, nextQuantity),
+      statusSaleAmount
     });
   },
 
@@ -460,6 +475,12 @@ Page({
     this.setStatusState(this.data.statusTarget, this.data.statusQuantity - 1, true);
   },
 
+  onStatusSaleAmountInput(event) {
+    this.setData({
+      statusSaleAmount: sanitizeMoneyInput(event.detail.value)
+    });
+  },
+
   async submitStatusChange() {
     const { productView, statusTarget, statusQuantity } = this.data;
 
@@ -473,14 +494,22 @@ Page({
 
     if (statusTarget === "sold") {
       try {
+        const saleAmount = Number(this.data.statusSaleAmount || 0);
+        if (!Number.isFinite(saleAmount) || saleAmount <= 0) {
+          wx.showToast({
+            title: "请填写实际出售金额",
+            icon: "none"
+          });
+          return;
+        }
         const ownerUser = await usersRepository.getUserById(String(this.data.product && this.data.product.ownerUserId || "").trim());
         const rateFraction = getUserRateFraction(ownerUser);
-        await productsRepository.recordProductSale(this.data.id, statusQuantity, rateFraction);
+        await productsRepository.recordProductSale(this.data.id, statusQuantity, rateFraction, { saleAmount });
         await addOperationLog({
           title: "标记商品售出",
           target: this.data.id,
           type: "商品",
-          note: `售出 ${statusQuantity} 件`
+          note: `售出 ${statusQuantity} 件 · 实际出售 ¥${fmtMoneyInput(saleAmount)}`
         });
 
         wx.showToast({

@@ -6,6 +6,9 @@ const { debounce } = require("../../../../utils/debounce");
 const { normalizeIpName } = require("../../../../utils/ipGroupsRepository");
 
 const TYPE_OPTIONS = ["小卡", "吧唧", "镭射票", "自定义"];
+const RECENT_OWNER_STORAGE_KEY = "admin_goods_upload_recent_owners";
+const RECENT_OWNER_LIMIT = 5;
+const PRODUCT_SAVE_MAX_RETRIES = 2;
 
 Page({
   data: {
@@ -30,8 +33,13 @@ Page({
     typeIndex: 0,
     ownerIndex: 0,
     ownerOptions: [],
+    ownerOptionList: [],
+    filteredOwnerOptions: [],
+    recentOwnerOptions: [],
     ownerUserMap: {},
-    ownerPickerOptions: ["请选择寄售用户"],
+    ownerSearchKeyword: "",
+    ownerPopupVisible: false,
+    pendingSelectedOwner: "",
     typeOptions: TYPE_OPTIONS,
     submitting: false
   },
@@ -44,18 +52,35 @@ Page({
 
   async onShow() {
     try {
-      const consignmentUsers = await usersRepository.listConsignmentUsers();
-      const ownerOptions = Array.from(new Set(consignmentUsers.map((item) => item.nickname.trim()).filter(Boolean)));
+      const [consignmentUsers, allProducts, nextId] = await Promise.all([
+        usersRepository.listConsignmentUsers(),
+        productsRepository.getAllProducts(),
+        productsRepository.buildNewProductId()
+      ]);
+      const ownerStatsMap = this.buildOwnerStatsMap(allProducts);
+      const ownerOptionList = [];
       const ownerUserMap = {};
       consignmentUsers.forEach((item) => {
         const nickname = String(item.nickname || "").trim();
-        if (nickname) ownerUserMap[nickname] = item._id;
+        if (!nickname || ownerUserMap[nickname]) {
+          return;
+        }
+        ownerUserMap[nickname] = item._id;
+        ownerOptionList.push({
+          userId: item._id,
+          nickname,
+          avatarText: nickname.slice(0, 1).toUpperCase(),
+          activeCount: ownerStatsMap[item._id] || ownerStatsMap[nickname] || 0,
+          rateText: this.formatOwnerRate(item.platformRate)
+        });
       });
-      const nextId = await productsRepository.buildNewProductId();
+      const ownerOptions = ownerOptionList.map((item) => item.nickname);
       this.setData({
         ownerOptions,
+        ownerOptionList,
+        filteredOwnerOptions: ownerOptionList,
+        recentOwnerOptions: this.buildRecentOwnerOptions(ownerOptionList),
         ownerUserMap,
-        ownerPickerOptions: ["请选择寄售用户"].concat(ownerOptions),
         "form.id": nextId
       });
       this.markInitialSnapshot();
@@ -63,9 +88,76 @@ Page({
       wx.showToast({ title: "寄售用户加载失败", icon: "none" });
       this.setData({
         ownerOptions: [],
-        ownerPickerOptions: ["请先在用户管理中配置寄售用户"]
+        ownerOptionList: [],
+        filteredOwnerOptions: [],
+        recentOwnerOptions: []
       });
     }
+  },
+
+  buildOwnerStatsMap(products) {
+    const statsMap = {};
+    (products || []).forEach((item) => {
+      const remainingCount = Math.max(
+        0,
+        Number(item.totalQuantity || 0) - Number(item.soldCount || 0)
+      );
+      if (!remainingCount) {
+        return;
+      }
+      const userIdKey = String(item.ownerUserId || "").trim();
+      const nicknameKey = String(item.owner || "").trim();
+      if (userIdKey) {
+        statsMap[userIdKey] = (statsMap[userIdKey] || 0) + remainingCount;
+      }
+      if (nicknameKey) {
+        statsMap[nicknameKey] = (statsMap[nicknameKey] || 0) + remainingCount;
+      }
+    });
+    return statsMap;
+  },
+
+  formatOwnerRate(rate) {
+    const value = Number(rate);
+    if (!Number.isFinite(value) || value < 0) {
+      return "";
+    }
+    return `抽成 ${Math.round(value * 100)}%`;
+  },
+
+  getRecentOwnerIds() {
+    try {
+      const value = wx.getStorageSync(RECENT_OWNER_STORAGE_KEY);
+      return Array.isArray(value) ? value.map((item) => String(item || "").trim()).filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  },
+
+  buildRecentOwnerOptions(ownerOptionList) {
+    const ownerMap = new Map((ownerOptionList || []).map((item) => [item.userId, item]));
+    return this.getRecentOwnerIds()
+      .map((userId) => ownerMap.get(userId))
+      .filter(Boolean)
+      .slice(0, RECENT_OWNER_LIMIT);
+  },
+
+  updateRecentOwners(userId) {
+    const normalizedUserId = String(userId || "").trim();
+    if (!normalizedUserId) {
+      return;
+    }
+    const nextRecentIds = [normalizedUserId]
+      .concat(this.getRecentOwnerIds().filter((item) => item !== normalizedUserId))
+      .slice(0, RECENT_OWNER_LIMIT);
+    try {
+      wx.setStorageSync(RECENT_OWNER_STORAGE_KEY, nextRecentIds);
+    } catch (error) {
+      return;
+    }
+    this.setData({
+      recentOwnerOptions: this.buildRecentOwnerOptions(this.data.ownerOptionList)
+    });
   },
 
   buildDirtySnapshot() {
@@ -113,14 +205,65 @@ Page({
     });
   },
 
-  onOwnerChange(event) {
-    const ownerIndex = Number(event.detail.value);
-    const owner = ownerIndex > 0 ? this.data.ownerPickerOptions[ownerIndex] : "";
+  openOwnerPopup() {
+    if (!this.data.ownerOptionList.length) {
+      wx.showToast({ title: "请先在用户管理中配置寄售用户", icon: "none" });
+      return;
+    }
     this.setData({
-      ownerIndex,
-      "form.owner": owner,
-      "errors.owner": ""
+      ownerPopupVisible: true,
+      ownerSearchKeyword: "",
+      filteredOwnerOptions: this.data.ownerOptionList,
+      recentOwnerOptions: this.buildRecentOwnerOptions(this.data.ownerOptionList),
+      pendingSelectedOwner: this.data.form.owner || this.data.pendingSelectedOwner || ""
     });
+  },
+
+  closeOwnerPopup() {
+    this.setData({
+      ownerPopupVisible: false,
+      ownerSearchKeyword: "",
+      filteredOwnerOptions: this.data.ownerOptionList,
+      pendingSelectedOwner: ""
+    });
+  },
+
+  onOwnerSearchInput(event) {
+    const keyword = String(event.detail.value || "").trim();
+    const filteredOwnerOptions = keyword
+      ? this.data.ownerOptionList.filter((item) => item.nickname.toLowerCase().includes(keyword.toLowerCase()))
+      : this.data.ownerOptionList;
+    this.setData({
+      ownerSearchKeyword: keyword,
+      filteredOwnerOptions
+    });
+  },
+
+  selectOwnerCandidate(event) {
+    const owner = String(event.currentTarget.dataset.owner || "").trim();
+    this.setData({
+      pendingSelectedOwner: owner
+    });
+  },
+
+  confirmOwnerSelection() {
+    const owner = String(this.data.pendingSelectedOwner || "").trim();
+    if (!owner) {
+      wx.showToast({ title: "请选择寄售用户", icon: "none" });
+      return;
+    }
+    const ownerIndex = this.data.ownerOptions.indexOf(owner);
+    const ownerUserId = this.data.ownerUserMap[owner] || "";
+    this.setData({
+      ownerIndex: ownerIndex >= 0 ? ownerIndex : 0,
+      "form.owner": owner,
+      "errors.owner": "",
+      ownerPopupVisible: false,
+      ownerSearchKeyword: "",
+      filteredOwnerOptions: this.data.ownerOptionList,
+      pendingSelectedOwner: ""
+    });
+    this.updateRecentOwners(ownerUserId);
   },
 
   toggleDropdown(event) {
@@ -161,6 +304,31 @@ Page({
     this.setData({
       "form.status": event.currentTarget.dataset.value
     });
+  },
+
+  async createProductWithRetry(payload) {
+    let lastError = null;
+
+    for (let attempt = 0; attempt < PRODUCT_SAVE_MAX_RETRIES; attempt += 1) {
+      try {
+        await productsRepository.createProduct(payload);
+        return payload.id;
+      } catch (error) {
+        lastError = error;
+        const message = String((error && (error.userMessage || error.errMsg || error.message)) || "");
+        if (!/数据重复|duplicate/i.test(message) || attempt === PRODUCT_SAVE_MAX_RETRIES - 1) {
+          throw error;
+        }
+
+        const nextId = await productsRepository.buildNewProductId();
+        payload.id = nextId;
+        await new Promise((resolve) => {
+          this.setData({ "form.id": nextId }, resolve);
+        });
+      }
+    }
+
+    throw lastError || new Error("商品保存失败");
   },
 
   // ===== 照片相关 =====
@@ -265,8 +433,8 @@ Page({
     // IP
     if (!form.ip) {
       errors.ip = "请填写 IP";
-    } else if (form.ip.length > 12) {
-      errors.ip = "IP 字数不能超过 12 个";
+    } else if (form.ip.length > 30) {
+      errors.ip = "IP 字数不能超过 30 个";
     }
 
     // 系列
@@ -279,15 +447,15 @@ Page({
     // 角色
     if (!form.role) {
       errors.role = "请填写角色";
-    } else if (form.role.length > 12) {
-      errors.role = "角色字数不能超过 12 个";
+    } else if (form.role.length > 30) {
+      errors.role = "角色字数不能超过 30 个";
     }
 
     // 自定义类型
     if (form.type === "自定义" && !form.customType) {
       errors.customType = "请填写自定义类型";
-    } else if (form.type === "自定义" && form.customType.length > 12) {
-      errors.customType = "自定义类型字数不能超过 12 个";
+    } else if (form.type === "自定义" && form.customType.length > 30) {
+      errors.customType = "自定义类型字数不能超过 30 个";
     }
 
     // 数量
@@ -324,24 +492,12 @@ Page({
 
     // 创建商品
     this.setData({ submitting: true });
-    wx.showLoading({
-      title: "准备上传",
-      mask: true
-    });
+    let submitStage = "upload_images";
+    let savedProductId = form.id;
     try {
-      const cloudImages = await ensureCloudImages(form.images, "products", {
-        onProgress: (done, total) => {
-          wx.showLoading({
-            title: `上传图片 ${done}/${total}`,
-            mask: true
-          });
-        }
-      });
-      wx.showLoading({
-        title: "保存商品",
-        mask: true
-      });
-      await productsRepository.createProduct({
+      const cloudImages = await ensureCloudImages(form.images, "products");
+      submitStage = "save_product";
+      savedProductId = await this.createProductWithRetry({
         id: form.id,
         ownerUserId: this.data.ownerUserMap[form.owner] || "",
         owner: form.owner,
@@ -361,7 +517,7 @@ Page({
       });
       await addOperationLog({
         title: "新增商品",
-        target: form.id,
+        target: savedProductId,
         type: "商品",
         note: `${form.owner} · ${form.role} · ${form.series}`
       });
@@ -370,7 +526,7 @@ Page({
           title: "新增商品自动创建 IP",
           target: normalizeIpName(form.ip),
           type: "IP管理",
-          note: `商品 ${form.id} 新增并归入该 IP`
+          note: `商品 ${savedProductId} 新增并归入该 IP`
         });
       }
 
@@ -388,19 +544,33 @@ Page({
         });
       }, 500);
     } catch (error) {
+      const stageLabelMap = {
+        upload_images: "图片上传失败",
+        save_product: "商品保存失败"
+      };
+      const errorMessage = String(
+        (error && (error.userMessage || error.errMsg || error.message))
+        || stageLabelMap[submitStage]
+        || "上传失败，请重试"
+      );
+      console.error("单个商品上传失败：", {
+        stage: submitStage,
+        message: errorMessage,
+        error
+      });
       await addOperationLog({
         title: "新增商品",
-        target: form.id || "未生成编号",
+        target: savedProductId || form.id || "未生成编号",
         type: "商品",
         note: formatFailureContext(error, `${form.owner || "未选寄售人"} · ${form.role || "未填角色"}`),
         success: false
       });
-      wx.showToast({
-        title: String((error && error.errMsg) || "上传失败，请重试").slice(0, 30),
-        icon: "none"
+      wx.showModal({
+        title: stageLabelMap[submitStage] || "上传失败",
+        content: errorMessage.slice(0, 120),
+        showCancel: false
       });
     } finally {
-      wx.hideLoading();
       this.setData({ submitting: false });
     }
   },

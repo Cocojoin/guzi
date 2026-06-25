@@ -2,6 +2,7 @@
   {
     "account": "admin",
     "nickname": "系统管理员",
+    "nicknameKey": "系统管理员",
     "password": "cc19980905",
     "role": "admin",
     "isAgentEnabled": false,

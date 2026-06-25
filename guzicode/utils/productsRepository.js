@@ -15,6 +15,7 @@ function cloneProducts(items) {
 
 function isUsingDefaultListQuery(options = {}) {
   return !options.where
+    && !options.limit
     && (options.orderByField || "updatedAt") === "updatedAt"
     && (options.orderByDirection || "desc") === "desc";
 }
@@ -71,6 +72,7 @@ async function getAllProducts(options = {}) {
     where: options.where || null,
     orderByField: options.orderByField || "updatedAt",
     orderByDirection: options.orderByDirection || "desc",
+    limit: Number.isInteger(options.limit) && options.limit > 0 ? options.limit : 0,
     forceRefresh: options.forceRefresh === true
   };
 
@@ -157,7 +159,7 @@ function getRemainingCount(product) {
 }
 
 async function createProduct(payload) {
-  const now = new Date();
+  const now = new Date().toISOString();
   const record = {
     id: payload.id,
     ownerUserId: payload.ownerUserId || "",
@@ -228,6 +230,14 @@ async function recordProductSale(id, quantity, rateFraction, overrides = {}) {
     const soldCount = Number(current.soldCount || 0) + qty;
     const totalQuantity = Number(current.totalQuantity || 0);
     const remainingCount = Math.max(0, totalQuantity - soldCount);
+    const saleAmount = Math.max(
+      0,
+      Number(
+        overrides && overrides.saleAmount != null
+          ? overrides.saleAmount
+          : Number(current.price || 0) * qty
+      )
+    );
 
     let nextStatus = current.status;
     if (remainingCount <= 0 && totalQuantity > 0) {
@@ -237,13 +247,13 @@ async function recordProductSale(id, quantity, rateFraction, overrides = {}) {
     }
 
     return {
-      ...current,
-      ...overrides,
-      soldCount,
-      status: nextStatus,
-      soldBatches: appendSoldBatch(current, qty, rateFraction, new Date())
-    };
-  });
+        ...current,
+        ...overrides,
+        soldCount,
+        status: nextStatus,
+        soldBatches: appendSoldBatch(current, qty, rateFraction, new Date(), saleAmount)
+      };
+    });
 }
 
 async function bulkRecordProductSales(sales, resolveRateFraction) {
@@ -251,7 +261,10 @@ async function bulkRecordProductSales(sales, resolveRateFraction) {
     ? sales.map((item) => ({
       id: String(item && item.id || "").trim(),
       qty: Math.max(0, Number(item && item.qty || 0)),
-      price: Number(item && item.price || 0)
+      price: Number(item && item.price || 0),
+      saleAmount: item && item.saleAmount != null && item.saleAmount !== ""
+        ? Math.max(0, Number(item.saleAmount || 0))
+        : null
     })).filter((item) => item.id && item.qty > 0)
     : [];
 
@@ -286,6 +299,8 @@ async function bulkRecordProductSales(sales, resolveRateFraction) {
       const soldCount = Number(current.soldCount || 0) + qty;
       const totalQuantity = Number(current.totalQuantity || 0);
       const remainingCount = Math.max(0, totalQuantity - soldCount - Number(current.settledCount || 0));
+      const fallbackSaleAmount = (Number.isFinite(sale.price) && sale.price > 0 ? sale.price : Number(current.price || 0)) * qty;
+      const saleAmount = Math.max(0, Number(sale.saleAmount != null ? sale.saleAmount : fallbackSaleAmount));
       let nextStatus = current.status;
 
       if (remainingCount <= 0 && totalQuantity > 0) {
@@ -299,7 +314,7 @@ async function bulkRecordProductSales(sales, resolveRateFraction) {
         price: Number.isFinite(sale.price) && sale.price > 0 ? sale.price : current.price,
         soldCount,
         status: nextStatus,
-        soldBatches: appendSoldBatch(current, qty, rateFraction, new Date())
+        soldBatches: appendSoldBatch(current, qty, rateFraction, new Date(), saleAmount)
       };
     });
 
@@ -445,9 +460,12 @@ async function restoreSoldProduct(id) {
       if (!nextQty) {
         soldBatches.splice(index, 1);
       } else {
+        const currentQty = Math.max(1, Number(batch.qty || 0));
+        const unitSaleAmount = Math.max(0, Number(batch.saleAmount || 0)) / currentQty;
         soldBatches[index] = {
           ...batch,
-          qty: nextQty
+          qty: nextQty,
+          saleAmount: Math.max(0, Number(batch.saleAmount || 0) - unitSaleAmount)
         };
       }
       break;
@@ -462,8 +480,10 @@ async function restoreSoldProduct(id) {
 }
 
 async function buildNewProductId() {
-  const all = await getAllProducts();
-  const maxValue = all.reduce((max, item) => {
+  const products = await getAllProducts({
+    forceRefresh: true
+  });
+  const maxValue = products.reduce((max, item) => {
     const value = Number(String(item.id || "").replace(/\D/g, ""));
     return Number.isFinite(value) ? Math.max(max, value) : max;
   }, 0);

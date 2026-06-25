@@ -1,3 +1,9 @@
+const CONSIGNMENT_USERS_CACHE_TTL = 60 * 1000;
+
+let consignmentUsersCache = null;
+let consignmentUsersCacheAt = 0;
+let consignmentUsersRequest = null;
+
 function extractErrorMessage(error, fallback = "操作失败，请稍后重试") {
   const message = String((error && (error.errMsg || error.message)) || "").trim();
   if (!message) {
@@ -12,7 +18,7 @@ function extractErrorMessage(error, fallback = "操作失败，请稍后重试")
   if (/network|timeout|fail/i.test(message)) {
     return "网络异常，请稍后重试";
   }
-  return fallback;
+  return message;
 }
 
 async function invokeAuth(action, data = {}) {
@@ -55,8 +61,29 @@ async function listUsers(options = {}) {
 }
 
 async function listConsignmentUsers() {
-  const result = await invokeAuth("listConsignmentUsers");
-  return result.users || [];
+  const now = Date.now();
+  if (Array.isArray(consignmentUsersCache) && now - consignmentUsersCacheAt <= CONSIGNMENT_USERS_CACHE_TTL) {
+    return consignmentUsersCache.map((item) => ({ ...item }));
+  }
+
+  if (consignmentUsersRequest) {
+    const users = await consignmentUsersRequest;
+    return users.map((item) => ({ ...item }));
+  }
+
+  consignmentUsersRequest = invokeAuth("listConsignmentUsers")
+    .then((result) => {
+      const users = result.users || [];
+      consignmentUsersCache = users.map((item) => ({ ...item }));
+      consignmentUsersCacheAt = Date.now();
+      return users;
+    })
+    .finally(() => {
+      consignmentUsersRequest = null;
+    });
+
+  const users = await consignmentUsersRequest;
+  return users.map((item) => ({ ...item }));
 }
 
 async function adminUpdateUserProfile(userId, { nickname, contactWechat, platformRate }) {

@@ -131,9 +131,14 @@ Page({
       }, 400);
     } catch (error) {
       console.error("资料保存失败", error);
-      this.setData({ submitting: false });
+      const message = String((error && (error.userMessage || error.message)) || "").trim();
+      const isNicknameError = error && (error.code === "NICKNAME_EXISTS" || error.code === "INVALID_NICKNAME");
+      this.setData({
+        submitting: false,
+        "errors.nickname": isNicknameError ? message : this.data.errors.nickname
+      });
       wx.showToast({
-        title: "保存失败，请重试",
+        title: isNicknameError ? message : "保存失败，请重试",
         icon: "none"
       });
     }

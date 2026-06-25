@@ -642,6 +642,24 @@
   margin-bottom: 12rpx;
 }
 
+.sheet-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.sheet-section-side {
+  color: #a0aec0;
+  font-size: 24rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.sheet-required {
+  color: #ff6f8f;
+}
+
 .status-choice-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -700,6 +718,43 @@
   color: #a5b3c7;
   font-size: 24rpx;
   margin-top: 8rpx;
+}
+
+.sheet-money-input {
+  margin-top: 18rpx;
+  height: 92rpx;
+  padding: 0 22rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid rgba(217, 236, 248, 0.96);
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  box-sizing: border-box;
+}
+
+.sheet-money-prefix {
+  color: #2f435f;
+  font-size: 40rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sheet-money-field {
+  flex: 1;
+  min-width: 0;
+  height: 92rpx;
+  line-height: 92rpx;
+  color: #2f435f;
+  font-size: 38rpx;
+  font-weight: 800;
+}
+
+.sheet-money-tail {
+  color: #bac4d3;
+  font-size: 24rpx;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .sheet-note {

@@ -396,9 +396,9 @@
         </view>
         <view class="settlement-income-wrap">
           <text class="settlement-income-prefix">¥</text>
-          <input class="settlement-income-input" value="{{settlementActualIncome}}" bindinput="onSettlementIncomeInput" />
+          <view class="settlement-income-value">{{settlementActualIncome}}</view>
         </view>
-        <view class="settlement-desc">在外部平台实际成交合计。不展示给寄售用户，不参与结算用户的结算金额。</view>
+        <view class="settlement-desc">自动汇总所选结算商品的实际出售金额。不展示给寄售用户，不参与结算图片内容。</view>
       </view>
 
       <view wx:if="{{currentView === 'settlement'}}" class="detail-card section-card">

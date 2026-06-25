@@ -25,14 +25,14 @@
         <view class="field-col">
           <view class="card-label">IP <text class="required">*</text></view>
           <view class="field-input">
-            <input class="field-input-text" placeholder="IP 名称" placeholder-class="placeholder" maxlength="12" value="{{form.ip}}" bindinput="onFieldInput" data-field="ip" />
+            <input class="field-input-text" placeholder="IP 名称" placeholder-class="placeholder" maxlength="30" value="{{form.ip}}" bindinput="onFieldInput" data-field="ip" />
           </view>
           <view wx:if="{{errors.ip}}" class="error-inline">{{errors.ip}}</view>
         </view>
         <view class="field-col">
           <view class="card-label">角色 <text class="required">*</text></view>
           <view class="field-input">
-            <input class="field-input-text" placeholder="角色名称" placeholder-class="placeholder" maxlength="12" value="{{form.role}}" bindinput="onFieldInput" data-field="role" />
+            <input class="field-input-text" placeholder="角色名称" placeholder-class="placeholder" maxlength="30" value="{{form.role}}" bindinput="onFieldInput" data-field="role" />
           </view>
           <view wx:if="{{errors.role}}" class="error-inline">{{errors.role}}</view>
         </view>
@@ -65,7 +65,7 @@
         </view>
         <view wx:if="{{form.type === '自定义'}}" class="custom-wrap">
           <view class="field-input">
-            <input class="field-input-text" placeholder="请输入自定义类型" placeholder-class="placeholder" maxlength="12" value="{{form.customType}}" bindinput="onFieldInput" data-field="customType" />
+            <input class="field-input-text" placeholder="请输入自定义类型" placeholder-class="placeholder" maxlength="30" value="{{form.customType}}" bindinput="onFieldInput" data-field="customType" />
           </view>
           <view wx:if="{{errors.customType}}" class="error-inline">{{errors.customType}}</view>
         </view>

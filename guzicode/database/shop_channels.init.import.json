@@ -1,0 +1,4 @@
+{"id":"shop_taobao","platformKey":"taobao","storeName":"谷圈星社官方店","searchKeyword":"谷圈星社官方店","enabled":true,"showInDetail":true,"sortIndex":0,"createdAt":"2026-06-25T00:00:00.000Z","updatedAt":"2026-06-25T00:00:00.000Z"}
+{"id":"shop_pdd","platformKey":"pdd","storeName":"谷圈星社官方店","searchKeyword":"谷圈星社官方店","enabled":true,"showInDetail":true,"sortIndex":1,"createdAt":"2026-06-25T00:00:00.000Z","updatedAt":"2026-06-25T00:00:00.000Z"}
+{"id":"shop_xhs","platformKey":"xhs","storeName":"星社の谷子铺","searchKeyword":"ququan_xs","enabled":true,"showInDetail":true,"sortIndex":2,"createdAt":"2026-06-25T00:00:00.000Z","updatedAt":"2026-06-25T00:00:00.000Z"}
+{"id":"shop_contact_service","kind":"contact_service_setting","enabled":true,"createdAt":"2026-06-25T00:00:00.000Z","updatedAt":"2026-06-25T00:00:00.000Z"}

@@ -87,22 +87,52 @@
   margin-left: 6rpx;
 }
 
+.section-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.section-copy-tip {
+  color: #9aa8bd;
+  font-size: 24rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
 .sold-list {
   display: flex;
   flex-direction: column;
 }
 
 .sold-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20rpx;
-  padding: 20rpx 0;
+  padding: 24rpx 0 28rpx;
   border-bottom: 2rpx solid rgba(217, 236, 248, 0.5);
 }
 
 .sold-item:last-child {
   border-bottom: none;
+}
+
+.sold-card-head {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.sold-avatar {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, rgba(255, 215, 230, 0.72), rgba(176, 221, 250, 0.88));
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .sold-info {
@@ -124,9 +154,58 @@
   line-height: 1.5;
 }
 
-.sold-input-box {
-  width: 120rpx;
-  height: 84rpx;
+.sold-stock-strong {
+  color: #42bc8e;
+  font-weight: 700;
+}
+
+.sold-form-row {
+  margin-top: 20rpx;
+  display: flex;
+  gap: 18rpx;
+  align-items: flex-end;
+}
+
+.sold-form-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.sold-form-field--amount {
+  flex: 1.34;
+}
+
+.sold-form-label {
+  margin-bottom: 12rpx;
+  color: #7f8ea7;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.qty-stepper-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 18rpx;
+  border: 2rpx solid rgba(217, 236, 248, 0.96);
+  background: rgba(255, 255, 255, 0.96);
+  color: #2a3f5a;
+  font-size: 34rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qty-stepper-value-wrap {
+  flex: 1;
+  height: 64rpx;
   padding: 0 16rpx;
   border-radius: 20rpx;
   border: 2rpx solid rgba(217, 236, 248, 0.96);
@@ -134,17 +213,78 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
-.sold-input {
+.qty-stepper-value {
   width: 100%;
-  height: 84rpx;
-  line-height: 84rpx;
+  height: 64rpx;
+  line-height: 64rpx;
   font-size: 28rpx;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: #2a3f5a;
   text-align: center;
+}
+
+.sold-amount-input {
+  height: 64rpx;
+  padding: 0 18rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid rgba(217, 236, 248, 0.96);
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  box-sizing: border-box;
+}
+
+.sold-amount-prefix {
+  color: #2a3f5a;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.sold-amount-field {
+  flex: 1;
+  min-width: 0;
+  height: 64rpx;
+  line-height: 64rpx;
+  color: #2a3f5a;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.summary-card {
+  margin-bottom: 24rpx;
+  padding: 26rpx 28rpx;
+  border-radius: 30rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.88);
+  background: linear-gradient(90deg, rgba(255, 216, 230, 0.36) 0%, rgba(176, 221, 250, 0.34) 100%);
+  box-shadow: 0 10rpx 24rpx rgba(118, 154, 190, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.summary-title {
+  color: #8b7e9b;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.summary-sub {
+  margin-top: 6rpx;
+  color: #9aa8bd;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.summary-amount {
+  color: #2a3f5a;
+  font-size: 44rpx;
+  font-weight: 800;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .remark-input-box {

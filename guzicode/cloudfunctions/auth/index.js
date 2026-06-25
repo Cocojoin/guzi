@@ -3,6 +3,7 @@ const cloud = require("wx-server-sdk");
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
+const command = db.command;
 const USERS_COLLECTION = "users";
 
 function normalizePasswordInput(password) {
@@ -29,6 +30,23 @@ function fail(code, message) {
 
 async function getUserByAccount(account) {
   const res = await db.collection(USERS_COLLECTION).where({ account }).limit(1).get();
+  return (res.data || [])[0] || null;
+}
+
+function normalizeNicknameKey(nickname) {
+  const normalizedNickname = String(nickname || "").trim();
+  if (!normalizedNickname) {
+    return "";
+  }
+  return normalizedNickname.toLowerCase();
+}
+
+async function getUserByNicknameKey(nickname) {
+  const nicknameKey = normalizeNicknameKey(nickname);
+  if (!nicknameKey) {
+    return null;
+  }
+  const res = await db.collection(USERS_COLLECTION).where({ nicknameKey }).limit(1).get();
   return (res.data || [])[0] || null;
 }
 
@@ -68,6 +86,40 @@ async function queryAllUsers(whereBuilder = null) {
   }
 
   return list;
+}
+
+async function findUserByNicknameConflict(nickname, options = {}) {
+  const nicknameKey = normalizeNicknameKey(nickname);
+  if (!nicknameKey) {
+    return null;
+  }
+
+  const exactMatch = await db.collection(USERS_COLLECTION).where({ nicknameKey }).limit(1).get();
+  const exactUser = (exactMatch.data || [])[0] || null;
+  if (exactUser && exactUser._id !== options.excludeUserId) {
+    return exactUser;
+  }
+
+  // Transitional fallback for legacy rows that do not have nicknameKey backfilled yet.
+  const legacyUsers = await queryAllUsers((query) => query.where({ nicknameKey: command.exists(false) }));
+  const legacyMatch = legacyUsers.find((item) => {
+    if (!item || item._id === options.excludeUserId) {
+      return false;
+    }
+    return normalizeNicknameKey(item.nickname) === nicknameKey;
+  });
+  if (legacyMatch) {
+    return legacyMatch;
+  }
+
+  const nullKeyUsers = await queryAllUsers((query) => query.where({ nicknameKey: null }));
+  const nullKeyMatch = nullKeyUsers.find((item) => {
+    if (!item || item._id === options.excludeUserId) {
+      return false;
+    }
+    return normalizeNicknameKey(item.nickname) === nicknameKey;
+  });
+  return nullKeyMatch || null;
 }
 
 function sanitizeUser(user, options = {}) {
@@ -195,11 +247,19 @@ async function handleRegister({ account, password }, openid) {
     return fail("ACCOUNT_EXISTS", "账号已存在，请更换账号");
   }
 
+  const initialNickname = normalizedAccount;
+  const initialNicknameKey = normalizeNicknameKey(initialNickname);
+  const existingNicknameUser = await findUserByNicknameConflict(initialNickname);
+  if (existingNicknameUser) {
+    return fail("DEFAULT_NICKNAME_EXISTS", "该账号会作为初始昵称，已被占用，请更换账号");
+  }
+
   const now = new Date();
   const res = await db.collection(USERS_COLLECTION).add({
     data: {
       account: normalizedAccount,
-      nickname: "",
+      nickname: initialNickname,
+      nicknameKey: initialNicknameKey,
       password: hashPassword(normalizedPassword),
       role: "normal_user",
       isAgentEnabled: false,
@@ -221,7 +281,7 @@ async function handleRegister({ account, password }, openid) {
       _id: res._id,
       account: normalizedAccount,
       role: "normal_user",
-      nickname: "",
+      nickname: initialNickname,
       status: "active",
       isAgentEnabled: false
     }
@@ -243,10 +303,18 @@ async function handleUpdateProfile({ userId, nickname, avatarUrl }, openid) {
     return fail("INVALID_NICKNAME", nicknameError);
   }
 
+  const normalizedNickname = String(nickname || "").trim();
+  const existingNicknameUser = await findUserByNicknameConflict(normalizedNickname, { excludeUserId: user._id });
+  if (existingNicknameUser) {
+    return fail("NICKNAME_EXISTS", "昵称已存在，请更换一个");
+  }
+  const nicknameKey = normalizeNicknameKey(normalizedNickname) || null;
+
   const nextAvatarUrl = String(avatarUrl || "").trim();
   await db.collection(USERS_COLLECTION).doc(user._id).update({
     data: {
-      nickname: String(nickname).trim(),
+      nickname: normalizedNickname,
+      nicknameKey,
       avatarUrl: nextAvatarUrl,
       updatedAt: new Date()
     }
@@ -255,7 +323,8 @@ async function handleUpdateProfile({ userId, nickname, avatarUrl }, openid) {
   return ok({
     user: sanitizeUser({
       ...user,
-      nickname: String(nickname).trim(),
+      nickname: normalizedNickname,
+      nicknameKey,
       avatarUrl: nextAvatarUrl
     }, { includeProfile: true })
   });
@@ -345,9 +414,17 @@ async function handleAdminUpdateUserProfile({ userId, nickname, contactWechat, p
     return fail("INVALID_NICKNAME", nicknameError);
   }
 
+  const normalizedNickname = String(nickname || "").trim();
+  const existingNicknameUser = await findUserByNicknameConflict(normalizedNickname, { excludeUserId: targetUser._id });
+  if (existingNicknameUser) {
+    return fail("NICKNAME_EXISTS", "昵称已存在，请更换一个");
+  }
+  const nicknameKey = normalizeNicknameKey(normalizedNickname) || null;
+
   const normalizedContactWechat = String(contactWechat || "").trim();
   const updateData = {
-    nickname: String(nickname).trim(),
+    nickname: normalizedNickname,
+    nicknameKey,
     contactWechat: normalizedContactWechat,
     updatedAt: new Date()
   };

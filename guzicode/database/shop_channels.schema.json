@@ -1,0 +1,79 @@
+{
+  "bsonType": "object",
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "bsonType": "string",
+      "description": "配置项唯一 ID，例如 shop_taobao 或 shop_contact_service"
+    },
+    "kind": {
+      "bsonType": [
+        "string",
+        "null"
+      ],
+      "description": "配置类型，普通店铺可为空，客服模块配置使用 contact_service_setting"
+    },
+    "platformKey": {
+      "bsonType": [
+        "string",
+        "null"
+      ],
+      "description": "平台标识，如 taobao / pdd / xhs"
+    },
+    "storeName": {
+      "bsonType": [
+        "string",
+        "null"
+      ],
+      "description": "店铺名称"
+    },
+    "searchKeyword": {
+      "bsonType": [
+        "string",
+        "null"
+      ],
+      "description": "复制到剪贴板的关键词"
+    },
+    "enabled": {
+      "bsonType": [
+        "bool",
+        "null"
+      ],
+      "description": "是否启用"
+    },
+    "showInDetail": {
+      "bsonType": [
+        "bool",
+        "null"
+      ],
+      "description": "是否在商品详情页展示"
+    },
+    "sortIndex": {
+      "bsonType": [
+        "int",
+        "long",
+        "double",
+        "null"
+      ],
+      "description": "排序序号"
+    },
+    "createdAt": {
+      "bsonType": [
+        "date",
+        "string",
+        "null"
+      ],
+      "description": "创建时间"
+    },
+    "updatedAt": {
+      "bsonType": [
+        "date",
+        "string",
+        "null"
+      ],
+      "description": "更新时间"
+    }
+  }
+}
