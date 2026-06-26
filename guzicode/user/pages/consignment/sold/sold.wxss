@@ -15,52 +15,102 @@
   flex: 1;
 }
 
-.sold-card {
-  padding: 28rpx;
-  margin-bottom: 24rpx;
-}
-
-.sold-head {
+.sold-record-card {
   display: flex;
   align-items: flex-start;
-  gap: 22rpx;
-  padding-bottom: 24rpx;
-  border-bottom: 2rpx solid rgba(211, 220, 235, 0.68);
+  gap: 26rpx;
+  padding: 26rpx;
+  margin-bottom: 24rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2rpx solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18rpx 42rpx rgba(116, 148, 181, 0.12);
 }
 
-.small-thumb {
-  width: 104rpx;
-  height: 104rpx;
-  flex-basis: 104rpx;
-  background: rgba(255, 255, 255, 0.92);
+.sold-thumb {
+  position: relative;
+  width: 144rpx;
+  height: 172rpx;
+  flex: 0 0 144rpx;
+  overflow: hidden;
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, #fde3ef 0%, #d4e5ff 100%);
 }
 
-.sold-info {
+.sold-thumb-star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34rpx;
+  height: 34rpx;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 8rpx;
+}
+
+.quality-badge {
+  position: absolute;
+  left: 10rpx;
+  top: 10rpx;
+  min-width: 54rpx;
+  height: 34rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 900;
+  line-height: 34rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.quality-badge--flaw {
+  background: #d95078;
+}
+
+.quality-badge--clean {
+  background: #35a978;
+}
+
+.sold-record-main {
   min-width: 0;
   flex: 1;
 }
 
-.single-line {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.sold-line {
-  display: flex;
-  justify-content: space-between;
-  color: #6c7b93;
-  font-size: 28rpx;
-  font-weight: 700;
-  margin-top: 20rpx;
-}
-
-.sold-line text:last-child {
-  color: #52617a;
-}
-
-.sold-price {
-  color: #f05e83 !important;
+.sold-record-title {
+  color: #33425f;
   font-size: 32rpx;
   font-weight: 900;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.sold-record-ip {
+  margin-top: 14rpx;
+  color: #5c6680;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sold-record-sale {
+  margin-top: 12rpx;
+  color: #f05e83;
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.sold-record-time {
+  margin-top: 10rpx;
+  color: #9aa6bb;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.35;
 }

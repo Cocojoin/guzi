@@ -21,7 +21,7 @@
         <view class="form-field {{errors.account ? 'form-field--error' : ''}}">
           <input
             class="field-input"
-            placeholder="请输入6-20英文和数字"
+            placeholder="请输入6-20位字母或数字"
             placeholder-class="field-placeholder"
             value="{{form.account}}"
             bindinput="onAccountInput"

@@ -3,7 +3,8 @@ const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const { addOperationLog, formatFailureContext } = require("../../../utils/adminSettings");
 const { navigateAdminRoot } = require("../../../utils/adminNavigation");
 const { debounce } = require("../../../utils/debounce");
-const { ensurePendingSoldBatches, getUserRateFraction, normalizeRateFraction, normalizeSoldBatches } = require("../../../utils/consignmentRate");
+const { getUserRateFraction, normalizeRateFraction, normalizeSoldBatches } = require("../../../utils/consignmentRate");
+const { buildPendingSettlementItems } = require("../../../utils/settlementPresentation");
 const { ensureCloudImages } = require("../../../utils/cloudFile");
 const dataAccessService = require("../../../utils/dataAccessService");
 const productsRepository = require("../../../utils/productsRepository");
@@ -125,46 +126,6 @@ function productBelongsToUser(product, user) {
 
 function canDeleteUser(user) {
   return !!(user && user.id);
-}
-
-function buildPendingSettlementItems(product, fallbackRateFraction) {
-  const pendingBatches = ensurePendingSoldBatches(product, fallbackRateFraction);
-  return pendingBatches
-    .map((batch, batchIndex) => {
-      const unsettledQty = Math.max(0, Number(batch.qty || 0) - Number(batch.settledQty || 0));
-      if (!unsettledQty) {
-        return null;
-      }
-      const rateFraction = normalizeRateFraction(batch.rateFraction);
-      const price = Number(product.price || 0);
-      const totalPrice = price * unsettledQty;
-      const payableAmount = calcPayableAmount(price, unsettledQty, rateFraction);
-      const batchSaleAmount = Number(batch.saleAmount || 0);
-      const unitSaleAmount = batch.qty > 0 && batchSaleAmount > 0 ? batchSaleAmount / Number(batch.qty || 1) : price;
-      const saleAmount = Number((unitSaleAmount * unsettledQty).toFixed(2));
-      return {
-        id: product._id,
-        rowKey: `${product._id}-${batchIndex}`,
-        productId: product.id,
-        title: `${product.role || ""} · ${product.series || ""}`.trim(),
-        soldQty: unsettledQty,
-        price,
-        totalPrice,
-        saleAmount,
-        saleAmountText: fmt2(saleAmount),
-        payableAmount,
-        payableText: fmt2(payableAmount),
-        rate: Number((rateFraction * 100).toFixed(2)),
-        rateFraction,
-        batchIndex,
-        type: product.customType || product.type || "-",
-        series: product.ip || product.series || "-",
-        quality: product.purchaseRecord || "无",
-        selected: true,
-        coverImage: Array.isArray(product.images) ? (product.images[0] || "") : ""
-      };
-    })
-    .filter(Boolean);
 }
 
 Page({
@@ -1165,6 +1126,7 @@ Page({
     if (!user) return;
     try {
       this.clearPageError();
+      await this.reconcileSettlementRecordsForCurrentUser();
       const products = await this.fetchAll(PRODUCTS_COLLECTION);
       const soldItems = products
         .filter((p) => productBelongsToUser(p, user) && Number(p.soldCount || 0) > Number(p.settledCount || 0))
@@ -2054,11 +2016,14 @@ Page({
       await dataAccessService.addDoc(SETTLEMENT_RECORDS_COLLECTION, record);
       await Promise.all(
         items.map(async (item) => {
-          await productsRepository.applySettlementToProduct(
-            item.id,
+          const updated = await productsRepository.applySettlementToProduct(
+            item.productId || item.id,
             Number(item.soldQty || 0),
             normalizeRateFraction(item.rateFraction)
           );
+          if (!updated) {
+            throw new Error(`商品结算状态更新失败: ${item.title || item.productId || item.id}`);
+          }
         })
       );
       await addOperationLog({
@@ -2098,6 +2063,7 @@ Page({
     if (!user) return;
     try {
       this.clearPageError();
+      await this.reconcileSettlementRecordsForCurrentUser();
       const settledRecords = await this.fetchAll(SETTLEMENT_RECORDS_COLLECTION, { userId: user.id });
       // 按 _id 去重，避免重复显示
       const uniqueRecordsMap = new Map();
@@ -2115,6 +2081,69 @@ Page({
       this.recalcSettledSummary();
       this.handlePageError(e, "已结算记录加载失败");
       console.warn("loadSettledRecordsForCurrentUser:", e);
+    }
+  },
+
+  async reconcileSettlementRecordsForCurrentUser() {
+    const user = this.data.currentUser;
+    if (!user || !user.id) return;
+
+    const userId = String(user.id);
+    this._settlementReconcileDone = this._settlementReconcileDone || {};
+    this._settlementReconcilePending = this._settlementReconcilePending || {};
+
+    if (this._settlementReconcileDone[userId]) {
+      return;
+    }
+    if (this._settlementReconcilePending[userId]) {
+      return this._settlementReconcilePending[userId];
+    }
+
+    this._settlementReconcilePending[userId] = (async () => {
+      const settledRecords = await this.fetchAll(SETTLEMENT_RECORDS_COLLECTION, { userId });
+      let repairedCount = 0;
+
+      for (const record of settledRecords) {
+        const settlementItems = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
+        for (const item of settlementItems) {
+          const batchIndex = Number(item && item.batchIndex);
+          const quantity = Number(item && item.soldQty || 0);
+          const productId = String((item && (item.productId || item.id)) || "").trim();
+
+          if (!productId || !Number.isInteger(batchIndex) || batchIndex < 0 || quantity <= 0) {
+            continue;
+          }
+
+          const result = await productsRepository.repairSettlementToProduct(
+            productId,
+            quantity,
+            batchIndex,
+            normalizeRateFraction(item.rateFraction)
+          );
+
+          if (result && result.updated) {
+            repairedCount += 1;
+          }
+        }
+      }
+
+      if (repairedCount > 0) {
+        await addOperationLog({
+          title: "修复历史结算状态",
+          target: user.account || user.id,
+          type: "结算",
+          note: `自动补齐 ${repairedCount} 条历史结算商品状态`
+        });
+        await this.refreshUserStats();
+      }
+
+      this._settlementReconcileDone[userId] = true;
+    })();
+
+    try {
+      await this._settlementReconcilePending[userId];
+    } finally {
+      delete this._settlementReconcilePending[userId];
     }
   },
 

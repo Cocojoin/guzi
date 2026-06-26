@@ -19,8 +19,8 @@ function getDisplayStatus(product) {
     return "sold";
   }
 
-  if (product.status === "up" || product.status === "down") {
-    return product.status;
+  if (product.status === "down") {
+    return "down";
   }
 
   return "up";
@@ -101,6 +101,11 @@ function buildProductCard(product) {
   const statusMeta = getStatusMeta(displayStatus);
   const qualityMeta = getQualityMeta(product.quality);
   const remainingCount = getRemainingCount(product);
+  const totalQuantity = Math.max(0, Number(product.totalQuantity || 0));
+  const soldQuantity = Math.max(0, Number(product.soldCount || 0));
+  const soldProgressPercent = totalQuantity > 0
+    ? Math.min(100, Math.max(0, (soldQuantity / totalQuantity) * 100))
+    : 0;
 
   const coverImage = Array.isArray(product.images)
     ? (product.images[0] || "")
@@ -117,6 +122,10 @@ function buildProductCard(product) {
     typeLabel: getTypeLabel(product),
     title: buildTitle(product),
     priceText: formatPrice(product.price),
+    unitPriceText: `¥${Number(product.price || 0)} /件`,
+    totalQuantity,
+    soldQuantity,
+    soldProgressPercent,
     remainingCount,
     coverImage
   };

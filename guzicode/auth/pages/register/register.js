@@ -7,8 +7,8 @@ function validateAccount(value) {
     return "请输入账号";
   }
 
-  if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$/.test(value)) {
-    return "账号需为6-20位数字和字母组合";
+  if (!/^[A-Za-z\d]{6,20}$/.test(value)) {
+    return "账号需为6-20位字母或数字";
   }
 
   return "";

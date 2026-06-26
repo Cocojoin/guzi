@@ -24,7 +24,7 @@ Page({
     activeDropdown: "",
     roleOptions: ["角色"],
     ipOptions: ["IP"],
-    statusOptions: ["状态", "已上架", "已下架", "已售出", "已结算"],
+    statusOptions: ["状态", "已上架", "已下架", "已售出"],
     roleIndex: 0,
     ipIndex: 0,
     statusIndex: 0,
@@ -119,7 +119,6 @@ Page({
         if (status === "已上架" && item.displayStatus !== "up") return false;
         if (status === "已下架" && item.displayStatus !== "down") return false;
         if (status === "已售出" && item.displayStatus !== "sold") return false;
-        if (status === "已结算" && item.displayStatus !== "settled") return false;
       }
 
       if (!keyword) return true;
@@ -144,6 +143,8 @@ Page({
   closeDropdown() {
     this.setData({ activeDropdown: "" });
   },
+
+  preventBubble() {},
 
   onDropdownSelect(event) {
     const key = event.currentTarget.dataset.key;

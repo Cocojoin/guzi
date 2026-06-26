@@ -1,5 +1,5 @@
 const PRODUCTS_COLLECTION = "products";
-const { appendSoldBatch, settleSoldBatches } = require("./consignmentRate");
+const { appendSoldBatch, settleSoldBatches, settleSpecificSoldBatch } = require("./consignmentRate");
 const { retainIpGroupNames, normalizeIpName } = require("./ipGroupsRepository");
 const dataAccessService = require("./dataAccessService");
 
@@ -118,18 +118,37 @@ async function getProductsByIds(ids, options = {}) {
   if (cacheEnabled) {
     const cached = getCachedFullList();
     if (cached) {
-      const cacheMap = new Map(cached.map((item) => [String(item.id || "").trim(), item]));
+      const cacheMap = new Map();
+      cached.forEach((item) => {
+        const businessId = String(item.id || "").trim();
+        const docId = String(item._id || "").trim();
+        if (businessId) {
+          cacheMap.set(businessId, item);
+        }
+        if (docId) {
+          cacheMap.set(docId, item);
+        }
+      });
       return list.map((id) => cacheMap.get(id)).filter(Boolean);
     }
   }
 
   const items = await getAllProducts({
-    where: { id: list },
     orderByField: "updatedAt",
     orderByDirection: "desc",
     forceRefresh: options.forceRefresh === true
   });
-  const itemMap = new Map(items.map((item) => [String(item.id || "").trim(), item]));
+  const itemMap = new Map();
+  items.forEach((item) => {
+    const businessId = String(item.id || "").trim();
+    const docId = String(item._id || "").trim();
+    if (businessId) {
+      itemMap.set(businessId, item);
+    }
+    if (docId) {
+      itemMap.set(docId, item);
+    }
+  });
   return list.map((id) => itemMap.get(id)).filter(Boolean);
 }
 
@@ -143,7 +162,11 @@ async function getProductById(id, options = {}) {
   if (cacheEnabled) {
     const cached = getCachedFullList();
     if (cached) {
-      return cached.find((item) => String(item.id || "").trim() === normalizedId) || null;
+      return cached.find((item) => {
+        const businessId = String(item.id || "").trim();
+        const docId = String(item._id || "").trim();
+        return businessId === normalizedId || docId === normalizedId;
+      }) || null;
     }
   }
 
@@ -285,7 +308,7 @@ async function bulkRecordProductSales(sales, resolveRateFraction) {
 
     const remaining = Math.max(
       0,
-      Number(product.totalQuantity || 0) - Number(product.soldCount || 0) - Number(product.settledCount || 0)
+      Number(product.totalQuantity || 0) - Number(product.soldCount || 0)
     );
     const qty = Math.max(0, Math.min(sale.qty, remaining));
     if (!qty) {
@@ -298,7 +321,7 @@ async function bulkRecordProductSales(sales, resolveRateFraction) {
     const next = buildUpdatedProduct(product, (current) => {
       const soldCount = Number(current.soldCount || 0) + qty;
       const totalQuantity = Number(current.totalQuantity || 0);
-      const remainingCount = Math.max(0, totalQuantity - soldCount - Number(current.settledCount || 0));
+      const remainingCount = Math.max(0, totalQuantity - soldCount);
       const fallbackSaleAmount = (Number.isFinite(sale.price) && sale.price > 0 ? sale.price : Number(current.price || 0)) * qty;
       const saleAmount = Math.max(0, Number(sale.saleAmount != null ? sale.saleAmount : fallbackSaleAmount));
       let nextStatus = current.status;
@@ -370,6 +393,61 @@ async function applySettlementToProduct(id, quantity, fallbackRateFraction) {
       status: nextStatus
     };
   });
+}
+
+async function repairSettlementToProduct(id, quantity, batchIndex, fallbackRateFraction) {
+  const qty = Math.max(0, Number(quantity || 0));
+  const normalizedBatchIndex = Number(batchIndex);
+  if (!qty || !Number.isInteger(normalizedBatchIndex) || normalizedBatchIndex < 0) {
+    return { updated: false, product: await getProductById(id, { forceRefresh: true }) };
+  }
+
+  const current = await getProductById(id, { forceRefresh: true });
+  if (!current || !current._id) {
+    return { updated: false, product: null };
+  }
+
+  const batches = Array.isArray(current.soldBatches) ? current.soldBatches : [];
+  const currentBatch = batches[normalizedBatchIndex];
+  const unsettledQty = currentBatch
+    ? Math.max(0, Number(currentBatch.qty || 0) - Number(currentBatch.settledQty || 0))
+    : 0;
+  const pendingQty = Math.max(0, Number(current.soldCount || 0) - Number(current.settledCount || 0));
+  const settleQty = Math.min(qty, unsettledQty, pendingQty);
+
+  if (!settleQty) {
+    return { updated: false, product: current };
+  }
+
+  const product = await updateProduct(id, (latest) => {
+    const totalQuantity = Number(latest.totalQuantity || 0);
+    const soldCount = Number(latest.soldCount || 0);
+    const nextSold = Math.max(0, soldCount - settleQty);
+    const nextSettled = Number(latest.settledCount || 0) + settleQty;
+    const remainingCount = Math.max(0, totalQuantity - nextSold);
+
+    let nextStatus = latest.status;
+    if (nextSettled > 0 && nextSold <= 0) {
+      nextStatus = "settled";
+    } else if (remainingCount <= 0 && totalQuantity > 0) {
+      nextStatus = nextSold > 0 ? "sold" : "settled";
+    } else if (["sold", "settled"].includes(nextStatus) && remainingCount > 0) {
+      nextStatus = "up";
+    }
+
+    return {
+      ...latest,
+      soldCount: nextSold,
+      settledCount: nextSettled,
+      soldBatches: settleSpecificSoldBatch(latest, normalizedBatchIndex, settleQty, fallbackRateFraction),
+      status: nextStatus
+    };
+  });
+
+  return {
+    updated: !!product,
+    product
+  };
 }
 
 async function updateProduct(id, updater) {
@@ -503,6 +581,7 @@ module.exports = {
   getProductsByIds,
   getRemainingCount,
   invalidateFullListCache,
+  repairSettlementToProduct,
   recordProductSale,
   restoreSoldProduct,
   updateProduct

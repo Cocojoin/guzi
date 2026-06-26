@@ -26,7 +26,7 @@
 
       <view wx:if="{{activeDropdown === 'role'}}" class="dropdown-panel">
         <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
-        <view class="dropdown-card">
+        <view class="dropdown-card" catchtap="preventBubble">
           <view class="dropdown-option {{roleIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{roleOptions}}" wx:key="index" data-key="role" data-index="{{index}}" bindtap="onDropdownSelect">
             <text>{{item}}</text>
             <text wx:if="{{roleIndex === index}}" class="dropdown-check">✓</text>
@@ -36,7 +36,7 @@
 
       <view wx:if="{{activeDropdown === 'ip'}}" class="dropdown-panel">
         <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
-        <view class="dropdown-card">
+        <view class="dropdown-card" catchtap="preventBubble">
           <view class="dropdown-option {{ipIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{ipOptions}}" wx:key="index" data-key="ip" data-index="{{index}}" bindtap="onDropdownSelect">
             <text>{{item}}</text>
             <text wx:if="{{ipIndex === index}}" class="dropdown-check">✓</text>
@@ -46,7 +46,7 @@
 
       <view wx:if="{{activeDropdown === 'status'}}" class="dropdown-panel">
         <view class="dropdown-panel-mask" bindtap="closeDropdown"></view>
-        <view class="dropdown-card">
+        <view class="dropdown-card" catchtap="preventBubble">
           <view class="dropdown-option {{statusIndex === index ? 'dropdown-option--active' : ''}}" wx:for="{{statusOptions}}" wx:key="index" data-key="status" data-index="{{index}}" bindtap="onDropdownSelect">
             <text>{{item}}</text>
             <text wx:if="{{statusIndex === index}}" class="dropdown-check">✓</text>
@@ -65,17 +65,25 @@
 
     <block wx:else>
       <view class="goods-card u-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
-        <view class="goods-thumb">
+        <view class="goods-thumb list-goods-thumb">
           <image wx:if="{{item.picture}}" class="goods-img" src="{{item.picture}}" mode="aspectFill" />
+          <view wx:else class="goods-thumb-star"></view>
+          <view class="quality-chip {{item.qualityClassName === 'quality-badge--flaw' ? 'quality-chip--flaw' : 'quality-chip--clean'}}">{{item.qualityLabel}}</view>
         </view>
         <view class="goods-body">
-          <view class="goods-title">{{item.title}}</view>
-          <view class="goods-meta">数量 {{item.remainingCount}} · {{item.ip}}</view>
-          <view class="goods-price">{{item.priceText}}</view>
-        </view>
-        <view class="goods-side">
-          <view class="badge {{item.qualityClassName === 'quality-badge--flaw' ? 'badge-flaw' : 'badge-clean'}}">{{item.qualityLabel}}</view>
-          <view class="badge {{item.statusClassName}}">{{item.statusLabel}}</view>
+          <view class="goods-title-row">
+            <view class="goods-title">{{item.title}}</view>
+            <view class="status-chip {{item.statusClassName}}">{{item.statusLabel}}</view>
+          </view>
+          <view class="goods-ip">{{item.ip}}</view>
+          <view class="goods-price">{{item.unitPriceText}} · 共 {{item.totalQuantity}} 件</view>
+          <view wx:if="{{item.soldQuantity > 0}}" class="goods-count-row">
+            <text class="sold-count">已售 {{item.soldQuantity}}</text>
+            <text wx:if="{{item.remainingCount > 0}}" class="remain-count">在售 {{item.remainingCount}}</text>
+          </view>
+          <view wx:if="{{item.soldQuantity > 0}}" class="progress-track">
+            <view class="progress-sold" style="width: {{item.soldProgressPercent}}%;"></view>
+          </view>
         </view>
       </view>
       <view class="end-line">—— 没有更多了 ——</view>

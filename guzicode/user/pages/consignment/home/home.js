@@ -1,8 +1,8 @@
 const session = require("../../../../utils/session");
 const usersRepository = require("../../../../utils/usersRepository");
 const productsRepository = require("../../../../utils/productsRepository");
-const { buildProductCard } = require("../../../../utils/productPresentation");
 const { formatRatePercent, getUserRateFraction } = require("../../../../utils/consignmentRate");
+const { buildPendingSettlementItems } = require("../../../../utils/settlementPresentation");
 const { debounce } = require("../../../../utils/debounce");
 const dataAccessService = require("../../../../utils/dataAccessService");
 
@@ -52,16 +52,20 @@ Page({
         return;
       }
       const normalized = { ...user, _id: current.userId, account: current.account, nickname };
-      const products = (await productsRepository.getAllProducts()).map(buildProductCard).filter((item) => belongsToUser(item, normalized));
+      const products = (await productsRepository.getAllProducts()).filter((item) => belongsToUser(item, normalized));
       const settlementRecords = await fetchSettlementRecordsByUser(current.userId);
       const rateFraction = getUserRateFraction(user);
+      const soldItems = products
+        .filter((item) => Number(item.soldCount || 0) > Number(item.settledCount || 0))
+        .flatMap((item) => buildPendingSettlementItems(item, rateFraction));
+      const soldCount = soldItems.reduce((sum, item) => sum + Number(item.soldQty || 0), 0);
       this.setData({
         user: normalized,
         enabled: true,
         rateText: formatRatePercent(rateFraction),
         counts: {
           all: products.length,
-          sold: products.filter((item) => item.displayStatus === "sold").length,
+          sold: soldCount,
           settled: settlementRecords.length
         }
       });
