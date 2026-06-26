@@ -511,12 +511,12 @@
       </view>
       <view class="sold-actions">
         <view class="sold-action" bindtap="toggleSoldAll">全选</view>
-        <view class="sold-action sold-action--primary" bindtap="handleSettleSubmit">结算 ({{selectedSoldCount}})</view>
+        <view class="sold-action sold-action--primary" bindtap="handleSettleSubmit">{{submitting ? '处理中...' : ('结算 (' + selectedSoldCount + ')')}}</view>
       </view>
     </view>
 
     <view wx:if="{{currentView === 'settlement'}}" class="sold-footer">
-      <view class="sold-action sold-action--primary sold-action--full" bindtap="submitSettlement">提 交 结 算</view>
+      <view class="sold-action sold-action--primary sold-action--full" bindtap="submitSettlement">{{submitting ? '提交中...' : '提 交 结 算'}}</view>
     </view>
 
     <!-- 空状态 -->

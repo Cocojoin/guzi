@@ -128,6 +128,41 @@ function canDeleteUser(user) {
   return !!(user && user.id);
 }
 
+function normalizeMoneyValue(value) {
+  return Number(value || 0).toFixed(2);
+}
+
+function buildSettlementItemFingerprint(item) {
+  return JSON.stringify({
+    productId: String((item && (item.productId || item.id)) || "").trim(),
+    batchIndex: Number(item && item.batchIndex),
+    soldQty: Number(item && item.soldQty || 0),
+    price: normalizeMoneyValue(item && item.price),
+    saleAmount: normalizeMoneyValue(item && item.saleAmount),
+    payableAmount: normalizeMoneyValue(item && item.payableAmount),
+    rateFraction: normalizeMoneyValue(normalizeRateFraction(item && item.rateFraction))
+  });
+}
+
+function buildSettlementRecordFingerprint(record) {
+  const items = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
+  const sortedItems = items
+    .map((item) => buildSettlementItemFingerprint(item))
+    .sort();
+
+  return JSON.stringify({
+    userId: String(record && record.userId || "").trim(),
+    date: String(record && record.date || "").trim(),
+    month: String(record && record.month || "").trim(),
+    items: Number(record && record.items || 0),
+    gross: normalizeMoneyValue(record && record.gross),
+    commission: normalizeMoneyValue(record && record.commission),
+    payable: normalizeMoneyValue(record && record.payable),
+    actualIncome: normalizeMoneyValue(record && record.actualIncome),
+    settlementItems: sortedItems
+  });
+}
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -293,6 +328,8 @@ Page({
         await this.loadSoldItemsForCurrentUser();
       } else if (this.data.currentView === 'settledList') {
         await this.loadSettledRecordsForCurrentUser();
+      } else if (this.data.currentView === 'userDetail') {
+        await this.refreshCurrentUserDetailStats();
       }
     }
   },
@@ -508,6 +545,36 @@ Page({
     }
   },
 
+  async refreshCurrentUserDetailStats() {
+    const currentUser = this.data.currentUser;
+    if (!currentUser || !currentUser.id) {
+      return;
+    }
+
+    await this.loadUsersFromDb();
+    const latestUser = (this.data.users || []).find((item) => item.id === currentUser.id) || null;
+    if (!latestUser) {
+      return;
+    }
+
+    const settledRecords = await this.fetchAll(SETTLEMENT_RECORDS_COLLECTION, { userId: currentUser.id });
+    const settledCount = settledRecords.reduce((sum, item) => sum + Number(item.items || 0), 0);
+    const mergedUser = {
+      ...latestUser,
+      settledCount
+    };
+    const users = (this.data.users || []).map((item) => (
+      item.id === mergedUser.id ? mergedUser : item
+    ));
+
+    this.setData({
+      users,
+      currentUser: mergedUser,
+      currentView: "userDetail",
+      ...this.getViewCopy("userDetail")
+    });
+  },
+
   async switchView(event) {
     const target = event.currentTarget.dataset.target;
     const userId = event.currentTarget.dataset.userId;
@@ -540,6 +607,7 @@ Page({
       editingField: null,
       ...this.getViewCopy("userDetail")
     });
+    this.refreshCurrentUserDetailStats();
   },
 
   handleUserCardTap(event) {
@@ -632,7 +700,7 @@ Page({
       return;
     }
     if (this.data.currentView === "userGoods" || this.data.currentView === "soldGoods" || this.data.currentView === "settledList") {
-      this.setData({ currentView: "userDetail", ...this.getViewCopy("userDetail") });
+      await this.refreshCurrentUserDetailStats();
       return;
     }
     this.setData({
@@ -1232,6 +1300,9 @@ Page({
   },
 
   handleSettleSubmit() {
+    if (this.data.submitting) {
+      return;
+    }
     const selectedItems = this.data.soldItems.filter((item) => item.selected);
     if (!selectedItems.length) {
       wx.showToast({ title: "请先选择商品", icon: "none" });
@@ -1977,7 +2048,11 @@ Page({
     const user = this.data.currentUser;
     const items = this.data.settlementItems || [];
     if (!user || !items.length) return;
+    if (this.data.submitting) {
+      return;
+    }
     try {
+      this.setData({ submitting: true });
       this.clearPageError();
       
       // 上传凭证图片
@@ -2055,6 +2130,10 @@ Page({
       });
       this.handlePageError(e, "提交失败，请重试");
       console.error("submitSettlement error:", e);
+    } finally {
+      if (this.data._pageAlive) {
+        this.setData({ submitting: false });
+      }
     }
   },
 
@@ -2063,25 +2142,44 @@ Page({
     if (!user) return;
     try {
       this.clearPageError();
-      await this.reconcileSettlementRecordsForCurrentUser();
       const settledRecords = await this.fetchAll(SETTLEMENT_RECORDS_COLLECTION, { userId: user.id });
-      // 按 _id 去重，避免重复显示
-      const uniqueRecordsMap = new Map();
-      settledRecords.forEach(record => {
-        if (record._id) {
-          uniqueRecordsMap.set(record._id, record);
-        }
-      });
-      const uniqueSettledRecords = Array.from(uniqueRecordsMap.values());
-      uniqueSettledRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-      this.setData({ settledRecords: uniqueSettledRecords });
-      this.recalcSettledSummary();
+      this.applySettledRecordsToView(settledRecords);
+
+      this.reconcileSettlementRecordsForCurrentUser()
+        .then(async (result) => {
+          if (!this.data._pageAlive || this.data.currentView !== "settledList") {
+            return;
+          }
+          if (result && (result.removedDuplicateCount > 0 || result.repairedCount > 0)) {
+            const latestRecords = await this.fetchAll(SETTLEMENT_RECORDS_COLLECTION, { userId: user.id });
+            if (!this.data._pageAlive || this.data.currentView !== "settledList") {
+              return;
+            }
+            this.applySettledRecordsToView(latestRecords);
+          }
+        })
+        .catch((error) => {
+          console.warn("reconcileSettlementRecordsForCurrentUser:", error);
+        });
     } catch (e) {
       this.setData({ settledRecords: [] });
       this.recalcSettledSummary();
       this.handlePageError(e, "已结算记录加载失败");
       console.warn("loadSettledRecordsForCurrentUser:", e);
     }
+  },
+
+  applySettledRecordsToView(settledRecords) {
+    const uniqueRecordsMap = new Map();
+    (Array.isArray(settledRecords) ? settledRecords : []).forEach((record) => {
+      if (record && record._id) {
+        uniqueRecordsMap.set(record._id, record);
+      }
+    });
+    const uniqueSettledRecords = Array.from(uniqueRecordsMap.values());
+    uniqueSettledRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+    this.setData({ settledRecords: uniqueSettledRecords });
+    this.recalcSettledSummary();
   },
 
   async reconcileSettlementRecordsForCurrentUser() {
@@ -2093,7 +2191,7 @@ Page({
     this._settlementReconcilePending = this._settlementReconcilePending || {};
 
     if (this._settlementReconcileDone[userId]) {
-      return;
+      return { removedDuplicateCount: 0, repairedCount: 0 };
     }
     if (this._settlementReconcilePending[userId]) {
       return this._settlementReconcilePending[userId];
@@ -2101,9 +2199,10 @@ Page({
 
     this._settlementReconcilePending[userId] = (async () => {
       const settledRecords = await this.fetchAll(SETTLEMENT_RECORDS_COLLECTION, { userId });
+      const { records: dedupedRecords, removedCount: removedDuplicateCount } = await this.removeDuplicateSettlementRecordsForUser(user, settledRecords);
       let repairedCount = 0;
 
-      for (const record of settledRecords) {
+      for (const record of dedupedRecords) {
         const settlementItems = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
         for (const item of settlementItems) {
           const batchIndex = Number(item && item.batchIndex);
@@ -2138,6 +2237,10 @@ Page({
       }
 
       this._settlementReconcileDone[userId] = true;
+      return {
+        removedDuplicateCount,
+        repairedCount
+      };
     })();
 
     try {
@@ -2145,6 +2248,58 @@ Page({
     } finally {
       delete this._settlementReconcilePending[userId];
     }
+  },
+
+  async removeDuplicateSettlementRecordsForUser(user, settledRecords) {
+    const records = Array.isArray(settledRecords) ? [...settledRecords] : [];
+    if (!user || !user.id || records.length < 2) {
+      return {
+        records,
+        removedCount: 0
+      };
+    }
+
+    const sortedRecords = records.sort((a, b) => {
+      const aTime = new Date(a && (a.createdAt || a.updatedAt || a.date) || 0).getTime() || 0;
+      const bTime = new Date(b && (b.createdAt || b.updatedAt || b.date) || 0).getTime() || 0;
+      return aTime - bTime;
+    });
+
+    const keepMap = new Map();
+    const duplicates = [];
+
+    sortedRecords.forEach((record) => {
+      const fingerprint = buildSettlementRecordFingerprint(record);
+      if (!keepMap.has(fingerprint)) {
+        keepMap.set(fingerprint, record);
+        return;
+      }
+      duplicates.push(record);
+    });
+
+    const removable = duplicates.filter((record) => record && record._id);
+    if (!removable.length) {
+      return {
+        records: Array.from(keepMap.values()),
+        removedCount: 0
+      };
+    }
+
+    await Promise.all(
+      removable.map((record) => dataAccessService.removeDocById(SETTLEMENT_RECORDS_COLLECTION, record._id))
+    );
+
+    await addOperationLog({
+      title: "清理重复结算记录",
+      target: user.account || user.id,
+      type: "结算",
+      note: `自动删除 ${removable.length} 条重复结算记录`
+    });
+
+    return {
+      records: Array.from(keepMap.values()),
+      removedCount: removable.length
+    };
   },
 
   async retryCurrentView() {

@@ -59,6 +59,7 @@ Page({
         .filter((item) => Number(item.soldCount || 0) > Number(item.settledCount || 0))
         .flatMap((item) => buildPendingSettlementItems(item, rateFraction));
       const soldCount = soldItems.reduce((sum, item) => sum + Number(item.soldQty || 0), 0);
+      const settledCount = settlementRecords.reduce((sum, item) => sum + Number(item.items || 0), 0);
       this.setData({
         user: normalized,
         enabled: true,
@@ -66,7 +67,7 @@ Page({
         counts: {
           all: products.length,
           sold: soldCount,
-          settled: settlementRecords.length
+          settled: settledCount
         }
       });
     } catch (error) {
