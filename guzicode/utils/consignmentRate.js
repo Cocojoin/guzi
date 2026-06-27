@@ -19,7 +19,7 @@ function formatRatePercent(fraction) {
 }
 
 function normalizeSoldBatches(product) {
-  return Array.isArray(product && product.soldBatches)
+  const normalized = Array.isArray(product && product.soldBatches)
     ? product.soldBatches
         .map((batch) => ({
           qty: Math.max(0, Number(batch && batch.qty || 0)),
@@ -30,6 +30,43 @@ function normalizeSoldBatches(product) {
         }))
         .filter((batch) => batch.qty > 0)
     : [];
+
+  const expectedTotalQty = Math.max(
+    0,
+    Number(product && product.soldCount || 0) + Number(product && product.settledCount || 0)
+  );
+  let overflowQty = normalized.reduce((sum, batch) => sum + batch.qty, 0) - expectedTotalQty;
+
+  if (overflowQty <= 0) {
+    return normalized;
+  }
+
+  const trimmed = [];
+  for (let index = 0; index < normalized.length; index += 1) {
+    const batch = normalized[index];
+    if (!overflowQty) {
+      trimmed.push(batch);
+      continue;
+    }
+
+    const removeQty = Math.min(batch.qty, overflowQty);
+    const nextQty = batch.qty - removeQty;
+    overflowQty -= removeQty;
+
+    if (nextQty <= 0) {
+      continue;
+    }
+
+    const unitSaleAmount = batch.qty > 0 ? Number(batch.saleAmount || 0) / batch.qty : 0;
+    trimmed.push({
+      ...batch,
+      qty: nextQty,
+      settledQty: Math.min(batch.settledQty, nextQty),
+      saleAmount: Number((unitSaleAmount * nextQty).toFixed(2))
+    });
+  }
+
+  return trimmed;
 }
 
 function getPendingSoldQuantity(product) {

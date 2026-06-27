@@ -545,7 +545,8 @@ Page({
     }
   },
 
-  async refreshCurrentUserDetailStats() {
+  async refreshCurrentUserDetailStats(options = {}) {
+    const forceUserDetail = !!(options && options.forceUserDetail);
     const currentUser = this.data.currentUser;
     if (!currentUser || !currentUser.id) {
       return;
@@ -570,8 +571,10 @@ Page({
     this.setData({
       users,
       currentUser: mergedUser,
-      currentView: "userDetail",
-      ...this.getViewCopy("userDetail")
+      ...(forceUserDetail ? {
+        currentView: "userDetail",
+        ...this.getViewCopy("userDetail")
+      } : {})
     });
   },
 
@@ -700,7 +703,7 @@ Page({
       return;
     }
     if (this.data.currentView === "userGoods" || this.data.currentView === "soldGoods" || this.data.currentView === "settledList") {
-      await this.refreshCurrentUserDetailStats();
+      await this.refreshCurrentUserDetailStats({ forceUserDetail: true });
       return;
     }
     this.setData({
@@ -1194,12 +1197,23 @@ Page({
     if (!user) return;
     try {
       this.clearPageError();
-      await this.reconcileSettlementRecordsForCurrentUser();
       const products = await this.fetchAll(PRODUCTS_COLLECTION);
       const soldItems = products
         .filter((p) => productBelongsToUser(p, user) && Number(p.soldCount || 0) > Number(p.settledCount || 0))
         .flatMap((p) => buildPendingSettlementItems(p, getUserRateFraction(user)));
-      this.setData({ soldItems });
+      const soldCount = soldItems.reduce((sum, item) => sum + Number(item.soldQty || 0), 0);
+      const nextCurrentUser = {
+        ...this.data.currentUser,
+        soldCount
+      };
+      const users = (this.data.users || []).map((item) => (
+        item.id === nextCurrentUser.id ? { ...item, soldCount } : item
+      ));
+      this.setData({
+        soldItems,
+        users,
+        currentUser: nextCurrentUser
+      });
       this.recalcSoldSummary();
     } catch (e) {
       this.handlePageError(e, "待结算商品加载失败");
@@ -1255,7 +1269,7 @@ Page({
 
           await dataAccessService.updateDocById(PRODUCTS_COLLECTION, item.id, {
             soldCount: nextSoldCount,
-            soldBatches: nextBatches.length > 0 ? nextBatches : undefined,
+            soldBatches: nextBatches,
             status: nextStatus,
             updatedAt: new Date()
           });
@@ -2049,6 +2063,10 @@ Page({
     const items = this.data.settlementItems || [];
     if (!user || !items.length) return;
     if (this.data.submitting) {
+      return;
+    }
+    if (!Array.isArray(this.data.settlementVouchers) || this.data.settlementVouchers.length === 0) {
+      wx.showToast({ title: "请上传结算凭证", icon: "none" });
       return;
     }
     try {

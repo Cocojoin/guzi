@@ -396,7 +396,14 @@
         </view>
         <view class="settlement-income-wrap">
           <text class="settlement-income-prefix">¥</text>
-          <view class="settlement-income-value">{{settlementActualIncome}}</view>
+          <input
+            class="settlement-income-value"
+            type="digit"
+            placeholder="0.00"
+            placeholder-class="placeholder"
+            value="{{settlementActualIncome}}"
+            bindinput="onSettlementIncomeInput"
+          />
         </view>
         <view class="settlement-desc">自动汇总所选结算商品的实际出售金额。不展示给寄售用户，不参与结算图片内容。</view>
       </view>
