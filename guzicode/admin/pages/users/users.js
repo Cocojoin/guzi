@@ -266,10 +266,13 @@ Page({
     const capGap = menuBtn ? (menuBtn.top - statusBarHeight) * 2 : 8;
     const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
     const contentPaddingTop = statusBarHeight + navBarHeight;
+    this._skipNextOnShowRefresh = true;
     this.setData({ statusBarHeight, navBarHeight, contentPaddingTop, _pageAlive: true });
     this.bindNetworkStatus();
-    await this.migrateProductOwnerLinks();
     await this.loadUsersFromDb();
+    this.migrateProductOwnerLinks().catch((e) => {
+      console.warn("migrateProductOwnerLinks skipped:", e && e.message);
+    });
     const keyword = String(options.keyword || "").trim();
     if (keyword) {
       this.setData({ keyword });
@@ -306,6 +309,10 @@ Page({
     const navBarHeight = menuBtn ? menuBtn.height + capGap : 44;
     const contentPaddingTop = statusBarHeight + navBarHeight;
     this.setData({ statusBarHeight, navBarHeight, contentPaddingTop, _pageAlive: true });
+    if (this._skipNextOnShowRefresh) {
+      this._skipNextOnShowRefresh = false;
+      return;
+    }
     // 只有在 onLoad 完成后才刷新数据，避免首次加载时重复调用
     if (this.data._onLoadCompleted) {
       this.refreshData();
@@ -414,7 +421,7 @@ Page({
         })
       );
     } catch (e) {
-      console.warn("migrateProductOwnerLinks skipped:", e && e.message);
+      throw e;
     }
   },
 
@@ -461,8 +468,10 @@ Page({
         });
       const selectedUserIds = this.data.selectedUserIds.filter((id) => users.some((item) => item.id === id));
       this.setData({ users, selectedUserIds, loadingUsers: false, usersLoaded: true });
-      await this.refreshUserStats();
       this.applyRoleFilter();
+      this.refreshUserStats().catch((error) => {
+        console.warn("refreshUserStats skipped:", error && error.message);
+      });
     } catch (e) {
       this.setData({ loadingUsers: false });
       this.handlePageError(e, "用户数据加载失败");
@@ -520,19 +529,9 @@ Page({
   },
 
   async refreshUserStats() {
-    const products = await this.fetchAll(PRODUCTS_COLLECTION);
-    console.log("[refreshUserStats] Total products:", products.length);
-    
+    const products = await productsRepository.getAllProducts();
     const users = (this.data.users || []).map((user) => {
       const matched = products.filter((p) => productBelongsToUser(p, user));
-      if (user.roleType === "consignment" && matched.length > 0) {
-        console.log("[refreshUserStats] User:", user.nickname, "| matched products:", matched.length, "| owner values:", matched.map(p => ({ owner: p.owner, ownerUserId: p.ownerUserId })));
-      }
-      if (user.roleType === "consignment" && matched.length === 0) {
-        console.log("[refreshUserStats] User with 0 products:", user.nickname, "| user.id:", user.id, "| user.account:", user.account);
-        const sampleOwners = products.slice(0, 3).map(p => ({ owner: p.owner, ownerUserId: p.ownerUserId, id: p.id }));
-        console.log("[refreshUserStats] Sample products:", JSON.stringify(sampleOwners));
-      }
       const goodsCount = matched.reduce((s, p) => s + Number(p.totalQuantity || 0), 0);
       const soldCount = matched.reduce((s, p) => s + Math.max(0, Number(p.soldCount || 0) - Number(p.settledCount || 0)), 0);
       const settledCount = matched.reduce((s, p) => s + Number(p.settledCount || 0), 0);
@@ -645,7 +644,7 @@ Page({
   async loadUserGoodsForCurrentUser() {
     const user = this.data.currentUser;
     if (!user) return;
-    const products = (await this.fetchAll(PRODUCTS_COLLECTION)).filter((p) => productBelongsToUser(p, user));
+    const products = (await productsRepository.getAllProducts()).filter((p) => productBelongsToUser(p, user));
     // 按 _id 去重，避免重复显示
     const uniqueProductsMap = new Map();
     products.forEach(p => {
@@ -694,8 +693,10 @@ Page({
       return;
     }
     if (this.data.currentView === "settlement") {
-      await this.loadSoldItemsForCurrentUser();
       this.setData({ currentView: "soldGoods", ...this.getViewCopy("soldGoods") });
+      this.loadSoldItemsForCurrentUser().catch((error) => {
+        console.warn("handleBack loadSoldItemsForCurrentUser:", error);
+      });
       return;
     }
     if (this.data.currentView === "settledDetail") {
@@ -703,7 +704,13 @@ Page({
       return;
     }
     if (this.data.currentView === "userGoods" || this.data.currentView === "soldGoods" || this.data.currentView === "settledList") {
-      await this.refreshCurrentUserDetailStats({ forceUserDetail: true });
+      this.setData({
+        currentView: "userDetail",
+        ...this.getViewCopy("userDetail")
+      });
+      this.refreshCurrentUserDetailStats().catch((error) => {
+        console.warn("handleBack refreshCurrentUserDetailStats:", error);
+      });
       return;
     }
     this.setData({
@@ -713,7 +720,6 @@ Page({
       currentUser: null,
       ...this.getViewCopy("userList")
     });
-    await this.loadUsersFromDb();
   },
 
   goGoodsDetail(event) {
@@ -1197,7 +1203,7 @@ Page({
     if (!user) return;
     try {
       this.clearPageError();
-      const products = await this.fetchAll(PRODUCTS_COLLECTION);
+      const products = await productsRepository.getAllProducts();
       const soldItems = products
         .filter((p) => productBelongsToUser(p, user) && Number(p.soldCount || 0) > Number(p.settledCount || 0))
         .flatMap((p) => buildPendingSettlementItems(p, getUserRateFraction(user)));

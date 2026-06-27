@@ -100,6 +100,17 @@ async function resolveCloudImageUrls(products) {
   }
 }
 
+function buildDisplayProducts(productItems, consignmentUsers) {
+  return sortProducts(productItems.map((item) => {
+    const displayOwner = resolveOwnerName(item, consignmentUsers);
+    return buildProductCard({
+      ...item,
+      owner: displayOwner,
+      ownerRaw: item.owner || ""
+    });
+  }));
+}
+
 Page({
   data: {
     statusBarHeight: 20,
@@ -169,18 +180,10 @@ Page({
         usersRepository.listConsignmentUsers(),
         productsRepository.getAllProducts()
       ]);
-      const rawProducts = sortProducts(productItems.map((item) => {
-        const displayOwner = resolveOwnerName(item, consignmentUsers);
-        return buildProductCard({
-          ...item,
-          owner: displayOwner,
-          ownerRaw: item.owner || ""
-        });
-      }));
-      const allProducts = await resolveCloudImageUrls(rawProducts);
+      const rawProducts = buildDisplayProducts(productItems, consignmentUsers);
       const ownerPool = new Set([
         ...consignmentUsers.map((item) => String(item.nickname || "").trim()).filter(Boolean),
-        ...allProducts.map((item) => String(item.owner || "").trim()).filter(Boolean)
+        ...rawProducts.map((item) => String(item.owner || "").trim()).filter(Boolean)
       ]);
       const ownerOptions = ["全部用户"].concat(Array.from(ownerPool));
 
@@ -189,7 +192,7 @@ Page({
         ownerIndex = 0;
       }
 
-      const rolePool = new Set(allProducts.map((item) => String(item.role || "").trim()).filter(Boolean));
+      const rolePool = new Set(rawProducts.map((item) => String(item.role || "").trim()).filter(Boolean));
       const roleOptions = ["全部角色"].concat(Array.from(rolePool));
 
       let roleIndex = this.data.roleIndex;
@@ -197,10 +200,10 @@ Page({
         roleIndex = 0;
       }
 
-      const selectedIds = this.data.selectedIds.filter((id) => allProducts.some((item) => item.id === id));
+      const selectedIds = this.data.selectedIds.filter((id) => rawProducts.some((item) => item.id === id));
 
       this.setData({
-        allProducts,
+        allProducts: rawProducts,
         ownerOptions,
         ownerIndex,
         roleOptions,
@@ -211,6 +214,16 @@ Page({
       });
 
       this.applyFilters();
+
+      resolveCloudImageUrls(rawProducts)
+        .then((allProducts) => {
+          if (!Array.isArray(allProducts) || !allProducts.length) {
+            return;
+          }
+          this.setData({ allProducts });
+          this.applyFilters();
+        })
+        .catch(() => {});
     } catch (error) {
       this.setData({ loading: false });
       wx.showToast({

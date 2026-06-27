@@ -1,11 +1,22 @@
 function debounce(fn, delay = 800) {
-  let timer = null;
+  let coolingDown = false;
+  let releaseTimer = null;
+
   return function (...args) {
-    if (timer) {
-      clearTimeout(timer);
+    if (coolingDown) {
+      return;
     }
-    timer = setTimeout(() => {
-      fn.apply(this, args);
+
+    coolingDown = true;
+    fn.apply(this, args);
+
+    if (releaseTimer) {
+      clearTimeout(releaseTimer);
+    }
+
+    releaseTimer = setTimeout(() => {
+      coolingDown = false;
+      releaseTimer = null;
     }, delay);
   };
 }

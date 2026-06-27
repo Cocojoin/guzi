@@ -31,8 +31,18 @@ function navigateAdminRoot(path, query = {}) {
   if (isSamePage(currentRoute, path, query)) {
     return;
   }
-  wx.reLaunch({
-    url: buildUrl(path, query)
+
+  const url = buildUrl(path, query);
+  wx.showLoading({
+    title: "加载中",
+    mask: true
+  });
+
+  wx.redirectTo({
+    url,
+    complete: () => {
+      wx.hideLoading();
+    }
   });
 }
 
