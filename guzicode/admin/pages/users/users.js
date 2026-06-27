@@ -1881,59 +1881,51 @@ Page({
     });
   },
 
-  ensureAlbumPermission() {
-    return new Promise((resolve, reject) => {
-      wx.getSetting({
-        success: (settingRes) => {
-          const scopeKey = "scope.writePhotosAlbum";
-          const authState = settingRes.authSetting ? settingRes.authSetting[scopeKey] : undefined;
-
-          if (authState === true || authState === undefined) {
-            resolve();
-            return;
-          }
-
-          wx.showModal({
-            title: "需要相册权限",
-            content: "保存图片到本地需要开启相册权限。",
-            success: ({ confirm }) => {
-              if (!confirm) {
-                reject(new Error("已取消保存"));
-                return;
-              }
-
-              wx.openSetting({
-                success: (openRes) => {
-                  if (openRes.authSetting && openRes.authSetting[scopeKey]) {
-                    resolve();
-                  } else {
-                    reject(new Error("未开启相册权限"));
-                  }
-                },
-                fail: () => reject(new Error("无法打开权限设置"))
-              });
-            },
-            fail: () => reject(new Error("权限校验失败"))
-          });
-        },
-        fail: () => reject(new Error("权限校验失败"))
-      });
-    });
-  },
-
   saveImageToAlbum(filePath) {
     return new Promise((resolve, reject) => {
       wx.saveImageToPhotosAlbum({
         filePath,
         success: resolve,
         fail: (error) => {
-          const errMsg = String((error && error.errMsg) || "");
-          if (/auth deny|auth denied|permission|photosalbum/i.test(errMsg)) {
-            reject(new Error("未开启相册权限"));
-            return;
-          }
-          reject(new Error("保存图片失败"));
+          reject(error || new Error("保存图片失败"));
         }
+      });
+    });
+  },
+
+  ensureAlbumPermissionBySaveAttempt(filePath) {
+    return this.saveImageToAlbum(filePath).catch((error) => {
+      const errMsg = String((error && error.errMsg) || (error && error.message) || "");
+      if (!/auth deny|auth denied|deny|permission|photosalbum/i.test(errMsg)) {
+        throw new Error("保存图片失败");
+      }
+
+      return new Promise((resolve, reject) => {
+        wx.showModal({
+          title: "需要相册权限",
+          content: "保存图片需要开启相册写入权限，是否前往设置？",
+          confirmText: "去设置",
+          success: ({ confirm }) => {
+            if (!confirm) {
+              reject(new Error("未开启相册权限"));
+              return;
+            }
+
+            wx.openSetting({
+              success: (settingRes) => {
+                if (settingRes.authSetting && settingRes.authSetting["scope.writePhotosAlbum"]) {
+                  this.saveImageToAlbum(filePath)
+                    .then(resolve)
+                    .catch(() => reject(new Error("保存图片失败")));
+                } else {
+                  reject(new Error("未开启相册权限"));
+                }
+              },
+              fail: () => reject(new Error("无法打开权限设置"))
+            });
+          },
+          fail: () => reject(new Error("权限校验失败"))
+        });
       });
     });
   },
@@ -1947,8 +1939,11 @@ Page({
     wx.showLoading({ title: "保存中...", mask: true });
     let savedCount = 0;
     try {
-      await this.ensureAlbumPermission();
-      for (const filePath of images) {
+      const [firstImage, ...restImages] = images;
+      await this.ensureAlbumPermissionBySaveAttempt(firstImage);
+      savedCount += 1;
+
+      for (const filePath of restImages) {
         await this.saveImageToAlbum(filePath);
         savedCount += 1;
       }
@@ -1959,16 +1954,7 @@ Page({
     } catch (error) {
       const errMsg = String((error && (error.errMsg || error.message)) || "");
       if (/相册权限|未开启相册权限|权限|auth deny|auth denied/i.test(errMsg)) {
-        wx.showModal({
-          title: "需要相册权限",
-          content: "请开启相册写入权限后重试",
-          confirmText: "去开启",
-          success: ({ confirm }) => {
-            if (confirm) {
-              wx.openSetting();
-            }
-          }
-        });
+        wx.showToast({ title: "未开启相册权限", icon: "none" });
       } else if (savedCount > 0) {
         wx.showToast({ title: "部分图片保存失败，请重试", icon: "none" });
       } else {
