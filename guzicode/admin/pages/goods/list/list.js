@@ -58,6 +58,11 @@ function sortProducts(products) {
   });
 }
 
+function sortOptionValues(values) {
+  return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)))
+    .sort((left, right) => String(left).localeCompare(String(right), "zh-Hans-CN"));
+}
+
 async function resolveCloudImageUrls(products) {
   const list = Array.isArray(products) ? products : [];
   const cloudIds = Array.from(new Set(
@@ -181,24 +186,18 @@ Page({
         productsRepository.getAllProducts()
       ]);
       const rawProducts = buildDisplayProducts(productItems, consignmentUsers);
-      const ownerPool = new Set([
+      const selectedOwner = this.data.ownerOptions[this.data.ownerIndex] || "全部用户";
+      const selectedRole = this.data.roleOptions[this.data.roleIndex] || "全部角色";
+      const ownerPool = [
         ...consignmentUsers.map((item) => String(item.nickname || "").trim()).filter(Boolean),
         ...rawProducts.map((item) => String(item.owner || "").trim()).filter(Boolean)
-      ]);
-      const ownerOptions = ["全部用户"].concat(Array.from(ownerPool));
+      ];
+      const ownerOptions = ["全部用户"].concat(sortOptionValues(ownerPool));
+      const ownerIndex = Math.max(0, ownerOptions.indexOf(selectedOwner));
 
-      let ownerIndex = this.data.ownerIndex;
-      if (ownerIndex >= ownerOptions.length) {
-        ownerIndex = 0;
-      }
-
-      const rolePool = new Set(rawProducts.map((item) => String(item.role || "").trim()).filter(Boolean));
-      const roleOptions = ["全部角色"].concat(Array.from(rolePool));
-
-      let roleIndex = this.data.roleIndex;
-      if (roleIndex >= roleOptions.length) {
-        roleIndex = 0;
-      }
+      const rolePool = rawProducts.map((item) => String(item.role || "").trim()).filter(Boolean);
+      const roleOptions = ["全部角色"].concat(sortOptionValues(rolePool));
+      const roleIndex = Math.max(0, roleOptions.indexOf(selectedRole));
 
       const selectedIds = this.data.selectedIds.filter((id) => rawProducts.some((item) => item.id === id));
 
@@ -235,25 +234,26 @@ Page({
 
   applyFilters() {
     const keyword = this.data.searchText.trim().toLowerCase();
+    const hasKeyword = Boolean(keyword);
     const owner = this.data.ownerOptions[this.data.ownerIndex];
     const status = STATUS_OPTIONS[this.data.statusIndex].value;
     const role = this.data.roleOptions[this.data.roleIndex];
 
     const filteredProducts = this.data.allProducts
       .filter((item) => {
-        if (owner !== "全部用户" && item.owner !== owner) {
-          return false;
-        }
+        if (!hasKeyword) {
+          if (owner !== "全部用户" && item.owner !== owner) {
+            return false;
+          }
 
-        if (status !== "all" && item.displayStatus !== status) {
-          return false;
-        }
+          if (status !== "all" && item.displayStatus !== status) {
+            return false;
+          }
 
-        if (role !== "全部角色" && item.role !== role) {
-          return false;
-        }
+          if (role !== "全部角色" && item.role !== role) {
+            return false;
+          }
 
-        if (!keyword) {
           return true;
         }
 

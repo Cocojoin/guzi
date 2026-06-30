@@ -5,7 +5,7 @@ Page({
     items: [
       { key: "users", title: "用户数据", subtitle: "寄售用户资料与权限", checked: false },
       { key: "goods", title: "商品数据", subtitle: "商品信息与状态明细", checked: false },
-      { key: "stats", title: "统计数据", subtitle: "收入 / 费用 / 汇总", checked: true },
+      { key: "stats", title: "统计数据", subtitle: "明细 / 汇总 / 支出", checked: true },
       { key: "logs", title: "操作日志", subtitle: "管理操作记录", checked: false }
     ],
     rangeOptions: ["本月", "近三月", "自定义", "全部"],
@@ -109,6 +109,22 @@ Page({
     }
 
     if (this.data.exporting) {
+      return;
+    }
+
+    let confirmRes;
+    try {
+      confirmRes = await wx.showModal({
+        title: "导出数据",
+        content: "导出数据可能包含敏感信息，请确认是否导出？",
+        confirmText: "确认导出",
+        cancelText: "取消"
+      });
+    } catch (error) {
+      return;
+    }
+
+    if (!confirmRes.confirm) {
       return;
     }
 

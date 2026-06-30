@@ -145,7 +145,9 @@
 
     <!-- 提交按钮 -->
     <view class="submit-wrap">
-      <button class="submit-btn" bindtap="handleSubmit">保存修改</button>
+      <button class="submit-btn" bindtap="handleSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+        保存修改
+      </button>
     </view>
   </view>
 </view>

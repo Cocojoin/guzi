@@ -32,7 +32,8 @@ Page({
     ownerUserMap: {},
     ownerPickerOptions: ["请选择寄售用户"],
     typeOptions: TYPE_OPTIONS,
-    originalIp: ""
+    originalIp: "",
+    submitting: false
   },
 
   async onLoad(options) {
@@ -264,6 +265,10 @@ Page({
 
   // ===== 提交 =====
   async handleSubmit(options = {}) {
+    if (this.data.submitting) {
+      return;
+    }
+
     const form = this.data.form;
 
     // 手动校验
@@ -343,6 +348,7 @@ Page({
 
     // 更新商品
     try {
+      this.setData({ submitting: true });
       const cloudImages = await ensureCloudImages(form.images, "products");
       await productsRepository.updateProduct(form.id, {
         ownerUserId: this.data.ownerUserMap[form.owner] || "",
@@ -405,6 +411,8 @@ Page({
         title: "保存失败，请重试",
         icon: "none"
       });
+    } finally {
+      this.setData({ submitting: false });
     }
   },
 

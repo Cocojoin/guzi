@@ -2395,7 +2395,7 @@ Page({
 
   recalcSettledSummary() {
     const settledRecords = this.data.settledRecords || [];
-    const settledTotalPayable = settledRecords.reduce((sum, item) => sum + Number(item.payable || 0), 0).toFixed(0);
+    const settledTotalPayable = settledRecords.reduce((sum, item) => sum + Number(item.payable || 0), 0).toFixed(2);
     const settledTotalItems = settledRecords.reduce((sum, item) => sum + Number(item.items || 0), 0);
     this.setData({ settledTotalPayable, settledTotalItems, settledTotalTimes: settledRecords.length });
   },

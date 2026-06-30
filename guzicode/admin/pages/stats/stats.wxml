@@ -1,7 +1,7 @@
 <view class="stats-shell">
   <view class="custom-nav" style="height: {{contentPaddingTop}}px;">
     <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
-    <view class="custom-nav-title-box {{(view === 'income' || view === 'settledDetail' || view === 'summary') ? 'custom-nav-title-box--with-back' : ''}}" style="height: {{navBarHeight}}px;">
+    <view class="custom-nav-title-box {{(view === 'income' || view === 'settledDetail' || view === 'summary' || view === 'monthReport') ? 'custom-nav-title-box--with-back' : ''}}" style="height: {{navBarHeight}}px;">
       <block wx:if="{{view === 'income'}}">
         <view class="custom-nav-back" bindtap="goBackHome"></view>
         <view class="custom-nav-title">收入明细</view>
@@ -14,6 +14,10 @@
         <view class="custom-nav-back" bindtap="goBackHome"></view>
         <view class="custom-nav-title">统计汇总</view>
       </block>
+      <block wx:elif="{{view === 'monthReport'}}">
+        <view class="custom-nav-back" bindtap="goBackHome"></view>
+        <view class="custom-nav-title">寄售月报</view>
+      </block>
       <view wx:else class="custom-nav-title">数据统计</view>
     </view>
   </view>
@@ -25,19 +29,21 @@
     <view wx:if="{{statsLoading && statsLoaded}}" class="stats-refresh-tip">刷新中…</view>
 
     <block wx:if="{{statsLoaded && view === 'home'}}">
-      <view class="hero-card">
-        <view class="hero-control-row">
+      <view class="hero-card hero-card--revamp" bindtap="goView" data-view="summary">
+        <view class="hero-control-row" catchtap="noop">
           <view class="switch-pill switch-pill--hero">
             <view class="switch-thumb {{statMode === 'all' ? 'switch-thumb--right' : ''}}"></view>
             <view class="switch-item {{statMode === 'month' ? 'active' : ''}}" data-mode="month" bindtap="switchMode">本月</view>
             <view class="switch-item {{statMode === 'all' ? 'active' : ''}}" data-mode="all" bindtap="switchMode">累计</view>
           </view>
-          <view class="month-btn" bindtap="toggleMonthPanel">{{statMode === 'all' ? '全部' : selectedMonth}} ˇ</view>
+          <view class="month-btn month-btn--revamp" bindtap="toggleMonthPanel">{{statMode === 'all' ? '全部' : selectedMonth}} <text class="month-btn-arrow">⌄</text></view>
         </view>
-        <view class="hero-top">
-          <view class="hero-title">{{heroTitle}}</view>
+        <view class="hero-main-row">
+          <view class="hero-main-copy">
+            <view class="hero-title">{{heroTitle}}</view>
+            <view class="hero-amount {{heroAmountClass}}">{{heroAmountDisplay}}</view>
+          </view>
         </view>
-        <view class="hero-amount {{heroAmountClass}}">{{heroAmountDisplay}}</view>
         <view class="hero-divider"></view>
         <view class="hero-mini-row">
           <view><text class="mini-label">抽成收益</text><text class="mini-value">{{commissionIncome}}</text></view>
@@ -50,18 +56,22 @@
         <view class="count-item"><view class="count-num">{{totalCount}}</view><view class="count-label">总商品</view></view>
         <view class="count-item"><view class="count-num">{{upCount}}</view><view class="count-label">在售</view></view>
         <view class="count-item"><view class="count-num">{{soldCount}}</view><view class="count-label">已出售</view></view>
-        <view class="count-item"><view class="count-num">{{settledCount}}</view><view class="count-label">已结算</view></view>
       </view>
 
-      <view class="money-grid">
+      <view class="report-entry-card" bindtap="openMonthReport">
+        <view class="report-entry-icon">⇪</view>
+        <view class="report-entry-main">
+          <view class="report-entry-title">生成寄售月报</view>
+          <view class="report-entry-sub">一键生成宣传海报 · 保存分享拉新</view>
+        </view>
+        <view class="report-entry-arrow">›</view>
+      </view>
+
+      <view class="money-grid money-grid--revamp">
+        <view class="money-item" bindtap="goView" data-view="income"><view class="money-title">销售额</view><view class="money-value">{{salesGross}}</view></view>
         <view class="money-item" bindtap="goView" data-view="income"><view class="money-title">实际销售额</view><view class="money-value">{{actualSale}}</view></view>
-        <view class="money-item" bindtap="goView" data-view="expense"><view class="money-title">费用支出</view><view class="money-value neg">{{totalExpense}}</view></view>
         <view class="money-item" bindtap="goView" data-view="income"><view class="money-title">结算金额</view><view class="money-value">{{settleIncome}}</view></view>
-      </view>
-
-      <view class="net-card" bindtap="goView" data-view="summary">
-        <text>实际收益（平台净收入）</text>
-        <text class="net-value {{netIncomeClass}}">{{netIncomeDisplay}}</text>
+        <view class="money-item" bindtap="goView" data-view="expense"><view class="money-title">费用支出</view><view class="money-value neg">{{totalExpense}}</view></view>
       </view>
     </block>
 
@@ -261,6 +271,58 @@
       <view class="submit-btn" bindtap="submitExpenseForm">保存支出</view>
     </block>
 
+
+    <block wx:if="{{statsLoaded && view === 'monthReport' && monthReportData}}">
+      <scroll-view class="list-scroll" scroll-y="true">
+        <view class="report-poster">
+          <view class="report-poster-top">
+            <view class="report-shop-mark">谷</view>
+            <view class="report-shop-main">
+              <view class="report-shop-name">谷圈星社</view>
+            </view>
+            <view class="month-btn month-btn--report" bindtap="toggleMonthPanel">{{selectedMonth}}</view>
+          </view>
+
+          <view class="report-core-card">
+            <view class="report-core-title">本月帮谷友成交</view>
+            <view class="report-core-amount">{{monthReportGrossDisplay}}</view>
+          </view>
+
+          <view class="report-stat-grid">
+            <view class="report-stat-item"><view class="report-stat-num">{{monthReportSettledIpCount}}</view><view class="report-stat-label">寄售 IP</view></view>
+            <view class="report-stat-item"><view class="report-stat-num">{{totalCount}}</view><view class="report-stat-label">平台总商品</view></view>
+            <view class="report-stat-item"><view class="report-stat-num">{{upCount}}</view><view class="report-stat-label">当前在售</view></view>
+            <view class="report-stat-item"><view class="report-stat-num">{{monthReportSettledCount}}</view><view class="report-stat-label">本月成交</view></view>
+          </view>
+
+          <view class="report-user-grid">
+            <view class="report-user-card report-user-card--pink">
+              <view class="report-user-num">{{monthReportConsigners}}<text> 人</text></view>
+              <view class="report-user-title">寄售谷友</view>
+              <view class="report-user-chip">本月新增 {{monthReportConsignersNew}}</view>
+            </view>
+            <view class="report-user-card report-user-card--blue">
+              <view class="report-user-num">{{monthReportUsers}}<text> 人</text></view>
+              <view class="report-user-title">小程序用户</view>
+              <view class="report-user-chip">本月新增 {{monthReportUsersNew}}</view>
+            </view>
+          </view>
+
+          <view class="report-cta-card">
+            <view>
+              <view class="report-cta-title">把你的谷子<br/>交给我们寄售</view>
+              <view class="report-cta-sub">省心代售 · 透明结算</view>
+            </view>
+            <image class="report-qr-image" src="{{monthReportQrCodeSrc}}" mode="aspectFit" />
+          </view>
+
+          <view class="report-footer">数据由「谷圈星社」于 {{monthReportGeneratedDate}} 生成 · 仅供参考</view>
+        </view>
+
+        <view class="report-save-btn report-save-btn--bottom" bindtap="saveMonthReportImage">保存图片</view>
+      </scroll-view>
+    </block>
+
     <block wx:if="{{statsLoaded && view === 'settledDetail' && settledDetail}}">
       <scroll-view class="list-scroll" scroll-y="true">
         <view class="settled-user-card">
@@ -360,3 +422,5 @@
     </view>
   </view>
 </view>
+
+<canvas canvas-id="monthReportCanvas" class="poster-canvas" style="width: {{monthReportCanvasWidth}}px; height: {{monthReportCanvasHeight}}px;" width="{{monthReportCanvasWidth}}" height="{{monthReportCanvasHeight}}"></canvas>

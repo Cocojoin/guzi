@@ -5,6 +5,7 @@ const session = require("../../../utils/session");
 const { debounce } = require("../../../utils/debounce");
 const dataAccessService = require("../../../utils/dataAccessService");
 const { getDisplayStatus } = require("../../../utils/productPresentation");
+const usersRepository = require("../../../utils/usersRepository");
 
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const MATERIAL_EXPENSES_COLLECTION = "material_expenses";
@@ -89,6 +90,45 @@ function classifyLogisticsNote(note) {
   return "物流";
 }
 
+function computeSettlementRecordMetrics(record) {
+  const items = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
+  if (!items.length) {
+    return {
+      gross: toNumber(record && record.gross),
+      actualIncome: toNumber(record && record.actualIncome),
+      payable: toNumber(record && record.payable),
+      commission: toNumber(record && record.commission)
+    };
+  }
+
+  const itemMetrics = items.reduce((sum, item) => {
+    const qty = Math.max(0, toNumber(item && item.soldQty));
+    const price = toNumber(item && item.price);
+    const gross = toNumber(item && (item.totalPrice != null ? item.totalPrice : price * qty));
+    const rateFraction = toNumber(item && (item.rateFraction != null ? item.rateFraction : toNumber(item && item.rate) / 100));
+    const commission = gross * rateFraction;
+    const payable = toNumber(item && (item.payableAmount != null ? item.payableAmount : Math.max(0, gross - commission)));
+    const actualIncome = toNumber(item && (item.saleAmount != null ? item.saleAmount : gross));
+    return {
+      gross: sum.gross + gross,
+      actualIncome: sum.actualIncome + actualIncome,
+      payable: sum.payable + payable,
+      commission: sum.commission + commission
+    };
+  }, {
+    gross: 0,
+    actualIncome: 0,
+    payable: 0,
+    commission: 0
+  });
+
+  if (record && record.actualIncome != null && record.actualIncome !== "") {
+    itemMetrics.actualIncome = toNumber(record.actualIncome);
+  }
+
+  return itemMetrics;
+}
+
 function getExpenseTypeByView(view) {
   if (view === "material" || view === "materialForm") return "material";
   if (view === "logistics" || view === "logisticsForm") return "logistics";
@@ -131,6 +171,7 @@ Page({
     contentPaddingTop: 64,
     submitting: false,
     view: "home",
+    previousView: "home",
     statsLoading: true,
     statsLoaded: false,
     statMode: "month",
@@ -142,6 +183,7 @@ Page({
     canPrevYear: true,
     canNextYear: false,
     months: [],
+    reportSaving: false,
 
     totalCount: 0,
     upCount: 0,
@@ -155,6 +197,7 @@ Page({
     commissionIncome: "¥0.00",
     spreadIncome: "¥0.00",
     totalExpense: "-¥0.00",
+    salesGross: "¥0.00",
     actualSale: "¥0.00",
     settleIncome: "¥0.00",
     netIncomeRaw: 0,
@@ -171,6 +214,25 @@ Page({
     allStatsRaw: null,
 
     summaryRows: [],
+
+    monthReportData: null,
+    monthReportMonthText: "",
+    monthReportGeneratedDate: "",
+    monthReportTrendText: "本月新增",
+    monthReportTrendPositive: true,
+    monthReportGrossDisplay: "¥0.00",
+    monthReportConsigners: 0,
+    monthReportConsignersNew: 0,
+    monthReportUsers: 0,
+    monthReportUsersNew: 0,
+    monthReportSettledIpCount: 0,
+    monthReportSettledCount: 0,
+    monthReportPosterMonth: "",
+    monthReportPosterImages: [],
+    monthReportPosterCurrent: 0,
+    monthReportCanvasWidth: 0,
+    monthReportCanvasHeight: 0,
+    monthReportQrCodeSrc: "/assets/month-report/mini-program-code.png",
 
     incomeItems: [],
     incomeFilter: "month",
@@ -278,12 +340,19 @@ Page({
   async loadAllStatsData() {
     this.setData({ statsLoading: true });
     try {
-      const [products, settlementRecords, materialRecords, logisticsRecords, techServiceRecords] = await Promise.all([
+      const withTimeoutFallback = (promise, fallback, timeout = 15000) => Promise.race([
+        promise.catch(() => fallback),
+        new Promise((resolve) => setTimeout(() => resolve(fallback), timeout))
+      ]);
+
+      const [products, settlementRecords, materialRecords, logisticsRecords, techServiceRecords, usersRaw, consignmentUsersRaw] = await Promise.all([
         productsRepository.getAllProducts(),
         this.fetchAll(SETTLEMENT_RECORDS_COLLECTION),
         this.fetchAll(MATERIAL_EXPENSES_COLLECTION),
         this.fetchAll(LOGISTICS_EXPENSES_COLLECTION),
-        this.fetchAll(TECH_SERVICE_EXPENSES_COLLECTION)
+        this.fetchAll(TECH_SERVICE_EXPENSES_COLLECTION),
+        withTimeoutFallback(usersRepository.listUsers(), []),
+        withTimeoutFallback(usersRepository.listConsignmentUsers(), [])
       ]);
 
       const now = new Date();
@@ -295,14 +364,37 @@ Page({
       }
 
       const statsCount = this.computeProductCounts(products || []);
+      const salesGrossMonth = this.computeSoldGross(products || [], selectedMonth);
+      const salesGrossAll = this.computeSoldGross(products || []);
       const monthStatsRaw = this.computeStatsByMonth(settlementRecords, materialRecords, logisticsRecords, techServiceRecords, selectedMonth);
       const allStatsRaw = this.computeStatsAll(settlementRecords, materialRecords, logisticsRecords, techServiceRecords);
       const summaryRows = this.buildSummaryRows(allStatsRaw);
+      const previousMonth = this.getPrevMonth(selectedMonth);
+      const previousMonthStatsRaw = this.computeStatsByMonth(settlementRecords, materialRecords, logisticsRecords, techServiceRecords, previousMonth);
+      const monthReportData = this.buildMonthReportData({
+        selectedMonth,
+        settlementRecords,
+        products,
+        users: usersRaw,
+        consignmentUsers: consignmentUsersRaw,
+        monthStatsRaw,
+        previousMonthStatsRaw
+      });
 
+      const settlementRecordMap = (settlementRecords || []).reduce((map, record) => {
+        const recordId = String(record && (record._id || record.id) || "").trim();
+        if (recordId) {
+          map[recordId] = record;
+        }
+        return map;
+      }, {});
       const incomeItems = this.buildIncomeItems(settlementRecords || []);
       const materialItems = this.buildMaterialItems(materialRecords || []);
       const logisticsItems = this.buildLogisticsItems(logisticsRecords || []);
       const techServiceItems = this.buildTechServiceItems(techServiceRecords || []);
+
+      this._settlementRecordMap = settlementRecordMap;
+      this._incomeItems = incomeItems;
 
       this.setData({
         ...statsCount,
@@ -312,10 +404,25 @@ Page({
         monthStatsRaw,
         allStatsRaw,
         summaryRows,
+        monthReportData,
+        monthReportMonthText: monthReportData.monthText,
+        monthReportGeneratedDate: monthReportData.generatedDate,
+        monthReportTrendText: monthReportData.trendText,
+        monthReportTrendPositive: monthReportData.trendPositive,
+        monthReportGrossDisplay: fmtMoney(monthReportData.settledGross),
+        monthReportConsigners: monthReportData.consignerCount,
+        monthReportConsignersNew: monthReportData.consignerNewCount,
+        monthReportUsers: monthReportData.userCount,
+        monthReportUsersNew: monthReportData.userNewCount,
+        monthReportSettledIpCount: monthReportData.settledIpCount,
+        monthReportSettledCount: monthReportData.settledCount,
+        monthReportPosterMonth: monthReportData.monthText,
+        salesGrossMonth,
+        salesGrossAll,
         summaryCommissionDisplay: fmtMoney(allStatsRaw.commissionTotal),
         summarySpreadDisplay: fmtMoney(allStatsRaw.spreadTotal),
         summaryExpenseDisplay: fmtMoney(allStatsRaw.totalExpense),
-        incomeItems,
+        incomeItems: [],
         materialItems,
         logisticsItems,
         techServiceItems,
@@ -385,10 +492,24 @@ Page({
   },
 
   computeStatsCore(settlementRecords = [], materialRecords = [], logisticsRecords = [], techServiceRecords = []) {
-    const settledPriceTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.gross), 0);
-    const actualIncomeTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.actualIncome), 0);
-    const commissionTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.commission), 0);
-    const payableTotal = settlementRecords.reduce((sum, item) => sum + toNumber(item.payable), 0);
+    const settlementTotals = settlementRecords.reduce((sum, item) => {
+      const metrics = computeSettlementRecordMetrics(item);
+      return {
+        settledPriceTotal: sum.settledPriceTotal + metrics.gross,
+        actualIncomeTotal: sum.actualIncomeTotal + metrics.actualIncome,
+        commissionTotal: sum.commissionTotal + metrics.commission,
+        payableTotal: sum.payableTotal + metrics.payable
+      };
+    }, {
+      settledPriceTotal: 0,
+      actualIncomeTotal: 0,
+      commissionTotal: 0,
+      payableTotal: 0
+    });
+    const settledPriceTotal = settlementTotals.settledPriceTotal;
+    const actualIncomeTotal = settlementTotals.actualIncomeTotal;
+    const commissionTotal = settlementTotals.commissionTotal;
+    const payableTotal = settlementTotals.payableTotal;
     const spreadTotal = actualIncomeTotal - settledPriceTotal;
 
     const materialTotal = materialRecords.reduce((sum, item) => sum + toNumber(item.amount), 0);
@@ -409,6 +530,466 @@ Page({
       totalExpense,
       netIncome
     };
+  },
+
+  computeSoldGross(products = [], monthKey = "") {
+    return (products || []).reduce((sum, product) => {
+      const batches = Array.isArray(product && product.soldBatches) ? product.soldBatches : [];
+      const matchedBatches = monthKey
+        ? batches.filter((batch) => this.isDateInMonth(batch && batch.soldAt, monthKey))
+        : batches;
+      return sum + matchedBatches.reduce((batchSum, batch) => {
+        const qty = Math.max(0, toNumber(batch && batch.qty));
+        const price = toNumber(batch && batch.price != null ? batch.price : product && product.price);
+        return batchSum + price * qty;
+      }, 0);
+    }, 0);
+  },
+
+  normalizeDateValue(input) {
+    if (!input) return null;
+    if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
+    if (typeof input === "object") {
+      if (input.$date) return this.normalizeDateValue(input.$date);
+      if (typeof input.seconds === "number") return new Date(input.seconds * 1000);
+      if (typeof input._seconds === "number") return new Date(input._seconds * 1000);
+    }
+    const date = new Date(input);
+    return Number.isNaN(date.getTime()) ? null : date;
+  },
+
+  isDateInMonth(input, monthKey) {
+    const date = this.normalizeDateValue(input);
+    if (!date || !monthKey) return false;
+    return formatDate(date).slice(0, 7) === monthKey;
+  },
+
+  formatMonthText(monthKey) {
+    const [year, month] = String(monthKey || "").split("-");
+    return `${year} 年 ${Number(month || 0)} 月`;
+  },
+
+  formatPercentTrend(current, previous) {
+    if (previous <= 0) {
+      return current > 0 ? "本月新增" : "暂无变化";
+    }
+    const percent = Math.round(((current - previous) / previous) * 100);
+    return `较上月 ${percent >= 0 ? "+" : ""}${percent}%`;
+  },
+
+  buildMonthSoldSummary(products = [], monthKey = "", settlementRecords = []) {
+    let soldGross = 0;
+    let soldCount = 0;
+    const soldIpSet = new Set();
+
+    const settledQtyMap = new Map();
+    (settlementRecords || []).forEach((record) => {
+      const items = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
+      items.forEach((item) => {
+        const soldTimeText = String(item && item.soldTimeText || "");
+        const soldMonth = soldTimeText.slice(0, 7);
+        const recordMonth = getMonthKey(record && record.date);
+        if (soldMonth !== monthKey && recordMonth !== monthKey) {
+          return;
+        }
+
+        const qty = Math.max(0, toNumber(item && item.soldQty));
+        const totalPrice = toNumber(item && (item.totalPrice != null ? item.totalPrice : toNumber(item && item.price) * qty));
+        soldCount += qty;
+        soldGross += totalPrice;
+
+        const ipLabel = [item && item.ip, item && item.ipName, item && item.series]
+          .map((entry) => String(entry || "").trim())
+          .find(Boolean);
+        if (ipLabel) {
+          soldIpSet.add(ipLabel);
+        }
+
+        const productId = String(item && (item.productId || item.id) || "").trim();
+        if (productId) {
+          settledQtyMap.set(productId, (settledQtyMap.get(productId) || 0) + qty);
+        }
+      });
+    });
+
+    (products || []).forEach((product) => {
+      const soldBatches = Array.isArray(product && product.soldBatches) ? product.soldBatches : [];
+      const matchedBatches = soldBatches.filter((batch) => this.isDateInMonth(batch && batch.soldAt, monthKey));
+      if (!matchedBatches.length) {
+        return;
+      }
+
+      const productId = String(product && (product.id || product._id) || "").trim();
+      let settledQtyForMonth = Math.max(0, toNumber(settledQtyMap.get(productId)));
+
+      matchedBatches.forEach((batch) => {
+        const batchQty = Math.max(0, toNumber(batch && batch.qty));
+        const unsettledQty = Math.max(0, batchQty - settledQtyForMonth);
+        settledQtyForMonth = Math.max(0, settledQtyForMonth - batchQty);
+        if (!unsettledQty) {
+          return;
+        }
+
+        const batchPrice = toNumber(batch && batch.price != null ? batch.price : product && product.price);
+        soldCount += unsettledQty;
+        soldGross += batchPrice * unsettledQty;
+      });
+
+      const ipLabel = [product && product.ip, product && product.ipName, product && product.series]
+        .map((entry) => String(entry || "").trim())
+        .find(Boolean);
+      if (ipLabel) {
+        soldIpSet.add(ipLabel);
+      }
+    });
+
+    return {
+      soldGross,
+      soldCount,
+      soldIpCount: soldIpSet.size
+    };
+  },
+
+  buildMonthReportData({
+    selectedMonth,
+    settlementRecords = [],
+    products = [],
+    users = [],
+    consignmentUsers = [],
+    monthStatsRaw = null,
+    previousMonthStatsRaw = null
+  }) {
+    const monthSoldSummary = this.buildMonthSoldSummary(products, selectedMonth, settlementRecords);
+    const currentSettledGross = toNumber(monthStatsRaw && monthStatsRaw.settledPriceTotal);
+    const previousSettledGross = toNumber(previousMonthStatsRaw && previousMonthStatsRaw.settledPriceTotal);
+
+    const consignerCount = Array.isArray(consignmentUsers) ? consignmentUsers.length : 0;
+    const consignerNewCount = (consignmentUsers || []).filter((item) => this.isDateInMonth(item.consignmentEnabledAt || item.updatedAt || item.createdAt, selectedMonth)).length;
+    const userCount = Array.isArray(users) ? users.length : 0;
+    const userNewCount = (users || []).filter((item) => this.isDateInMonth(item.createdAt || item.registeredAt || item.updatedAt, selectedMonth)).length;
+
+    return {
+      monthKey: selectedMonth,
+      monthText: this.formatMonthText(selectedMonth),
+      generatedDate: formatDate(new Date()),
+      shopName: "谷圈星社",
+      shopHandle: "@guzi_shop",
+      shopDesc: "谷圈寄售代售",
+      reportLabel: "寄售月报",
+      settledGross: currentSettledGross,
+      settledCount: monthSoldSummary.soldCount,
+      settledIpCount: monthSoldSummary.soldIpCount,
+      totalProducts: (products || []).length,
+      upCount: (products || []).filter((item) => getDisplayStatus(item) === "up").length,
+      consignerCount,
+      consignerNewCount,
+      userCount,
+      userNewCount,
+      trendText: this.formatPercentTrend(currentSettledGross, previousSettledGross),
+      trendPositive: currentSettledGross >= previousSettledGross,
+      previousGross: previousSettledGross
+    };
+  },
+
+  openMonthReport() {
+    this.setData({
+      previousView: this.data.view || "home",
+      view: "monthReport",
+      showMonthPanel: false
+    });
+  },
+
+  async saveMonthReportImage() {
+    const report = this.data.monthReportData;
+    if (!report) {
+      wx.showToast({ title: "当前月份暂无可生成月报的数据", icon: "none" });
+      return;
+    }
+    if (this.data.reportSaving) return;
+
+    this.setData({ reportSaving: true });
+    wx.showLoading({ title: "正在保存图片", mask: true });
+    try {
+      const filePath = await this.renderMonthReportPoster(report);
+      await this.ensureAlbumPermissionBySaveAttempt(filePath);
+      wx.showToast({ title: "图片已保存到相册", icon: "success" });
+    } catch (error) {
+      const msg = String((error && error.message) || "");
+      if (msg.includes("未开启相册权限")) {
+        wx.showToast({ title: "请开启相册权限后再保存", icon: "none" });
+      } else {
+        wx.showToast({ title: "保存失败，请稍后重试", icon: "none" });
+      }
+    } finally {
+      wx.hideLoading();
+      this.setData({ reportSaving: false });
+    }
+  },
+
+  setDataAsync(payload) {
+    return new Promise((resolve) => this.setData(payload, resolve));
+  },
+
+  async resolvePosterImagePath(imageUrl) {
+    const src = String(imageUrl || "").trim();
+    if (!src) {
+      return "";
+    }
+    this._posterImageCache = this._posterImageCache || {};
+    if (this._posterImageCache[src]) {
+      return this._posterImageCache[src];
+    }
+
+    let resolved = src;
+    if (/^cloud:\/\//i.test(src)) {
+      const res = await wx.cloud.getTempFileURL({ fileList: [src] });
+      const tempFile = (res.fileList || [])[0];
+      if (!tempFile || tempFile.status !== 0 || !tempFile.tempFileURL) {
+        throw new Error("图片加载失败");
+      }
+      resolved = tempFile.tempFileURL;
+    }
+
+    if (/^https?:\/\//i.test(resolved)) {
+      resolved = await new Promise((resolve, reject) => {
+        wx.downloadFile({
+          url: resolved,
+          success: (res) => {
+            if (res.statusCode >= 200 && res.statusCode < 300 && res.tempFilePath) {
+              resolve(res.tempFilePath);
+              return;
+            }
+            reject(new Error("图片下载失败"));
+          },
+          fail: () => reject(new Error("图片下载失败"))
+        });
+      });
+    }
+
+    this._posterImageCache[src] = resolved;
+    return resolved;
+  },
+
+  fillRoundedRect(ctx, x, y, width, height, radius, fillStyle) {
+    const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + width, y, x + width, y + height, r);
+    ctx.arcTo(x + width, y + height, x, y + height, r);
+    ctx.arcTo(x, y + height, x, y, r);
+    ctx.arcTo(x, y, x + width, y, r);
+    ctx.closePath();
+    ctx.setFillStyle(fillStyle);
+    ctx.fill();
+    ctx.restore();
+  },
+
+  strokeRoundedRect(ctx, x, y, width, height, radius, strokeStyle, lineWidth = 1) {
+    const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + width, y, x + width, y + height, r);
+    ctx.arcTo(x + width, y + height, x, y + height, r);
+    ctx.arcTo(x, y + height, x, y, r);
+    ctx.arcTo(x, y, x + width, y, r);
+    ctx.closePath();
+    ctx.setStrokeStyle(strokeStyle);
+    ctx.setLineWidth(lineWidth);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  drawMonthReportPosterCard(ctx, report, canvasWidth, canvasHeight, qrCodePath = "") {
+    const pagePadding = 28;
+    const cardX = pagePadding;
+    const cardY = 56;
+    const cardWidth = canvasWidth - pagePadding * 2;
+    const headerTop = cardY + 34;
+    const coreCardY = headerTop + 102;
+    const statY = coreCardY + 172;
+    const userCardY = statY + 124;
+    const ctaY = userCardY + 164;
+    const ctaBottom = ctaY + 132;
+    const footerY = ctaBottom + 32;
+    const cardHeight = footerY - cardY + 28;
+    const titleGradient = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
+    titleGradient.addColorStop(0, "#ffd3e8");
+    titleGradient.addColorStop(1, "#cfd6ff");
+    this.fillRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 28, "rgba(255,255,255,0.72)");
+    this.strokeRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 28, "rgba(196,220,244,0.92)", 1);
+
+    let y = headerTop;
+    ctx.setTextAlign("left");
+    const logoSize = 62;
+    const headerStartX = cardX + 22;
+    const headerGap = 16;
+    this.fillRoundedRect(ctx, headerStartX, y - 6, logoSize, logoSize, 20, titleGradient);
+    ctx.setFillStyle("#ffffff");
+    ctx.setFontSize(32);
+    ctx.setTextAlign("center");
+    ctx.setTextBaseline("middle");
+    ctx.fillText("谷", headerStartX + logoSize / 2, y - 6 + logoSize / 2 + 2);
+    ctx.setTextAlign("left");
+    ctx.setTextBaseline("alphabetic");
+    ctx.setFillStyle("#32445f");
+    ctx.setFontSize(28);
+    ctx.fillText(report.shopName, headerStartX + logoSize + headerGap, y + 18);
+
+    y += 102;
+    this.fillRoundedRect(ctx, cardX + 20, y, cardWidth - 40, 142, 24, "rgba(255,255,255,0.94)");
+    this.strokeRoundedRect(ctx, cardX + 20, y, cardWidth - 40, 142, 24, "rgba(240,232,255,0.72)", 1);
+    ctx.setFillStyle("#7077a4");
+    ctx.setFontSize(18);
+    ctx.fillText("本月帮谷友成交", cardX + 42, y + 42);
+    const amountGradient = ctx.createLinearGradient(cardX + 42, y + 54, cardX + 240, y + 54);
+    amountGradient.addColorStop(0, "#c96bd8");
+    amountGradient.addColorStop(1, "#5f8dff");
+    ctx.setFillStyle(amountGradient);
+    ctx.setFontSize(52);
+    ctx.fillText(fmtMoney(report.settledGross), cardX + 38, y + 104);
+
+    y += 172;
+    const statWidth = (cardWidth - 40 - 18 * 3) / 4;
+    const statLabels = [
+      [String(report.settledIpCount), "寄售 IP"],
+      [String(report.totalProducts), "平台总商品"],
+      [String(report.upCount), "当前在售"],
+      [String(report.settledCount), "本月成交"]
+    ];
+    statLabels.forEach((entry, index) => {
+      const x = cardX + 20 + index * (statWidth + 18);
+      this.fillRoundedRect(ctx, x, statY, statWidth, 100, 22, "rgba(255,255,255,0.92)");
+      this.strokeRoundedRect(ctx, x, statY, statWidth, 100, 22, "rgba(232,238,252,0.96)", 1);
+      ctx.setFillStyle("#32445f");
+      ctx.setFontSize(24);
+      ctx.fillText(entry[0], x + 18, statY + 40);
+      ctx.setFillStyle("#8c90b4");
+      ctx.setFontSize(13);
+      ctx.fillText(entry[1], x + 18, statY + 72);
+    });
+
+    y += 124;
+    const halfWidth = (cardWidth - 52) / 2;
+    this.fillRoundedRect(ctx, cardX + 20, y, halfWidth, 140, 24, "rgba(255,221,235,0.72)");
+    this.fillRoundedRect(ctx, cardX + 32 + halfWidth, y, halfWidth, 140, 24, "rgba(216,241,255,0.82)");
+    this.strokeRoundedRect(ctx, cardX + 20, y, halfWidth, 140, 24, "rgba(255,232,241,0.96)", 1);
+    this.strokeRoundedRect(ctx, cardX + 32 + halfWidth, y, halfWidth, 140, 24, "rgba(223,239,255,0.96)", 1);
+    ctx.setFillStyle("#d56995");
+    ctx.setFontSize(26);
+    ctx.fillText(`${report.consignerCount}`, cardX + 42, y + 48);
+    ctx.setFontSize(16);
+    ctx.fillText("人", cardX + 92, y + 48);
+    ctx.setFontSize(15);
+    ctx.fillText("寄售谷友", cardX + 42, y + 84);
+    this.fillRoundedRect(ctx, cardX + 42, y + 100, 102, 26, 13, "rgba(255,255,255,0.82)");
+    ctx.setFontSize(11);
+    ctx.fillText(`本月新增 ${report.consignerNewCount}`, cardX + 54, y + 118);
+    ctx.setFillStyle("#4c8fdd");
+    ctx.setFontSize(26);
+    ctx.fillText(`${report.userCount}`, cardX + 54 + halfWidth, y + 48);
+    ctx.setFontSize(16);
+    ctx.fillText("人", cardX + 104 + halfWidth, y + 48);
+    ctx.setFontSize(15);
+    ctx.fillText("小程序用户", cardX + 54 + halfWidth, y + 84);
+    this.fillRoundedRect(ctx, cardX + 54 + halfWidth, y + 100, 110, 26, 13, "rgba(255,255,255,0.82)");
+    ctx.setFontSize(11);
+    ctx.fillText(`本月新增 ${report.userNewCount}`, cardX + 66 + halfWidth, y + 118);
+
+    y += 164;
+    ctx.setFillStyle("#32445f");
+    ctx.setFontSize(28);
+    ctx.fillText("把你的谷子交给我们寄售", cardX + 30, y + 40);
+    ctx.setFillStyle("#7f84a9");
+    ctx.setFontSize(16);
+    ctx.fillText("省心代售 · 透明结算", cardX + 30, y + 92);
+    const qrX = cardX + cardWidth - 158;
+    const qrY = y + 8;
+    const qrSize = 124;
+    if (qrCodePath) {
+      try {
+        ctx.drawImage(qrCodePath, qrX, qrY, qrSize, qrSize);
+      } catch (error) {
+        this.fillRoundedRect(ctx, qrX, qrY, qrSize, qrSize, 20, "rgba(250,248,255,0.94)");
+      }
+    } else {
+      this.fillRoundedRect(ctx, qrX, qrY, qrSize, qrSize, 20, "rgba(250,248,255,0.94)");
+    }
+
+    ctx.setTextAlign("center");
+    ctx.setFillStyle("#9a99b8");
+    ctx.setFontSize(11);
+    ctx.fillText(`数据由「${report.shopName}」于 ${report.generatedDate} 生成 · 仅供参考`, canvasWidth / 2, footerY);
+    ctx.setTextAlign("left");
+
+    return {
+      cropX: cardX,
+      cropY: cardY,
+      cropWidth: cardWidth,
+      cropHeight: cardHeight
+    };
+  },
+
+  async renderMonthReportPoster(report) {
+    const canvasWidth = 750;
+    const canvasHeight = 920;
+    await this.setDataAsync({
+      monthReportCanvasWidth: canvasWidth,
+      monthReportCanvasHeight: canvasHeight
+    });
+    const ctx = wx.createCanvasContext("monthReportCanvas", this);
+    ctx.setFillStyle("#ffffff");
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    let qrCodePath = "";
+    try {
+      qrCodePath = await this.resolvePosterImagePath(this.data.monthReportQrCodeSrc);
+    } catch (error) {}
+    const cropRect = this.drawMonthReportPosterCard(ctx, report, canvasWidth, canvasHeight, qrCodePath);
+
+    await new Promise((resolve) => ctx.draw(false, resolve));
+    return new Promise((resolve, reject) => {
+      wx.canvasToTempFilePath({
+        canvasId: "monthReportCanvas",
+        x: cropRect.cropX,
+        y: cropRect.cropY,
+        width: cropRect.cropWidth,
+        height: cropRect.cropHeight,
+        destWidth: cropRect.cropWidth * 2,
+        destHeight: cropRect.cropHeight * 2,
+        fileType: "png",
+        quality: 1,
+        success: (res) => resolve(res.tempFilePath),
+        fail: reject
+      }, this);
+    });
+  },
+
+  saveImageToAlbum(filePath) {
+    return new Promise((resolve, reject) => {
+      wx.saveImageToPhotosAlbum({ filePath, success: resolve, fail: reject });
+    });
+  },
+
+  ensureAlbumPermissionBySaveAttempt(filePath) {
+    return this.saveImageToAlbum(filePath).catch((error) => {
+      const errMsg = String((error && error.errMsg) || (error && error.message) || "");
+      if (!/auth deny|auth denied|deny|permission|photosalbum/i.test(errMsg)) {
+        throw new Error("保存图片失败");
+      }
+      return new Promise((resolve, reject) => {
+        wx.openSetting({
+          success: (res) => {
+            if (res.authSetting && res.authSetting["scope.writePhotosAlbum"]) {
+              this.saveImageToAlbum(filePath).then(resolve).catch(reject);
+              return;
+            }
+            reject(new Error("未开启相册权限"));
+          },
+          fail: () => reject(new Error("未开启相册权限"))
+        });
+      });
+    });
   },
 
   buildSummaryRows(allStats) {
@@ -448,7 +1029,6 @@ Page({
           id: `${record._id || record.id || record.date}-${item.id || item.productId || Math.random()}`,
           productId: item.id || item.productId || "",
           settlementRecordId: record._id || record.id || "",
-          settlementRecord: record,
           title: item.role || item.series || item.ip || item.id || "已结算商品",
           code: `${item.id || ""} · ${record.userNickname || ""}`.trim(),
           userId: record.userId || "",
@@ -566,6 +1146,7 @@ Page({
   applyIncomeFilter() {
     const keyword = (this.data.incomeKeyword || "").trim().toLowerCase();
     const filter = this.data.incomeFilter || "month";
+    const sourceItems = Array.isArray(this._incomeItems) ? this._incomeItems : [];
     const now = new Date();
     const today = formatDate(now);
     const nowMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -576,7 +1157,7 @@ Page({
     monday.setDate(now.getDate() - diffToMonday);
     const weekStart = formatDate(monday);
 
-    const list = (this.data.incomeItems || []).filter((item) => {
+    const list = sourceItems.filter((item) => {
       const text = `${item.title} ${item.code} ${item.source}`.toLowerCase();
       if (keyword && !text.includes(keyword)) return false;
 
@@ -628,15 +1209,7 @@ Page({
     const productId = String(e.currentTarget.dataset.productId || "").trim();
     if (!recordId) return;
 
-    const incomeItem = (this.data.filteredIncomeItems || []).find((item) =>
-      String(item.settlementRecordId || "").trim() === recordId
-      && String(item.productId || "").trim() === productId
-    ) || (this.data.incomeItems || []).find((item) =>
-      String(item.settlementRecordId || "").trim() === recordId
-      && String(item.productId || "").trim() === productId
-    ) || (this.data.filteredIncomeItems || []).find((item) => String(item.settlementRecordId || "").trim() === recordId)
-      || (this.data.incomeItems || []).find((item) => String(item.settlementRecordId || "").trim() === recordId);
-    const record = incomeItem?.settlementRecord;
+    const record = (this._settlementRecordMap || {})[recordId];
     if (!record) return;
 
     const allSettlementItems = (record.settlementItems || []).map((item, index) => ({
@@ -1038,6 +1611,7 @@ Page({
       commissionIncome: fmtMoney(source.commissionTotal),
       spreadIncome: fmtSignedMoney(source.spreadTotal),
       totalExpense: fmtMoney(-source.totalExpense),
+      salesGross: fmtMoney(source.settledPriceTotal),
       actualSale: fmtMoney(source.actualIncomeTotal),
       settleIncome: fmtMoney(source.payableTotal),
       netIncomeRaw: source.netIncome,

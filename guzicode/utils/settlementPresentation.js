@@ -33,7 +33,7 @@ function buildPendingSettlementItems(product, fallbackRateFraction) {
       }
 
       const rateFraction = normalizeRateFraction(batch.rateFraction);
-      const price = Number(product.price || 0);
+      const price = Number(batch.price != null ? batch.price : product.price || 0);
       const totalPrice = price * unsettledQty;
       const payableAmount = calcPayableAmount(price, unsettledQty, rateFraction);
       const batchSaleAmount = Number(batch.saleAmount || 0);

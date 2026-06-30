@@ -6,6 +6,7 @@ const PRODUCTS_COLLECTION = "products";
 const SETTLEMENT_RECORDS_COLLECTION = "settlement_records";
 const MATERIAL_EXPENSES_COLLECTION = "material_expenses";
 const LOGISTICS_EXPENSES_COLLECTION = "logistics_expenses";
+const TECH_SERVICE_EXPENSES_COLLECTION = "tech_service_expenses";
 const OPERATION_LOGS_COLLECTION = "admin_operation_logs";
 
 const STORAGE_KEYS = {
@@ -423,15 +424,64 @@ function createSheetXml(name, rows) {
   return `<Worksheet ss:Name="${escapeXml(name)}"><Table>${rowXml}</Table></Worksheet>`;
 }
 
-function buildStatsRows(settlementRecords, materialExpenses, logisticsExpenses) {
-  const gross = settlementRecords.reduce((sum, item) => sum + toNumber(item.gross), 0);
-  const actualIncome = settlementRecords.reduce((sum, item) => sum + toNumber(item.actualIncome), 0);
-  const commission = settlementRecords.reduce((sum, item) => sum + toNumber(item.commission), 0);
-  const payable = settlementRecords.reduce((sum, item) => sum + toNumber(item.payable), 0);
+function computeSettlementRecordMetrics(record) {
+  const items = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
+  if (!items.length) {
+    return {
+      gross: toNumber(record && record.gross),
+      actualIncome: toNumber(record && record.actualIncome),
+      payable: toNumber(record && record.payable),
+      commission: toNumber(record && record.commission)
+    };
+  }
+
+  return items.reduce((sum, item) => {
+    const qty = Math.max(0, toNumber(item && item.soldQty));
+    const price = toNumber(item && item.price);
+    const gross = toNumber(item && (item.totalPrice != null ? item.totalPrice : price * qty));
+    const rateFraction = toNumber(item && (item.rateFraction != null ? item.rateFraction : toNumber(item && item.rate) / 100));
+    const commission = gross * rateFraction;
+    const payable = toNumber(item && (item.payableAmount != null ? item.payableAmount : Math.max(0, gross - commission)));
+    const actualIncome = toNumber(item && (item.saleAmount != null ? item.saleAmount : gross));
+    return {
+      gross: sum.gross + gross,
+      actualIncome: sum.actualIncome + actualIncome,
+      payable: sum.payable + payable,
+      commission: sum.commission + commission
+    };
+  }, {
+    gross: 0,
+    actualIncome: 0,
+    payable: 0,
+    commission: 0
+  });
+}
+
+function buildStatsRows(settlementRecords, materialExpenses, logisticsExpenses, techServiceExpenses) {
+  const settlementTotals = settlementRecords.reduce((sum, item) => {
+    const metrics = computeSettlementRecordMetrics(item);
+    return {
+      gross: sum.gross + metrics.gross,
+      actualIncome: sum.actualIncome + metrics.actualIncome,
+      commission: sum.commission + metrics.commission,
+      payable: sum.payable + metrics.payable
+    };
+  }, {
+    gross: 0,
+    actualIncome: 0,
+    commission: 0,
+    payable: 0
+  });
+  const gross = settlementTotals.gross;
+  const actualIncome = settlementTotals.actualIncome;
+  const commission = settlementTotals.commission;
+  const payable = settlementTotals.payable;
   const material = materialExpenses.reduce((sum, item) => sum + toNumber(item.amount), 0);
   const logistics = logisticsExpenses.reduce((sum, item) => sum + toNumber(item.amount), 0);
+  const techService = techServiceExpenses.reduce((sum, item) => sum + toNumber(item.amount), 0);
   const spread = actualIncome - gross;
-  const net = commission + spread - material - logistics;
+  const totalExpense = material + logistics + techService;
+  const net = commission + spread - totalExpense;
 
   return [
     ["指标", "数值"],
@@ -443,7 +493,88 @@ function buildStatsRows(settlementRecords, materialExpenses, logisticsExpenses) 
     ["差价收益", spread.toFixed(2)],
     ["材料支出", material.toFixed(2)],
     ["物流支出", logistics.toFixed(2)],
+    ["技术服务支出", techService.toFixed(2)],
+    ["总支出", totalExpense.toFixed(2)],
     ["净收入", net.toFixed(2)]
+  ];
+}
+
+function buildStatsDetailRows(settlementRecords) {
+  const rows = [];
+
+  settlementRecords.forEach((record) => {
+    const list = Array.isArray(record && record.settlementItems) ? record.settlementItems : [];
+    list.forEach((item) => {
+      const qty = Math.max(0, toNumber(item && (item.soldQty != null ? item.soldQty : 1)));
+      const price = toNumber(item && item.price);
+      const gross = toNumber(item && (item.totalPrice != null ? item.totalPrice : price * qty));
+      const rate = toNumber(item && item.rate);
+      const commission = gross * (rate / 100);
+      const payable = item && item.payableAmount != null
+        ? toNumber(item.payableAmount)
+        : Math.max(0, gross - commission);
+      const actualIncome = item && item.actualIncome != null
+        ? toNumber(item.actualIncome)
+        : (item && item.saleAmount != null ? toNumber(item.saleAmount) : gross);
+      rows.push([
+        item.id || item.productId || "",
+        item.role || item.series || item.ip || item.title || "已结算商品",
+        record.userNickname || record.userName || record.owner || "",
+        gross.toFixed(2),
+        actualIncome.toFixed(2),
+        `${rate.toFixed(0)}%`,
+        commission.toFixed(2),
+        "已结算",
+        item.remark || record.note || "",
+        `${record.date || formatDate(record.createdAt || "")} ${record.time || ""}`.trim()
+      ]);
+    });
+  });
+
+  return [
+    ["商品编号", "商品名称", "寄售用户", "商品价格", "商品实际收入", "平台抽成比例", "平台抽成金额", "商品状态", "备注", "结算时间"],
+    ...rows.sort((left, right) => String(right[9] || "").localeCompare(String(left[9] || "")))
+  ];
+}
+
+function buildStatsExpenseRows(materialExpenses, logisticsExpenses, techServiceExpenses) {
+  const expenseRows = []
+    .concat((materialExpenses || []).map((item) => ({
+      type: "材料支出",
+      name: item.itemName || item.item || "材料支出",
+      amount: toNumber(item.amount),
+      note: item.note || item.remark || "",
+      date: item.date || item.createdAt || "",
+      operator: item.operator || item.operatorName || ""
+    })))
+    .concat((logisticsExpenses || []).map((item) => ({
+      type: "物流支出",
+      name: "物流支出",
+      amount: toNumber(item.amount),
+      note: item.note || item.remark || "",
+      date: item.date || item.createdAt || "",
+      operator: item.operator || item.operatorName || ""
+    })))
+    .concat((techServiceExpenses || []).map((item) => ({
+      type: "技术服务支出",
+      name: item.itemName || item.item || "技术服务支出",
+      amount: toNumber(item.amount),
+      note: item.note || item.remark || "",
+      date: item.date || item.createdAt || "",
+      operator: item.operator || item.operatorName || ""
+    })))
+    .sort((left, right) => safeDate(right.date) - safeDate(left.date));
+
+  return [
+    ["日期", "支出类型", "支出项目", "金额", "备注", "记录人"],
+    ...expenseRows.map((item) => [
+      formatDateTime(item.date),
+      item.type,
+      item.name,
+      item.amount.toFixed(2),
+      item.note,
+      item.operator
+    ])
   ];
 }
 
@@ -494,7 +625,7 @@ function resolveRangeDates(rangeType, customRange) {
 async function createExportFile(options = {}) {
   const range = resolveRangeDates(options.rangeType, options.customRange);
   const selectedKeys = Array.isArray(options.selectedKeys) ? options.selectedKeys : [];
-  const [users, products, settlementRecords, materialExpenses, logisticsExpenses, operationLogs] = await Promise.all([
+  const [users, products, settlementRecords, materialExpenses, logisticsExpenses, techServiceExpenses, operationLogs] = await Promise.all([
     usersRepository.listUsers({
       includePassword: selectedKeys.includes("users")
     }),
@@ -502,6 +633,7 @@ async function createExportFile(options = {}) {
     fetchAllSafe(SETTLEMENT_RECORDS_COLLECTION),
     fetchAllSafe(MATERIAL_EXPENSES_COLLECTION),
     fetchAllSafe(LOGISTICS_EXPENSES_COLLECTION),
+    fetchAllSafe(TECH_SERVICE_EXPENSES_COLLECTION),
     listOperationLogs()
   ]);
 
@@ -510,6 +642,7 @@ async function createExportFile(options = {}) {
   const filteredSettlements = settlementRecords.filter((item) => isWithinRange(item, range));
   const filteredMaterial = materialExpenses.filter((item) => isWithinRange(item, range));
   const filteredLogistics = logisticsExpenses.filter((item) => isWithinRange(item, range));
+  const filteredTechService = techServiceExpenses.filter((item) => isWithinRange(item, range));
   const filteredLogs = operationLogs.filter((item) => isWithinRange(item, range));
 
   const sheets = [];
@@ -551,7 +684,9 @@ async function createExportFile(options = {}) {
   }
 
   if (selectedKeys.includes("stats")) {
-    sheets.push(createSheetXml("统计汇总", buildStatsRows(filteredSettlements, filteredMaterial, filteredLogistics)));
+    sheets.push(createSheetXml("统计明细数据", buildStatsDetailRows(filteredSettlements)));
+    sheets.push(createSheetXml("统计汇总数据", buildStatsRows(filteredSettlements, filteredMaterial, filteredLogistics, filteredTechService)));
+    sheets.push(createSheetXml("统计支出数据", buildStatsExpenseRows(filteredMaterial, filteredLogistics, filteredTechService)));
   }
 
   if (selectedKeys.includes("logs")) {

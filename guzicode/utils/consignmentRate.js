@@ -24,6 +24,7 @@ function normalizeSoldBatches(product) {
         .map((batch) => ({
           qty: Math.max(0, Number(batch && batch.qty || 0)),
           settledQty: Math.max(0, Number(batch && batch.settledQty || 0)),
+          price: Math.max(0, Number(batch && (batch.price != null ? batch.price : product && product.price) || 0)),
           saleAmount: Math.max(0, Number(batch && (batch.saleAmount != null ? batch.saleAmount : batch.price) || 0)),
           rateFraction: normalizeRateFraction(batch && (batch.rateFraction ?? batch.rate)),
           soldAt: batch && batch.soldAt ? batch.soldAt : null
@@ -84,6 +85,7 @@ function ensurePendingSoldBatches(product, fallbackRateFraction) {
     normalized.push({
       qty: missingPending,
       settledQty: 0,
+      price,
       saleAmount: price * missingPending,
       rateFraction: normalizeRateFraction(fallbackRateFraction),
       soldAt: product && (product.updatedAt || product.createdAt) ? (product.updatedAt || product.createdAt) : null
@@ -104,6 +106,7 @@ function appendSoldBatch(product, quantity, rateFraction, soldAt = new Date(), s
   normalized.push({
     qty,
     settledQty: 0,
+    price: Math.max(0, Number(product && product.price || 0)),
     saleAmount: Math.max(0, Number(saleAmount != null ? saleAmount : fallbackSaleAmount)),
     rateFraction: normalizeRateFraction(rateFraction),
     soldAt

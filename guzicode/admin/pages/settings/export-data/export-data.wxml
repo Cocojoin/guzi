@@ -50,6 +50,6 @@
     </view>
 
     <button class="primary-btn" bindtap="handleExport">导出数据（{{selectedCount}} 项）</button>
-    <view class="footer-tip">文件生成后将自动下载至本地</view>
+    <view class="footer-tip">文件生成成功后将尝试直接打开</view>
   </view>
 </view>
